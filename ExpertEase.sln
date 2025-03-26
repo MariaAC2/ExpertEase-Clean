@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpertEase.API", "ExpertEase.API\ExpertEase.API.csproj", "{1E466E90-9CB7-4624-A304-DF1AE4CB717D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpertEase.Domain", "ExpertEase.Domain\ExpertEase.Domain.csproj", "{5BD8D9DE-002D-4911-B3D7-1AF81A194FEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpertEase.Infrastructure", "ExpertEase.Infrastructure\ExpertEase.Infrastructure.csproj", "{C94A9FEA-D12F-46EE-9E16-C8779C94B953}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpertEase.Application", "ExpertEase.Application\ExpertEase.Application.csproj", "{DF22FCAA-B35A-46AD-85E1-E64A3DE5F26F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E466E90-9CB7-4624-A304-DF1AE4CB717D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E466E90-9CB7-4624-A304-DF1AE4CB717D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E466E90-9CB7-4624-A304-DF1AE4CB717D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E466E90-9CB7-4624-A304-DF1AE4CB717D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BD8D9DE-002D-4911-B3D7-1AF81A194FEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BD8D9DE-002D-4911-B3D7-1AF81A194FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BD8D9DE-002D-4911-B3D7-1AF81A194FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BD8D9DE-002D-4911-B3D7-1AF81A194FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C94A9FEA-D12F-46EE-9E16-C8779C94B953}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C94A9FEA-D12F-46EE-9E16-C8779C94B953}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C94A9FEA-D12F-46EE-9E16-C8779C94B953}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C94A9FEA-D12F-46EE-9E16-C8779C94B953}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF22FCAA-B35A-46AD-85E1-E64A3DE5F26F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF22FCAA-B35A-46AD-85E1-E64A3DE5F26F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF22FCAA-B35A-46AD-85E1-E64A3DE5F26F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF22FCAA-B35A-46AD-85E1-E64A3DE5F26F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
