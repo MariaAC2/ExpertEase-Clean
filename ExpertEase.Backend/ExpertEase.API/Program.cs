@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
 
-// Load connection string from appsettings.json
-builder.Services.AddDbContext<WebAppDatabaseContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));
+// builder.Services.AddDbContext<WebAppDatabaseContext>(options =>
+//     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));
 
+builder.Services.AddDbContext<WebAppDatabaseContext>(o => 
+    o.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

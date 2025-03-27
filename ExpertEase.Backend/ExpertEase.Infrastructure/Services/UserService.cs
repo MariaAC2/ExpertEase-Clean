@@ -52,7 +52,8 @@ public class UserService(
         {
             Id = result.Id,
             Email = result.Email,
-            Name = result.Name,
+            FirstName = result.FirstName,
+            LastName = result.LastName,
             Role = result.Role
         };
 
@@ -80,7 +81,8 @@ public class UserService(
         await repository.AddAsync(new User
         {
             Email = user.Email,
-            Name = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             Role = user.Role,
             Password = PasswordUtils.HashPassword(user.Password)
         }, cancellationToken);
@@ -104,7 +106,8 @@ public class UserService(
             return false; // Or throw new NotFoundException("User not found");
         }
 
-        entity.Name = user.Name ?? entity.Name;
+        entity.FirstName = user.FirstName ?? entity.FirstName;
+        entity.LastName = user.LastName ?? entity.LastName;
         entity.Password = user.Password ?? entity.Password;
 
         await repository.UpdateAsync(entity, cancellationToken);

@@ -1,1 +1,46 @@
-/* You can add global styles to this file, and also import other style files */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+// Logo button for home
+.logo-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.logo-button img {
+  height: 40px;
+  width: auto;
+}
+
+// Toggle button for accessibility
+.toggle-btn {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn::after {
+  content: attr(data-btn);
+  position: relative;
+  top: 30px;
+  right: 20px;
+  background-color: white;
+  border: 1px solid black;
+  color: #333;
+  padding: 3px 3px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.toggle-btn:hover::after {
+  opacity: 1; /* Show the tooltip on hover */
+}
+

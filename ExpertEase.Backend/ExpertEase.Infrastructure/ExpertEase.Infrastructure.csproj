@@ -16,6 +16,10 @@
       <PackageReference Include="Ardalis.EFCore.Extensions" Version="6.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="8.0.14" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.14">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
       <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
     </ItemGroup>

@@ -18,7 +18,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.Id) // This specifies which property is configured.
             .IsRequired(); // Here it is specified if the property is required, meaning it cannot be null in the database.
         builder.HasKey(x => x.Id); // Here it is specified that the property Id is the primary key.
-        builder.Property(e => e.Name)
+        builder.Property(e => e.FirstName)
+            .HasMaxLength(255) // This specifies the maximum length for varchar type in the database.
+            .IsRequired();
+        builder.Property(e => e.LastName)
             .HasMaxLength(255) // This specifies the maximum length for varchar type in the database.
             .IsRequired();
         builder.Property(e => e.Email)

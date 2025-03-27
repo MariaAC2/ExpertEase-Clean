@@ -20,25 +20,26 @@ public sealed class UserProjectionSpec : Specification<User, UserDTO>
         {
             Id = e.Id,
             Email = e.Email,
-            Name = e.Name,
+            FirstName = e.FirstName,
+            LastName = e.LastName,
             Role = e.Role
         })
         .OrderByDescending(x => x.CreatedAt, orderByCreatedAt);
 
     public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id); // This constructor will call the first declared constructor with the default parameter. 
 
-    public UserProjectionSpec(string? search) : this(true) // This constructor will call the first declared constructor with 'true' as the parameter. 
-    {
-        search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
-
-        if (search == null)
-        {
-            return;
-        }
-
-        var searchExpr = $"%{search.Replace(" ", "%")}%";
-
-        Query.Where(e => EF.Functions.ILike(e.Name, searchExpr)); // This is an example on how database specific expressions can be used via C# expressions.
-                                                                                          // Note that this will be translated to the database something like "where user.Name ilike '%str%'".
-    }
+    // public UserProjectionSpec(string? search) : this(true) // This constructor will call the first declared constructor with 'true' as the parameter. 
+    // {
+    //     search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
+    //
+    //     if (search == null)
+    //     {
+    //         return;
+    //     }
+    //
+    //     var searchExpr = $"%{search.Replace(" ", "%")}%";
+    //
+    //     Query.Where(e => EF.Functions.ILike(e.Name, searchExpr)); // This is an example on how database specific expressions can be used via C# expressions.
+    //                                                                                       // Note that this will be translated to the database something like "where user.Name ilike '%str%'".
+    // }
 }
