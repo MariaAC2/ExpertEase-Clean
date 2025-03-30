@@ -24,4 +24,8 @@
       <ProjectReference Include="..\ExpertEase.Infrastructure\ExpertEase.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\" />
+    </ItemGroup>
+
 </Project>

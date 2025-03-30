@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace ExpertEase.Infrastructure.Authorization;
 /// <summary>
 /// This abstract class is used as a base class for controllers that need to get current information about the user from the database.
 /// </summary>
-public abstract class AuthorizedController(IUserService userService) : ControllerBase
+public abstract class AuthorizedController(IUserService userService) : ResponseController
 {
     private UserClaims? _userClaims;
     protected readonly IUserService UserService = userService;
@@ -37,5 +38,5 @@ public abstract class AuthorizedController(IUserService userService) : Controlle
     /// <summary>
     /// This method also gets the currently logged user information from the database to provide more information to authorization verifications.
     /// </summary>
-    protected Task<UserDTO?> GetCurrentUser() => UserService.GetUser(ExtractClaims().Id);
+    protected Task<ServiceResponse<UserDTO?>> GetCurrentUser() => UserService.GetUser(ExtractClaims().Id);
 }
