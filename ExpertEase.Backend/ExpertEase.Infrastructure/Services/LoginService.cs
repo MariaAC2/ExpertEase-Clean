@@ -22,9 +22,6 @@ public class LoginService(IOptions<JwtConfiguration> jwtConfiguration) : ILoginS
         var key = Encoding.ASCII.GetBytes(_jwtConfiguration.Key);
 
         var claims = new Dictionary<string, object>();
-
-        if (!string.IsNullOrWhiteSpace(user.FirstName))
-            claims.Add(ClaimTypes.Name, user.FirstName);
         
         if (!string.IsNullOrWhiteSpace(user.LastName))
             claims.Add(ClaimTypes.Name, user.LastName);
@@ -50,5 +47,4 @@ public class LoginService(IOptions<JwtConfiguration> jwtConfiguration) : ILoginS
 
         return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
     }
-
 }

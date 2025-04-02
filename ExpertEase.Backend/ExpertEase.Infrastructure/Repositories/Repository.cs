@@ -1,10 +1,10 @@
 ﻿using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
 using ExpertEase.Domain.Entities;
-using ExpertEase.Infrastructure.Repositories.Interfaces;
+using ExpertEase.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExpertEase.Infrastructure.Repositories.Implementation;
+namespace ExpertEase.Infrastructure.Repositories;
 
 /// <summary>
 /// Inject the database context.

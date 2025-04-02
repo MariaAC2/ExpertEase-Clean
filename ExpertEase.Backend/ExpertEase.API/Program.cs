@@ -2,8 +2,7 @@ using System.Text.Json.Serialization;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
-using ExpertEase.Infrastructure.Repositories.Implementation;
-using ExpertEase.Infrastructure.Repositories.Interfaces;
+using ExpertEase.Infrastructure.Repositories;
 using ExpertEase.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -51,7 +50,7 @@ app.UseCors("AllowAll");
 // app.UseStaticFiles();
 //
 // app.UseRouting();
-// app.UseAuthorization();
+app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 

@@ -2,7 +2,7 @@
 using ExpertEase.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExpertEase.Infrastructure.Repositories.Interfaces;
+namespace ExpertEase.Infrastructure.Repositories;
 
 /// <summary>
 /// This interface provides the generic methods to work with the database context easier and use the specification design pattern.

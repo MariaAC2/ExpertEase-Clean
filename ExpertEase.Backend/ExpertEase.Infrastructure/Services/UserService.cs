@@ -9,7 +9,7 @@ using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using ExpertEase.Infrastructure.Database;
-using ExpertEase.Infrastructure.Repositories.Interfaces;
+using ExpertEase.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace ExpertEase.Infrastructure.Services;
@@ -20,8 +20,6 @@ public class UserService(
 {
     public async Task<ServiceResponse<UserDTO?>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
-        // return await repository.GetAsync(new UserProjectionSpec(id), cancellationToken);
-        
         var result = await repository.GetAsync(new UserProjectionSpec(id), cancellationToken);
         
         return result != null ? 

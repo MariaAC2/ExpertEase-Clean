@@ -3,6 +3,7 @@ using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Infrastructure.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpertEase.API.Controllers;
@@ -11,6 +12,7 @@ namespace ExpertEase.API.Controllers;
 [Route("api/[controller]/[action]")]
 public class UsersController(IUserService _userService, ILogger<UsersController> _logger) : AuthorizedController(_userService)
 {
+    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<UserDTO>>> GetById([FromRoute] Guid id)
     {
@@ -21,6 +23,7 @@ public class UsersController(IUserService _userService, ILogger<UsersController>
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<RequestResponse>> Add([FromBody] UserAddDTO user)
     {
@@ -32,6 +35,7 @@ public class UsersController(IUserService _userService, ILogger<UsersController>
             CreateErrorMessageResult(currentUser.Error);
     }
     
+    [Authorize]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] UserUpdateDTO user)
     {
@@ -45,6 +49,7 @@ public class UsersController(IUserService _userService, ILogger<UsersController>
             CreateErrorMessageResult(currentUser.Error);
     }
     
+    [Authorize]
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Delete([FromRoute] Guid id)
     {

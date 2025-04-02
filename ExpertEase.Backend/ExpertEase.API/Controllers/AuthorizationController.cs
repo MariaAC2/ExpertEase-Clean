@@ -7,10 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ExpertEase.API.Controllers;
 
-/// <summary>
-/// This is a controller to respond to authentication requests.
-/// Inject the required services through the constructor.
-/// </summary>
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class AuthorizationController(IUserService userService) : ResponseController
