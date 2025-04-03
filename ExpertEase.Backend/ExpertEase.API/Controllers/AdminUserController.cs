@@ -1,7 +1,6 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
-using ExpertEase.Domain.Enums;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +11,7 @@ namespace ExpertEase.API.Controllers;
 [Route("api/admin/users/[action]")]
 public class UserController(IUserService _userService) : AuthorizedController(_userService)
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<UserDTO>>> GetById([FromRoute] Guid id)
     {

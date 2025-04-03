@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
+using ExpertEase.Infrastructure.Middlewares;
 using ExpertEase.Infrastructure.Repositories;
 using ExpertEase.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -43,6 +44,7 @@ builder.Services.AddAuthorization(options =>
         .RequireClaim(ClaimTypes.NameIdentifier)
         .RequireClaim(ClaimTypes.Name)
         .RequireClaim(ClaimTypes.Email)
+        .RequireClaim(ClaimTypes.Role)
         .Build();
 });
 
@@ -59,19 +61,21 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
 //
 // app.UseDefaultFiles();
 // app.UseStaticFiles();
 //
 // app.UseRouting();
-app.UseSwagger();
-app.UseSwaggerUI();
+// app.UseSwagger();
+// app.UseSwaggerUI();
 
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/swagger");
-    return Task.CompletedTask;
-});
+// app.MapGet("/", context =>
+// {
+//     context.Response.Redirect("/swagger");
+//     return Task.CompletedTask;
+// });
 
 // app.UseEndpoints(endpoints =>
 // {

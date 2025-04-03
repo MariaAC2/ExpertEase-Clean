@@ -28,6 +28,9 @@ public class LoginService(IOptions<JwtConfiguration> jwtConfiguration) : ILoginS
 
         if (!string.IsNullOrWhiteSpace(user.Email))
             claims.Add(ClaimTypes.Email, user.Email);
+        
+        if (!string.IsNullOrWhiteSpace(user.Role.ToString()))
+            claims.Add(ClaimTypes.Role, user.Role.ToString());
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
