@@ -9,15 +9,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
-public class UsersController(IUserService _userService, ILogger<UsersController> _logger) : AuthorizedController(_userService)
+[Route("api/admin/users/[action]")]
+public class UserController(IUserService _userService) : AuthorizedController(_userService)
 {
     [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<UserDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
-
+        
         return currentUser.Result != null ? 
             CreateRequestResponseFromServiceResponse(await UserService.GetUser(id)) : 
             CreateErrorMessageResult<UserDTO>(currentUser.Error);

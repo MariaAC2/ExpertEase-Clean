@@ -18,7 +18,7 @@ public class UserService(
     IRepository<WebAppDatabaseContext> repository,
     ILoginService loginService): IUserService
 {
-    public async Task<ServiceResponse<UserDTO?>> GetUser(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await repository.GetAsync(new UserProjectionSpec(id), cancellationToken);
         

@@ -3,6 +3,7 @@ using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ExpertEase.Infrastructure.Authorization;
 

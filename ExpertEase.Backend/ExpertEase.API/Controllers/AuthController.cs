@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
-public class AuthorizationController(IUserService userService) : ResponseController
+[Route("api/auth/[action]")]
+public class AuthController(IUserService userService) : ResponseController
 {
     [HttpPost]
     public async Task<ActionResult<RequestResponse<LoginResponseDTO>>> Login([FromBody] LoginDTO login) // The FromBody attribute indicates that the parameter is deserialized from the JSON body.
@@ -35,4 +35,10 @@ public class AuthorizationController(IUserService userService) : ResponseControl
         
         return CreateRequestResponseFromServiceResponse(await userService.AddUser(user));
     }
+    
+    // [HttpDelete("{id:guid}")]
+    // public async Task<ActionResult<RequestResponse>> Logout()
+    // {
+    //     return CreateRequestResponseFromServiceResponse(await userService.DeleteUser());
+    // }
 }

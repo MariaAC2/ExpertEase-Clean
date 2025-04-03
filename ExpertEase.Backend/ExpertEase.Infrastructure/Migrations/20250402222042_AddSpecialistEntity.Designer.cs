@@ -3,6 +3,7 @@ using System;
 using ExpertEase.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    partial class WebAppDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250402222042_AddSpecialistEntity")]
+    partial class AddSpecialistEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,6 +34,11 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -64,9 +72,11 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasAlternateKey("Email");
 
-                    b.ToTable("User", (string)null);
+                    b.ToTable("User");
 
-                    b.UseTptMappingStrategy();
+                    b.HasDiscriminator().HasValue("User");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
@@ -101,16 +111,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<int>("YearsExperience")
                         .HasColumnType("integer");
 
-                    b.ToTable("Specialist", (string)null);
-                });
-
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
-                {
-                    b.HasOne("ExpertEase.Domain.Entities.User", null)
-                        .WithOne()
-                        .HasForeignKey("ExpertEase.Domain.Entities.Specialist", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasDiscriminator().HasValue("Specialist");
                 });
 #pragma warning restore 612, 618
         }

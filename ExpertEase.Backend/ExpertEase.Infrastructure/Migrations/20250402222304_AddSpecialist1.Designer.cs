@@ -3,6 +3,7 @@ using System;
 using ExpertEase.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    partial class WebAppDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250402222304_AddSpecialist1")]
+    partial class AddSpecialist1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,7 +67,7 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasAlternateKey("Email");
 
-                    b.ToTable("User", (string)null);
+                    b.ToTable("User");
 
                     b.UseTptMappingStrategy();
                 });
@@ -101,7 +104,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<int>("YearsExperience")
                         .HasColumnType("integer");
 
-                    b.ToTable("Specialist", (string)null);
+                    b.ToTable("Specialists", (string)null);
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
