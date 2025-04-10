@@ -25,8 +25,7 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository): I
         {
             return ServiceResponse.CreateErrorResponse(CommonErrors.UserNotFound);
         }
-
-        // Step 2: Check if already a specialist
+        
         var existingSpecialist = await repository.GetAsync(new SpecialistSpec(specialist.UserId), cancellationToken);
         if (existingSpecialist != null)
         {
@@ -40,8 +39,6 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository): I
                 UserId = requestingUser.Id,
                 PhoneNumber = specialist.PhoneNumber,
                 Address = specialist.Address,
-                City = specialist.City,
-                Country = specialist.Country,
                 YearsExperience = specialist.YearsExperience,
                 Description = specialist.Description,
             }

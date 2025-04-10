@@ -17,12 +17,6 @@ public class SpecialistConfiguration: IEntityTypeConfiguration<Specialist>
         builder.Property(e => e.Address)
             .HasMaxLength(255)
             .IsRequired();
-        builder.Property(e => e.City)
-            .HasMaxLength(255)
-            .IsRequired();
-        builder.Property(e => e.Country)
-            .HasMaxLength(255)
-            .IsRequired();
         builder.Property(e => e.YearsExperience)
             .IsRequired();
         builder.Property(e => e.Description)

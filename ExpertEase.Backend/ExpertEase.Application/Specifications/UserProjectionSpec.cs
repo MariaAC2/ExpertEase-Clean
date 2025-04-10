@@ -15,16 +15,43 @@ public sealed class UserProjectionSpec : Specification<User, UserDTO>
     /// <summary>
     /// In this constructor is the projection/mapping expression used to get UserDTO object directly from the database.
     /// </summary>
-    public UserProjectionSpec(bool orderByCreatedAt = false) =>
-        Query.Select(e => new()
+    public UserProjectionSpec(bool orderByCreatedAt = false)
+    {
+        // Include the related entities first
+        Query.Include(e => e.Account);
+        Query.Include(e => e.Specialist);
+
+        // Select into full UserDTO
+        Query.Select(e => new UserDTO
         {
             Id = e.Id,
             Email = e.Email,
             FirstName = e.FirstName,
             LastName = e.LastName,
-            Role = e.Role
-        })
-        .OrderByDescending(x => x.CreatedAt, orderByCreatedAt);
+            Role = e.Role,
+            Account = e.Account != null
+                ? new AccountDTO
+                {
+                    Id = e.Account.Id,
+                    Balance = e.Account.Balance
+                }
+                : null,
+            Specialist = e.Specialist != null
+                ? new SpecialistDTO
+                {
+                    PhoneNumber = e.Specialist.PhoneNumber,
+                    Address = e.Specialist.Address,
+                    YearsExperience = e.Specialist.YearsExperience,
+                    Description = e.Specialist.Description
+                }
+                : null
+        });
+
+        if (orderByCreatedAt)
+        {
+            Query.OrderByDescending(e => e.CreatedAt);
+        }
+    }
 
     public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id); // This constructor will call the first declared constructor with the default parameter. 
 

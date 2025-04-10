@@ -65,7 +65,6 @@ public class UserService(
                 ? new AccountDTO
                 {
                     Id = result.Account.Id,
-                    UserId = result.Account.UserId,
                     Balance = result.Account.Balance
                 }
                 : null
@@ -107,18 +106,21 @@ public class UserService(
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Unauthorized, "User must be authenticated!", ErrorCodes.CannotAdd));
         }
 
-        var account = new AccountAddDTO
+        if (newUser.Role != UserRoleEnum.Admin)
         {
-            UserId = newUser.Id,
-            InitialBalance = 0
-        };
-        
-        await repository.AddAsync(new Account
+            var account = new AccountAddDTO
             {
-                UserId = account.UserId,
-                Balance = account.InitialBalance,
-            }
-            , cancellationToken);
+                UserId = newUser.Id,
+                InitialBalance = 0
+            };
+        
+            await repository.AddAsync(new Account
+                {
+                    UserId = account.UserId,
+                    Balance = account.InitialBalance,
+                }
+                , cancellationToken);
+        }
         
         return ServiceResponse.CreateSuccessResponse();
     }
