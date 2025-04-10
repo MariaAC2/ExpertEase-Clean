@@ -13,19 +13,18 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.HasKey(e=>e.Id);
         builder.Property(e => e.SenderUserId)
             .IsRequired();
-        builder.HasKey(e => e.SenderUserId);
         builder.HasOne(e => e.SenderUser)
             .WithMany()
             .HasForeignKey(e => e.SenderUserId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Property(e => e.ReceiverSpecialistId)
             .IsRequired();
-        builder.HasKey(e => e.ReceiverSpecialistId);
         builder.HasOne(e => e.ReveiverSpecialist)
             .WithMany()
             .HasForeignKey(e => e.ReceiverSpecialistId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Property(e => e.Price)
+            .HasColumnType("decimal(18,2)")
             .IsRequired();
         builder.Property(e => e.Status)
             .IsRequired();
