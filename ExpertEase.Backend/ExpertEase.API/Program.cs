@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using ExpertEase.Application.Services;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Middlewares;
@@ -29,6 +30,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ISpecialistService, SpecialistService>();
 
 builder.Services.Configure<JwtConfiguration>(
     builder.Configuration.GetSection("JwtConfiguration"));

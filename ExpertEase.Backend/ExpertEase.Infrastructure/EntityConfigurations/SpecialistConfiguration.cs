@@ -27,5 +27,7 @@ public class SpecialistConfiguration: IEntityTypeConfiguration<Specialist>
             .IsRequired();
         builder.Property(e => e.Description)
             .HasMaxLength(255);
+        builder.Ignore(e => e.CreatedAt);
+        builder.Ignore(e => e.UpdatedAt);
     }
 }

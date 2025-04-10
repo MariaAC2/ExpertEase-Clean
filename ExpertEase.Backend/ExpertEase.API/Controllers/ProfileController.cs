@@ -1,6 +1,7 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/profile/")]
-public class ProfileController(IUserService userService): AuthorizedController(userService)
+public class ProfileController(IUserService userService, ISpecialistService specialistService): AuthorizedController(userService)
 {
     [Authorize]
     [HttpGet]
@@ -36,7 +37,14 @@ public class ProfileController(IUserService userService): AuthorizedController(u
             CreateErrorMessageResult(currentUser.Error);
     }
     
-    // [Authorize]
-    // [HttpPatch("become_specialist")]
-    // public async Task<ActionResult<RequestResponse>> BecomeSpecialist([])
+    [Authorize]
+    [HttpPatch("become_specialist")]
+    public async Task<ActionResult<RequestResponse>> BecomeSpecialist([FromBody] SpecialistAddDTO specialist)
+    {
+        var currentUser = await GetCurrentUser();
+
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialist(specialist, currentUser.Result)) :
+            CreateErrorMessageResult(currentUser.Error);
+    }
 }

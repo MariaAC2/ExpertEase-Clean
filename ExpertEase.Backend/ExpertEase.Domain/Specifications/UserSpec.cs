@@ -12,5 +12,9 @@ public sealed class UserSpec : Specification<User>
 {
     public UserSpec(Guid id) => Query.Where(e => e.Id == id);
 
-    public UserSpec(string email) => Query.Where(e => e.Email == email);
+    public UserSpec(string email)
+    {
+        Query.Where(e => e.Email == email);
+        Query.Include(e => e.Account);
+    }
 }

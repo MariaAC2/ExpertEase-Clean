@@ -60,7 +60,15 @@ public class UserService(
             Email = result.Email,
             FirstName = result.FirstName,
             LastName = result.LastName,
-            Role = result.Role
+            Role = result.Role,
+            Account = result.Account!= null
+                ? new AccountDTO
+                {
+                    Id = result.Account.Id,
+                    UserId = result.Account.UserId,
+                    Balance = result.Account.Balance
+                }
+                : null
         };
 
         return ServiceResponse.CreateSuccessResponse(new LoginResponseDTO
@@ -83,14 +91,34 @@ public class UserService(
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user already exists!", ErrorCodes.UserAlreadyExists));
         }
 
-        await repository.AddAsync(new User
+        var newUser = new User
         {
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
             Role = user.Role,
             Password = user.Password
-        }, cancellationToken); // A new entity is created and persisted in the database.
+        };
+
+        await repository.AddAsync(newUser, cancellationToken); // newUser.Id now populated (if using EF Core)
+        
+        if (newUser == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Unauthorized, "User must be authenticated!", ErrorCodes.CannotAdd));
+        }
+
+        var account = new AccountAddDTO
+        {
+            UserId = newUser.Id,
+            InitialBalance = 0
+        };
+        
+        await repository.AddAsync(new Account
+            {
+                UserId = account.UserId,
+                Balance = account.InitialBalance,
+            }
+            , cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }

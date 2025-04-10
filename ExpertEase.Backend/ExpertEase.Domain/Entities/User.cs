@@ -13,5 +13,5 @@ public class User : BaseEntity
     public string Password { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
     public Specialist? Specialist { get; set; }
-    public Account? Account { get; set; }
+    public Account Account { get; set; } = null!;
 }

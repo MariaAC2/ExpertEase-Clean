@@ -137,6 +137,9 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -322,7 +325,8 @@ namespace ExpertEase.Infrastructure.Migrations
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Account");
+                    b.Navigation("Account")
+                        .IsRequired();
 
                     b.Navigation("Specialist");
                 });

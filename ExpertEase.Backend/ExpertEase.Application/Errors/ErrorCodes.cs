@@ -17,5 +17,6 @@ public enum ErrorCodes
     CannotAdd,
     CannotUpdate,
     CannotDelete,
-    MailSendFailed
+    MailSendFailed,
+    AccountAlreadyExists
 }
