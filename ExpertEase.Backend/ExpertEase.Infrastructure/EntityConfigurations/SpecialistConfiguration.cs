@@ -8,7 +8,7 @@ public class SpecialistConfiguration: IEntityTypeConfiguration<Specialist>
 {
     public void Configure(EntityTypeBuilder<Specialist> builder)
     {
-        builder.ToTable("Specialist");
+        builder.HasKey(e => e.UserId);
         builder.Property(e => e.PhoneNumber)
             .HasMaxLength(255)
             .IsRequired();

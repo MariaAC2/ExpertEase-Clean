@@ -1,4 +1,5 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Authorization;
@@ -11,7 +12,7 @@ namespace ExpertEase.API.Controllers;
 [Route("api/admin/users/[action]")]
 public class UserController(IUserService _userService) : AuthorizedController(_userService)
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<UserDTO>>> GetById([FromRoute] Guid id)
     {
@@ -20,6 +21,18 @@ public class UserController(IUserService _userService) : AuthorizedController(_u
         return currentUser.Result != null ? 
             CreateRequestResponseFromServiceResponse(await UserService.GetUser(id)) : 
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
+    }
+    
+    [Authorize(Roles = "Admin")]
+    [HttpGet] // This attribute will make the controller respond to a HTTP GET request on the route /api/User/GetPage.
+    public async Task<ActionResult<RequestResponse<PagedResponse<UserDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination) // The FromQuery attribute will bind the parameters matching the names of
+    // the PaginationSearchQueryParams properties to the object in the method parameter.
+    {
+        var currentUser = await GetCurrentUser();
+
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await UserService.GetUsers(pagination)) :
+            CreateErrorMessageResult<PagedResponse<UserDTO>>(currentUser.Error);
     }
 
     [Authorize]
@@ -40,13 +53,23 @@ public class UserController(IUserService _userService) : AuthorizedController(_u
     {
         var currentUser = await GetCurrentUser();
 
-        return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await UserService.UpdateUser(user with
-            {
-                Password = !string.IsNullOrWhiteSpace(user.Password) ? PasswordUtils.HashPassword(user.Password) : null
-            }, currentUser.Result)) :
-            CreateErrorMessageResult(currentUser.Error);
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+
+        var updatedUserDto = user with
+        {
+            Password = !string.IsNullOrWhiteSpace(user.Password)
+                ? PasswordUtils.HashPassword(user.Password)
+                : null
+        };
+
+        var response = await UserService.UpdateUser(updatedUserDto, currentUser.Result);
+
+        return CreateRequestResponseFromServiceResponse(response);
     }
+
     
     [Authorize]
     [HttpDelete("{id:guid}")]

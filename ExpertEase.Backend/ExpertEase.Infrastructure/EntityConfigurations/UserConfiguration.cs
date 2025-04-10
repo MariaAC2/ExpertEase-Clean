@@ -15,8 +15,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("User");
-        builder.Property(e => e.Id) // This specifies which property is configured.
+        builder.Property(u => u.Id) // This specifies which property is configured.
             .IsRequired(); // Here it is specified if the property is required, meaning it cannot be null in the database.
         builder.HasKey(x => x.Id); // Here it is specified that the property Id is the primary key.
         builder.Property(e => e.FirstName)
@@ -40,5 +39,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
         builder.Property(e => e.UpdatedAt)
             .IsRequired();
+        builder.HasOne(u => u.Specialist)
+            .WithOne(s => s.User)
+            .HasForeignKey<Specialist>(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    [Migration("20250402223227_AddSpecialist2")]
-    partial class AddSpecialist2
+    [Migration("20250410193756_UpdateDB1")]
+    partial class UpdateDB1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,57 @@ namespace ExpertEase.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("YearsExperience")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Specialist");
+                });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
                 {
@@ -67,52 +118,23 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasAlternateKey("Email");
 
-                    b.ToTable("Users", (string)null);
-
-                    b.UseTptMappingStrategy();
+                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
                 {
-                    b.HasBaseType("ExpertEase.Domain.Entities.User");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<int>("YearsExperience")
-                        .HasColumnType("integer");
-
-                    b.ToTable("Specialist", (string)null);
-                });
-
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
-                {
-                    b.HasOne("ExpertEase.Domain.Entities.User", null)
-                        .WithOne()
-                        .HasForeignKey("ExpertEase.Domain.Entities.Specialist", "Id")
+                    b.HasOne("ExpertEase.Domain.Entities.User", "User")
+                        .WithOne("Specialist")
+                        .HasForeignKey("ExpertEase.Domain.Entities.Specialist", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Specialist")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

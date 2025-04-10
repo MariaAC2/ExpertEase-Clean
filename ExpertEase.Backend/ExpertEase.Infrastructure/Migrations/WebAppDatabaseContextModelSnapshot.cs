@@ -23,6 +23,44 @@ namespace ExpertEase.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("YearsExperience")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Specialist");
+                });
+
             modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -64,53 +102,23 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasAlternateKey("Email");
 
-                    b.ToTable("User", (string)null);
-
-                    b.UseTptMappingStrategy();
+                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
                 {
-                    b.HasBaseType("ExpertEase.Domain.Entities.User");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<int>("YearsExperience")
-                        .HasColumnType("integer");
-
-                    b.ToTable("Specialist", (string)null);
-                });
-
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
-                {
-                    b.HasOne("ExpertEase.Domain.Entities.User", null)
-                        .WithOne()
-                        .HasForeignKey("ExpertEase.Domain.Entities.Specialist", "Id")
+                    b.HasOne("ExpertEase.Domain.Entities.User", "User")
+                        .WithOne("Specialist")
+                        .HasForeignKey("ExpertEase.Domain.Entities.Specialist", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Specialist");
                 });
 #pragma warning restore 612, 618
         }

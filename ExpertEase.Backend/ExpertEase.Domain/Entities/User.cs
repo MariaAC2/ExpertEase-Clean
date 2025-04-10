@@ -12,4 +12,5 @@ public class User : BaseEntity
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
+    public Specialist? Specialist { get; set; }
 }

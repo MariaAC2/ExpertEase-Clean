@@ -1,4 +1,6 @@
 ﻿using Ardalis.Specification;
+using ExpertEase.Application.Requests;
+using ExpertEase.Application.Responses;
 using ExpertEase.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +9,7 @@ namespace ExpertEase.Infrastructure.Repositories;
 /// <summary>
 /// This interface provides the generic methods to work with the database context easier and use the specification design pattern.
 /// </summary>
-public interface IRepository<TDb> where TDb : DbContext
+public interface IRepository<out TDb> where TDb : DbContext
 {
     /// <summary>
     /// It may be useful to get the database context if necessary, this is why this property exists.
@@ -37,7 +39,7 @@ public interface IRepository<TDb> where TDb : DbContext
     /// <summary>
     /// Counts the entities found in the database that satisfy the specifications, this exists if using a specification with a projection, the actual projection will be ignored.
     /// </summary>
-    // public Task<int> GetCountAsync<T, TOut>(ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity;
+    public Task<int> GetCountAsync<T, TOut>(ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity;
     /// <summary>
     /// Gets a list of entities that satisfy the specifications.
     /// </summary>
@@ -50,6 +52,14 @@ public interface IRepository<TDb> where TDb : DbContext
     /// Gets a list of entities that satisfy the specifications projected onto another object type.
     /// </summary>
     public Task<List<TOut>> ListAsync<T, TOut>(ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity;
+    /// <summary>
+    /// Gets a page of entities that satisfy the specifications according to the pagination parameters.
+    /// </summary>
+    public Task<PagedResponse<T>> PageAsync<T>(PaginationQueryParams pagination, ISpecification<T> spec, CancellationToken cancellationToken = default) where T : BaseEntity;
+    /// <summary>
+    /// Gets a page of entities that satisfy the specifications projected onto another object type according to the pagination parameters.
+    /// </summary>
+    public Task<PagedResponse<TOut>> PageAsync<T, TOut>(PaginationQueryParams pagination, ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity;
     /// <summary>
     /// Adds an entity to the database.
     /// </summary>

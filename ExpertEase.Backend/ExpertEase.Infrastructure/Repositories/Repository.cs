@@ -1,5 +1,7 @@
 ﻿using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
+using ExpertEase.Application.Requests;
+using ExpertEase.Application.Responses;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +19,8 @@ public sealed class Repository<TDb>(TDb dbContext) : IRepository<TDb> where TDb 
         await DbContext.Set<T>().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
     public async Task<T?> GetAsync<T>(ISpecification<T> spec, CancellationToken cancellationToken = default) where T : BaseEntity =>
-        await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec).FirstOrDefaultAsync(cancellationToken);
+        await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<TOut?> GetAsync<T, TOut>(ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity =>
         await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec).FirstOrDefaultAsync(cancellationToken);
@@ -114,8 +117,28 @@ public sealed class Repository<TDb>(TDb dbContext) : IRepository<TDb> where TDb 
     public async Task<int> GetCountAsync<T>(CancellationToken cancellationToken = default) where T : BaseEntity =>
         await DbContext.Set<T>().CountAsync(cancellationToken);
 
-    public async Task<int> GetCountAsync<T>(ISpecification<T> spec, CancellationToken cancellationToken = default)
-        where T : BaseEntity =>
-        await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec)
-            .CountAsync(cancellationToken);
+    public async Task<int> GetCountAsync<T>(ISpecification<T> spec, CancellationToken cancellationToken = default) where T : BaseEntity =>
+        await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec).CountAsync(cancellationToken);
+
+    public async Task<int> GetCountAsync<T, TOut>(ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity =>
+        await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec).CountAsync(cancellationToken);
+
+    public async Task<PagedResponse<T>> PageAsync<T>(PaginationQueryParams pagination, ISpecification<T> spec, CancellationToken cancellationToken = default) where T : BaseEntity =>
+        new(pagination.Page,
+            pagination.PageSize,
+            await GetCountAsync(spec, cancellationToken),
+            await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync(cancellationToken)); // Here the limits for the page are computed using skip and limit query statements on the database, the specifications should include an order by,
+                                                  // otherwise the results are non-deterministic.
+
+    public async Task<PagedResponse<TOut>> PageAsync<T, TOut>(PaginationQueryParams pagination, ISpecification<T, TOut> spec, CancellationToken cancellationToken = default) where T : BaseEntity =>
+        new(pagination.Page,
+            pagination.PageSize,
+            await GetCountAsync(spec, cancellationToken),
+            await new SpecificationEvaluator().GetQuery(DbContext.Set<T>().AsQueryable(), spec)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync(cancellationToken));
 }

@@ -33,16 +33,6 @@ public class AuthController(IUserService userService) : ResponseController
             Role = role
         };
         
-        // return currentUser.Result != null ?
-        //     CreateRequestResponseFromServiceResponse(await UserService.AddUser(user, currentUser.Result)) :
-        //     CreateErrorMessageResult(currentUser.Error);
-        
         return CreateRequestResponseFromServiceResponse(await userService.AddUser(user));
-    }
-
-    [HttpDelete("{id:guid}")]
-    public async Task<ActionResult<RequestResponse>> Logout([FromRoute] Guid id)
-    {
-        return CreateRequestResponseFromServiceResponse(await userService.DeleteUser(id));
     }
 }

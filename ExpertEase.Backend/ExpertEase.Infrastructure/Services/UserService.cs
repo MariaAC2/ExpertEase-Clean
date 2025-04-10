@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.Errors;
+using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
@@ -25,6 +26,13 @@ public class UserService(
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
             ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
+    }
+    
+    public async Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.PageAsync(pagination, new UserProjectionSpec(pagination.Search), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
+
+        return ServiceResponse.CreateSuccessResponse(result);
     }
 
     public async Task<int> GetUserCount(CancellationToken cancellationToken = default)
