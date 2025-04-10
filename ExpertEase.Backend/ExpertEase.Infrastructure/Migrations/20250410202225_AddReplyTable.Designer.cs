@@ -3,6 +3,7 @@ using System;
 using ExpertEase.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    partial class WebAppDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250410202225_AddReplyTable")]
+    partial class AddReplyTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,9 +30,6 @@ namespace ExpertEase.Infrastructure.Migrations
                 {
                     b.Property<Guid>("RequestId")
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
@@ -124,36 +124,6 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.ToTable("Specialist");
                 });
 
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Transaction", b =>
-                {
-                    b.Property<Guid>("ReceiverSpecialistId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
-                    b.Property<Guid>("SenderUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("ReceiverSpecialistId");
-
-                    b.HasIndex("SenderUserId");
-
-                    b.ToTable("Transaction");
-                });
-
             modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -237,25 +207,6 @@ namespace ExpertEase.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Transaction", b =>
-                {
-                    b.HasOne("ExpertEase.Domain.Entities.Specialist", "ReveiverSpecialist")
-                        .WithMany()
-                        .HasForeignKey("ReceiverSpecialistId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
-                        .WithMany()
-                        .HasForeignKey("SenderUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ReveiverSpecialist");
-
-                    b.Navigation("SenderUser");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>
