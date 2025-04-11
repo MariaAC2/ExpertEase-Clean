@@ -17,7 +17,8 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class UserService(
     IRepository<WebAppDatabaseContext> repository,
-    ILoginService loginService): IUserService
+    ILoginService loginService,
+    IAccountService accountService): IUserService
 {
     public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
@@ -108,18 +109,18 @@ public class UserService(
 
         if (newUser.Role != UserRoleEnum.Admin)
         {
-            var account = new AccountAddDTO
+            var account = await accountService.AddAccount(new AccountAddDTO
             {
                 UserId = newUser.Id,
                 InitialBalance = 0
-            };
-        
-            await repository.AddAsync(new Account
-                {
-                    UserId = account.UserId,
-                    Balance = account.InitialBalance,
-                }
-                , cancellationToken);
+            }, new UserDTO
+            {
+                Id = newUser.Id,
+                Email = newUser.Email,
+                FirstName = newUser.FirstName,
+                LastName = newUser.LastName,
+                Role = newUser.Role
+            }, cancellationToken);
         }
         
         return ServiceResponse.CreateSuccessResponse();

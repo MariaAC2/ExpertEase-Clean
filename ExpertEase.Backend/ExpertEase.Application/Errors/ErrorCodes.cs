@@ -14,6 +14,7 @@ public enum ErrorCodes
     PhysicalFileNotFound,
     UserAlreadyExists,
     WrongPassword,
+    WrongUser,
     CannotAdd,
     CannotUpdate,
     CannotDelete,

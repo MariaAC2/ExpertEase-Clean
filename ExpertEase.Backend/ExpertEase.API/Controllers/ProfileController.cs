@@ -19,7 +19,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await UserService.GetUser(currentUser.Result.Id)) : 
+            CreateRequestResponseFromServiceResponse(await userService.GetUser(currentUser.Result.Id)) : 
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
     }
     
@@ -30,7 +30,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await UserService.UpdateUser(user with
+            CreateRequestResponseFromServiceResponse(await userService.UpdateUser(user with
             {
                 Password = !string.IsNullOrWhiteSpace(user.Password) ? PasswordUtils.HashPassword(user.Password) : null
             }, currentUser.Result)) :
