@@ -23,5 +23,6 @@ public class SpecialistConfiguration: IEntityTypeConfiguration<Specialist>
             .HasMaxLength(255);
         builder.Ignore(e => e.CreatedAt);
         builder.Ignore(e => e.UpdatedAt);
+        builder.Ignore(e => e.Id);
     }
 }

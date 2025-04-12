@@ -12,13 +12,15 @@ using ExpertEase.Infrastructure.Authorization;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
+using MobyLabWebProgramming.Core.Constants;
 
 namespace ExpertEase.Infrastructure.Services;
 
 public class UserService(
     IRepository<WebAppDatabaseContext> repository,
     ILoginService loginService,
-    IAccountService accountService): IUserService
+    IAccountService accountService,
+    IMailService mailService): IUserService
 {
     public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
@@ -68,7 +70,15 @@ public class UserService(
                     Id = result.Account.Id,
                     Balance = result.Account.Balance
                 }
-                : null
+                : null,
+            Specialist = result.Specialist != null
+                ? new SpecialistOnlyDTO
+                {
+                    PhoneNumber = result.Specialist.PhoneNumber,
+                    Address = result.Specialist.Address,
+                    YearsExperience = result.Specialist.YearsExperience,
+                    Description = result.Specialist.Description,
+                } : null,
         };
 
         return ServiceResponse.CreateSuccessResponse(new LoginResponseDTO
@@ -123,6 +133,10 @@ public class UserService(
             }, cancellationToken);
         }
         
+        var fullName = $"{user.LastName} {user.FirstName}";
+        
+        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "My App", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        
         return ServiceResponse.CreateSuccessResponse();
     }
 
@@ -135,14 +149,17 @@ public class UserService(
 
         var entity = await repository.GetAsync(new UserSpec(user.Id), cancellationToken); 
 
-        if (entity != null) // Verify if the user is not found, you cannot update a non-existing entity.
+        if (entity == null)
         {
-            entity.FirstName = user.FirstName ?? entity.FirstName;
-            entity.LastName = user.LastName ?? entity.LastName;
-            entity.Password = user.Password ?? entity.Password;
-
-            await repository.UpdateAsync(entity, cancellationToken); // Update the entity and persist the changes.
+            return ServiceResponse.CreateErrorResponse(
+                new(HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
         }
+        
+        entity.FirstName = user.FirstName ?? entity.FirstName;
+        entity.LastName = user.LastName ?? entity.LastName;
+        entity.Password = user.Password ?? entity.Password;
+
+        await repository.UpdateAsync(entity, cancellationToken); // Update the entity and persist the changes.
 
         return ServiceResponse.CreateSuccessResponse();
     }

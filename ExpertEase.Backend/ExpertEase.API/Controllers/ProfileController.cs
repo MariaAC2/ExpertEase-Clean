@@ -10,7 +10,7 @@ namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/profile/")]
-public class ProfileController(IUserService userService, ISpecialistService specialistService): AuthorizedController(userService)
+public class ProfileController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
     [Authorize]
     [HttpGet]
@@ -19,26 +19,26 @@ public class ProfileController(IUserService userService, ISpecialistService spec
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await userService.GetUser(currentUser.Result.Id)) : 
+            CreateRequestResponseFromServiceResponse(await UserService.GetUser(currentUser.Result.Id)) : 
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
     }
     
     [Authorize]
-    [HttpPatch("update")]
+    [HttpPut("update")]
     public async Task<ActionResult<RequestResponse>> UpdateProfile([FromBody] UserUpdateDTO user)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await userService.UpdateUser(user with
+            CreateRequestResponseFromServiceResponse(await UserService.UpdateUser(user with
             {
                 Password = !string.IsNullOrWhiteSpace(user.Password) ? PasswordUtils.HashPassword(user.Password) : null
             }, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
     
-    [Authorize]
-    [HttpPatch("become_specialist")]
+    [Authorize(Roles = "Client")]
+    [HttpPut("become_specialist")]
     public async Task<ActionResult<RequestResponse>> BecomeSpecialist([FromBody] SpecialistAddDTO specialist)
     {
         var currentUser = await GetCurrentUser();
@@ -47,4 +47,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
             CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialist(specialist, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
+    
+    // send request
+    // resolve reply (accept or deny)
 }

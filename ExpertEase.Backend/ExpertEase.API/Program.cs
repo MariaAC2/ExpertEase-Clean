@@ -27,11 +27,13 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
-builder.Services.AddScoped<ILoginService, LoginService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<ISpecialistService, SpecialistService>();
+builder.Services.AddScoped<ILoginService, LoginService>()
+    .AddScoped<IUserService, UserService>()
+    .AddScoped<IAccountService, AccountService>()
+    .AddScoped<ISpecialistService, SpecialistService>()
+    .AddScoped<IMailService, MailService>();
 
 builder.Services.Configure<JwtConfiguration>(
     builder.Configuration.GetSection("JwtConfiguration"));

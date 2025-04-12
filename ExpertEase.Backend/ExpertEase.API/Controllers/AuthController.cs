@@ -8,16 +8,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers;
 
 [ApiController]
-[Route("api/auth/[action]")]
-public class AuthController(IUserService userService) : ResponseController
+[Route("api/auth/")]
+public class AuthController(IUserService _userService) : ResponseController
 {
-    [HttpPost]
+    [HttpPost("login")]
     public async Task<ActionResult<RequestResponse<LoginResponseDTO>>> Login([FromBody] LoginDTO login) // The FromBody attribute indicates that the parameter is deserialized from the JSON body.
     {
-        return CreateRequestResponseFromServiceResponse(await userService.Login(login with { Password = PasswordUtils.HashPassword(login.Password)})); // The "with" keyword works only with records and it creates another object instance with the updated properties. 
+        return CreateRequestResponseFromServiceResponse(await _userService.Login(login with { Password = PasswordUtils.HashPassword(login.Password)})); // The "with" keyword works only with records and it creates another object instance with the updated properties. 
     }
     
-    [HttpPost]
+    [HttpPost("register")]
     public async Task<ActionResult<RequestResponse>> Register([FromBody] UserRegisterDTO regDto)
     {
         var role = regDto.Email.EndsWith("@admin.com", StringComparison.OrdinalIgnoreCase)
@@ -33,6 +33,6 @@ public class AuthController(IUserService userService) : ResponseController
             Role = role
         };
         
-        return CreateRequestResponseFromServiceResponse(await userService.AddUser(user));
+        return CreateRequestResponseFromServiceResponse(await _userService.AddUser(user));
     }
 }

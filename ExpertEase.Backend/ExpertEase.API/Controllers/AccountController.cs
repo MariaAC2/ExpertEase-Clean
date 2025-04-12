@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers;
 
 [ApiController]
-[Route("api/profile/account/[action]")]
+[Route("api/profile/account/")]
 public class AccountController(IUserService userService, IAccountService accountService): AuthorizedController(userService)
 {
     [Authorize]
-    [HttpGet]
+    [HttpGet("get_account")]
     public async Task<ActionResult<RequestResponse<AccountDTO>>> GetAccount()
     {
         var currentUser = await GetCurrentUser();
@@ -23,7 +23,7 @@ public class AccountController(IUserService userService, IAccountService account
     }
     
     [Authorize]
-    [HttpPut]
+    [HttpPut("update_account")]
     public async Task<ActionResult<RequestResponse>> UpdateAccount([FromBody] AccountUpdateDTO account)
     {
         var currentUser = await GetCurrentUser();
