@@ -3,6 +3,7 @@ using System;
 using ExpertEase.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    partial class WebAppDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250412214949_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,11 +37,6 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -170,20 +168,11 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<string>("ExternalSource")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("InitiatorUserId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("ReceiverAccountId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("ReceiverUserId")
                         .HasColumnType("uuid");
-
-                    b.Property<int?>("RejectionCode")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RejectionDetails")
-                        .HasColumnType("text");
 
                     b.Property<Guid?>("SenderAccountId")
                         .HasColumnType("uuid");
@@ -201,8 +190,6 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("InitiatorUserId");
 
                     b.HasIndex("ReceiverAccountId");
 
@@ -313,12 +300,6 @@ namespace ExpertEase.Infrastructure.Migrations
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Transaction", b =>
                 {
-                    b.HasOne("ExpertEase.Domain.Entities.User", "InitiatorUser")
-                        .WithMany()
-                        .HasForeignKey("InitiatorUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("ExpertEase.Domain.Entities.Account", "ReceiverAccount")
                         .WithMany()
                         .HasForeignKey("ReceiverAccountId")
@@ -338,8 +319,6 @@ namespace ExpertEase.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("SenderUserId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("InitiatorUser");
 
                     b.Navigation("ReceiverAccount");
 

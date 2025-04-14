@@ -1,24 +1,24 @@
-﻿using ExpertEase.Application.DataTransferObjects;
+﻿using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers;
+namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/profile/account/")]
 public class AccountController(IUserService userService, IAccountService accountService): AuthorizedController(userService)
 {
     [Authorize]
-    [HttpGet("get_account")]
+    [HttpGet]
     public async Task<ActionResult<RequestResponse<AccountDTO>>> GetAccount()
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await accountService.GetAccount(currentUser.Result)) : 
+            CreateRequestResponseFromServiceResponse(await accountService.GetUserAccount(currentUser.Result.Id)) : 
             CreateErrorMessageResult<AccountDTO>(currentUser.Error);
     }
     

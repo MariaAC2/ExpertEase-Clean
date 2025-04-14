@@ -1,4 +1,4 @@
-﻿namespace ExpertEase.Application.DataTransferObjects;
+﻿namespace ExpertEase.Application.DataTransferObjects.LoginDTOs;
 
 /// <summary>
 /// This is a DTO that contains the login request information.

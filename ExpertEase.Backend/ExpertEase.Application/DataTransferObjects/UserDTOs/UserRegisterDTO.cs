@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ExpertEase.Application.DataTransferObjects;
+namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 
 public class UserRegisterDTO
 {

@@ -1,12 +1,12 @@
-﻿using ExpertEase.Application.DataTransferObjects;
+﻿using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
-using ExpertEase.Application.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers;
+namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/profile/")]
@@ -48,6 +48,9 @@ public class ProfileController(IUserService userService, ISpecialistService spec
             CreateErrorMessageResult(currentUser.Error);
     }
     
+    
+    
     // send request
     // resolve reply (accept or deny)
+    // send transaction
 }

@@ -1,7 +1,8 @@
-﻿using ExpertEase.Domain.Entities;
+﻿using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Domain.Enums;
 
-namespace ExpertEase.Application.DataTransferObjects;
+namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 
 /// <summary>
 /// This DTO is used to transfer information about a user within the application and to client application.
@@ -16,4 +17,13 @@ public class UserDTO
     public UserRoleEnum Role { get; set; }
     public AccountDTO? Account { get; set; }
     public SpecialistOnlyDTO? Specialist { get; set; }
+}
+
+public class UserTransactionDTO
+{
+    public Guid Id { get; set; }
+    public string FirstName { get; set; } = null!;
+    public string LastName { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public UserRoleEnum Role { get; set; }
 }

@@ -1,8 +1,9 @@
-﻿using ExpertEase.Application.DataTransferObjects;
+﻿using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 
-namespace ExpertEase.Application.Specifications;
+namespace ExpertEase.Application.Services;
 
 public interface ISpecialistService
 {

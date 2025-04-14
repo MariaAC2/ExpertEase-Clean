@@ -1,11 +1,12 @@
-using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.LoginDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers;
+namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/auth/")]

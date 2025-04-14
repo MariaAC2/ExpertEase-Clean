@@ -1,6 +1,6 @@
 ﻿using ExpertEase.Domain.Enums;
 
-namespace ExpertEase.Application.DataTransferObjects;
+namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 
 /// <summary>
 /// This DTO is used to add a user, note that it doesn't have an id property because the id for the user entity should be added by the application.

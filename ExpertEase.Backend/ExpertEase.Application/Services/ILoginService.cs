@@ -1,4 +1,5 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 
 namespace ExpertEase.Application.Services;
 

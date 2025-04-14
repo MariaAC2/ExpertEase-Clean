@@ -1,5 +1,8 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

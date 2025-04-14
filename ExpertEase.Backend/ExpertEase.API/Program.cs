@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
+using ExpertEase.Domain.Entities;
 using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Middlewares;
@@ -33,6 +34,7 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IUserService, UserService>()
     .AddScoped<IAccountService, AccountService>()
     .AddScoped<ISpecialistService, SpecialistService>()
+    .AddScoped<ITransactionService, TransactionService>()
     .AddScoped<IMailService, MailService>();
 
 builder.Services.Configure<JwtConfiguration>(

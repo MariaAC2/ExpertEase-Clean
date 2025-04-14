@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ExpertEase.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,7 +51,7 @@ namespace ExpertEase.Infrastructure.Migrations
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -61,11 +61,8 @@ namespace ExpertEase.Infrastructure.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     PhoneNumber = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Address = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    City = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Country = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     YearsExperience = table.Column<int>(type: "integer", nullable: false),
-                    Description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Id = table.Column<Guid>(type: "uuid", nullable: false)
+                    Description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -76,6 +73,52 @@ namespace ExpertEase.Infrastructure.Migrations
                         principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Transaction",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SenderUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReceiverUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    TransactionType = table.Column<int>(type: "integer", nullable: false),
+                    ExternalSource = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    SenderAccountId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReceiverAccountId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transaction", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Transaction_Account_ReceiverAccountId",
+                        column: x => x.ReceiverAccountId,
+                        principalTable: "Account",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Transaction_Account_SenderAccountId",
+                        column: x => x.SenderAccountId,
+                        principalTable: "Account",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Transaction_User_ReceiverUserId",
+                        column: x => x.ReceiverUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Transaction_User_SenderUserId",
+                        column: x => x.SenderUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -109,43 +152,6 @@ namespace ExpertEase.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Transaction",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    SenderUserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReceiverSpecialistId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    AccountId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Transaction", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Transaction_Account_AccountId",
-                        column: x => x.AccountId,
-                        principalTable: "Account",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Transaction_Specialist_ReceiverSpecialistId",
-                        column: x => x.ReceiverSpecialistId,
-                        principalTable: "Specialist",
-                        principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Transaction_User_SenderUserId",
-                        column: x => x.SenderUserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Reply",
                 columns: table => new
                 {
@@ -154,7 +160,9 @@ namespace ExpertEase.Infrastructure.Migrations
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Price = table.Column<decimal>(type: "numeric", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -184,14 +192,19 @@ namespace ExpertEase.Infrastructure.Migrations
                 column: "SenderUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transaction_AccountId",
+                name: "IX_Transaction_ReceiverAccountId",
                 table: "Transaction",
-                column: "AccountId");
+                column: "ReceiverAccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transaction_ReceiverSpecialistId",
+                name: "IX_Transaction_ReceiverUserId",
                 table: "Transaction",
-                column: "ReceiverSpecialistId");
+                column: "ReceiverUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transaction_SenderAccountId",
+                table: "Transaction",
+                column: "SenderAccountId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transaction_SenderUserId",

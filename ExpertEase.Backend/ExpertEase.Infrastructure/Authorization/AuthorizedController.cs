@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using Microsoft.AspNetCore.Mvc;

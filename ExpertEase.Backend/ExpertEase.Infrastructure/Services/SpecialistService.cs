@@ -1,8 +1,12 @@
 ﻿using System.Net;
+using ExpertEase.Application.Constants;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
+using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
@@ -12,7 +16,9 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class SpecialistService(IRepository<WebAppDatabaseContext> repository): ISpecialistService
+public class SpecialistService(
+    IRepository<WebAppDatabaseContext> repository,
+    IMailService mailService): ISpecialistService
 {
     public async Task<ServiceResponse> AddSpecialist(SpecialistAddDTO specialist, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
@@ -44,6 +50,9 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository): I
                 Description = specialist.Description,
             }
             , cancellationToken);
+        
+        var fullName = $"{user.LastName} {user.FirstName}";
+        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
         return ServiceResponse.CreateSuccessResponse();
     }

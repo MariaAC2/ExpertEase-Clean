@@ -1,9 +1,13 @@
 ﻿using System.Net;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
+using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Repositories;
@@ -12,9 +16,9 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class AccountService (IRepository<WebAppDatabaseContext> repository): IAccountService
 {
-    public async Task<ServiceResponse> AddAccount(AccountAddDTO account, UserDTO requestingUser, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse> AddAccount(AccountAddDTO account, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new AccountSpec(requestingUser.Id), cancellationToken);
+        var result = await repository.GetAsync(new AccountUserSpec(account.UserId), cancellationToken);
         
         if (result != null)
         {
@@ -23,7 +27,8 @@ public class AccountService (IRepository<WebAppDatabaseContext> repository): IAc
 
         await repository.AddAsync(new Account
             {
-                UserId = requestingUser.Id,
+                UserId = account.UserId,
+                Currency = account.Currency,
                 Balance = account.InitialBalance,
             }
             , cancellationToken);
@@ -31,46 +36,53 @@ public class AccountService (IRepository<WebAppDatabaseContext> repository): IAc
         return ServiceResponse.CreateSuccessResponse();
     }
     
-    public async Task<ServiceResponse<AccountDTO>> GetAccount(UserDTO requestingUser, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<AccountDTO>> GetAccount(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new AccountSpec(requestingUser.Id), cancellationToken);
+        var result = await repository.GetAsync(new AccountProjectionSpec(id), cancellationToken);
         
-        if (result == null)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(CommonErrors.AccountNotFound);
-        }
-
-        if (requestingUser.Id != result.UserId)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden, "You are not allowed to access this account!", ErrorCodes.WrongUser));
-        }
-
-        return ServiceResponse.CreateSuccessResponse(new AccountDTO
-        {
-            Id = result.Id,
-            Balance = result.Balance
-        });
+        return result != null ? 
+            ServiceResponse.CreateSuccessResponse(result) : 
+            ServiceResponse.CreateErrorResponse<AccountDTO>(new (HttpStatusCode.NotFound, "Account not found!", ErrorCodes.EntityNotFound));
     }
     
-    public async Task<ServiceResponse> UpdateAccount(AccountUpdateDTO account, UserDTO requestingUser, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<AccountDTO>> GetUserAccount(Guid userId, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new AccountSpec(requestingUser.Id), cancellationToken);
+        var result = await repository.GetAsync(new AccountUserProjectionSpec(userId), cancellationToken);
         
+        return result != null ? 
+            ServiceResponse.CreateSuccessResponse(result) : 
+            ServiceResponse.CreateErrorResponse<AccountDTO>(new (HttpStatusCode.NotFound, "Account not found!", ErrorCodes.EntityNotFound));
+    }
+    
+    public async Task<ServiceResponse> UpdateAccount(AccountUpdateDTO account, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
+    {
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != account.UserId) // Verify who can add the user, you can change this however you se fit.
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin and own user can update account!", ErrorCodes.CannotUpdate));
+        }
+        
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && account.Amount != null) // Verify who can add the user, you can change this however you se fit.
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can update balance!", ErrorCodes.CannotUpdate));
+        }
+        
+        var result = await repository.GetAsync(new AccountUserSpec(account.UserId), cancellationToken);
+
         if (result == null)
         {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(CommonErrors.AccountNotFound);
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Account not found!", ErrorCodes.EntityNotFound));
         }
 
-        if (requestingUser.Id != result.UserId)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden, "You are not allowed to access this account!", ErrorCodes.WrongUser));
-        }
+        result.Currency = account.Currency ?? result.Currency;
 
-        result.Balance += account.Amount;
-
-        if (result.Balance < 0)
+        if (account.Amount.HasValue)
         {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new (HttpStatusCode.BadRequest, "Insufficient funds!", ErrorCodes.CannotUpdate));
+            result.Balance += account.Amount.Value;
+
+            if (result.Balance < 0)
+            {
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Insufficient funds!", ErrorCodes.CannotUpdate));
+            }
         }
 
         await repository.UpdateAsync(result, cancellationToken);
@@ -78,23 +90,24 @@ public class AccountService (IRepository<WebAppDatabaseContext> repository): IAc
         return ServiceResponse.CreateSuccessResponse();
     }
 
-    public async Task<ServiceResponse> DeleteAccount(UserDTO requestingUser,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse> DeleteAccount(Guid id, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new AccountSpec(requestingUser.Id), cancellationToken);
-        
-        if (result == null)
+        if (requestingUser == null || requestingUser.Role != UserRoleEnum.Admin)
         {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(CommonErrors.AccountNotFound);
+            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
+                "Only admins are allowed to delete accounts!", ErrorCodes.CannotDelete));
         }
 
-        if (requestingUser.Id != result.UserId)
+        var result = await repository.GetAsync(new AccountSpec(id), cancellationToken);
+
+        if (result == null)
         {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden, "You are not allowed to access this account!", ErrorCodes.WrongUser));
+            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+                "Account doesn't exist!", ErrorCodes.EntityNotFound));
         }
-        
+
         await repository.DeleteAsync<Account>(result.Id, cancellationToken);
-        
+
         return ServiceResponse.CreateSuccessResponse();
     }
 }

@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;

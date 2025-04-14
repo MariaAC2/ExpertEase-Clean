@@ -8,29 +8,43 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 {
     public void Configure(EntityTypeBuilder<Transaction> builder)
     {
-        builder.Property(e=>e.Id)
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Amount)
+            .HasColumnType("decimal(18,2)")
             .IsRequired();
-        builder.HasKey(e=>e.Id);
-        builder.Property(e => e.SenderUserId)
-            .IsRequired();
+
+        builder.Property(e => e.Description)
+            .HasMaxLength(255);
+
+        builder.Property(e => e.Status).IsRequired();
+        builder.Property(e => e.CreatedAt).IsRequired();
+        builder.Property(e => e.UpdatedAt).IsRequired();
+        builder.Property(e => e.TransactionType).IsRequired();
+        builder.HasOne(e => e.InitiatorUser)
+            .WithMany()
+            .HasForeignKey(e => e.InitiatorUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(e => e.SenderUser)
             .WithMany()
             .HasForeignKey(e => e.SenderUserId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.Property(e => e.ReceiverSpecialistId)
-            .IsRequired();
-        builder.HasOne(e => e.ReveiverSpecialist)
+
+        builder.HasOne(e => e.ReceiverUser)
             .WithMany()
-            .HasForeignKey(e => e.ReceiverSpecialistId)
+            .HasForeignKey(e => e.ReceiverUserId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.Property(e => e.Price)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
-        builder.Property(e => e.Status)
-            .IsRequired();
-        builder.Property(e => e.CreatedAt)
-            .IsRequired();
-        builder.Property(e => e.UpdatedAt)
-            .IsRequired();
+
+        builder.HasOne(e => e.SenderAccount)
+            .WithMany()
+            .HasForeignKey(e => e.SenderAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.ReceiverAccount)
+            .WithMany()
+            .HasForeignKey(e => e.ReceiverAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
+
 }

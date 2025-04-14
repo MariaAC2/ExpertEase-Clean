@@ -1,4 +1,6 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -7,7 +9,7 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers;
+namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
 [Route("api/admin/specialists/[action]")]

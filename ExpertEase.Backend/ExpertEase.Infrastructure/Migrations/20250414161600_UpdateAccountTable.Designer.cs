@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    [Migration("20250412160725_UpdateSpecialistTable2")]
-    partial class UpdateSpecialistTable2
+    [Migration("20250414161600_UpdateAccountTable")]
+    partial class UpdateAccountTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,6 +63,9 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
@@ -71,6 +74,9 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("RequestId");
 
@@ -149,26 +155,38 @@ namespace ExpertEase.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uuid");
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ExternalSource")
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("ReceiverSpecialistId")
+                    b.Property<Guid>("InitiatorUserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("SenderUserId")
+                    b.Property<Guid?>("ReceiverAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReceiverUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SenderAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SenderUserId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TransactionType")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -176,9 +194,13 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("InitiatorUserId");
 
-                    b.HasIndex("ReceiverSpecialistId");
+                    b.HasIndex("ReceiverAccountId");
+
+                    b.HasIndex("ReceiverUserId");
+
+                    b.HasIndex("SenderAccountId");
 
                     b.HasIndex("SenderUserId");
 
@@ -234,7 +256,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.HasOne("ExpertEase.Domain.Entities.User", "User")
                         .WithOne("Account")
                         .HasForeignKey("ExpertEase.Domain.Entities.Account", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -283,34 +305,41 @@ namespace ExpertEase.Infrastructure.Migrations
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Transaction", b =>
                 {
-                    b.HasOne("ExpertEase.Domain.Entities.Account", "Account")
-                        .WithMany("Transactions")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ExpertEase.Domain.Entities.Specialist", "ReveiverSpecialist")
+                    b.HasOne("ExpertEase.Domain.Entities.User", "InitiatorUser")
                         .WithMany()
-                        .HasForeignKey("ReceiverSpecialistId")
+                        .HasForeignKey("InitiatorUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("ExpertEase.Domain.Entities.Account", "ReceiverAccount")
+                        .WithMany()
+                        .HasForeignKey("ReceiverAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ExpertEase.Domain.Entities.User", "ReceiverUser")
+                        .WithMany()
+                        .HasForeignKey("ReceiverUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ExpertEase.Domain.Entities.Account", "SenderAccount")
+                        .WithMany()
+                        .HasForeignKey("SenderAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
                         .WithMany()
                         .HasForeignKey("SenderUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Account");
+                    b.Navigation("InitiatorUser");
 
-                    b.Navigation("ReveiverSpecialist");
+                    b.Navigation("ReceiverAccount");
+
+                    b.Navigation("ReceiverUser");
+
+                    b.Navigation("SenderAccount");
 
                     b.Navigation("SenderUser");
-                });
-
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Account", b =>
-                {
-                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.User", b =>

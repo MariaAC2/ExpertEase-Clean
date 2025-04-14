@@ -1,6 +1,8 @@
-﻿namespace ExpertEase.Application.DataTransferObjects;
+﻿namespace ExpertEase.Application.DataTransferObjects.AccountDTOs;
 
 public class AccountUpdateDTO
 {
-    public decimal Amount { get; set; }
+    public Guid UserId { get; set; }
+    public string? Currency { get; set; }
+    public decimal? Amount { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace ExpertEase.Application.DataTransferObjects;
+﻿namespace ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 
 public class SpecialistAddDTO
 {

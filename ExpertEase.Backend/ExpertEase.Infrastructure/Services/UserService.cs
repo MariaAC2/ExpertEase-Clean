@@ -1,5 +1,10 @@
 ﻿using System.Net;
+using ExpertEase.Application.Constants;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.LoginDTOs;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
@@ -12,7 +17,6 @@ using ExpertEase.Infrastructure.Authorization;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
-using MobyLabWebProgramming.Core.Constants;
 
 namespace ExpertEase.Infrastructure.Services;
 
@@ -38,10 +42,8 @@ public class UserService(
         return ServiceResponse.CreateSuccessResponse(result);
     }
 
-    public async Task<int> GetUserCount(CancellationToken cancellationToken = default)
-    {
-        return await repository.GetCountAsync<User>(cancellationToken);
-    }
+    public async Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default) => 
+        ServiceResponse.CreateSuccessResponse(await repository.GetCountAsync<User>(cancellationToken));
 
     public async Task<ServiceResponse<LoginResponseDTO>> Login(LoginDTO login, CancellationToken cancellationToken = default)
     {
@@ -122,20 +124,14 @@ public class UserService(
             var account = await accountService.AddAccount(new AccountAddDTO
             {
                 UserId = newUser.Id,
+                Currency = "RON",
                 InitialBalance = 0
-            }, new UserDTO
-            {
-                Id = newUser.Id,
-                Email = newUser.Email,
-                FirstName = newUser.FirstName,
-                LastName = newUser.LastName,
-                Role = newUser.Role
             }, cancellationToken);
         }
         
         var fullName = $"{user.LastName} {user.FirstName}";
         
-        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "My App", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
         return ServiceResponse.CreateSuccessResponse();
     }
