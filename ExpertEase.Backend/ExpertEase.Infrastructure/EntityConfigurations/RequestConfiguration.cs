@@ -15,14 +15,18 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request>
             .WithMany()
             .HasForeignKey(r => r.SenderUserId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(r => r.ReveiverSpecialist)
+        builder.HasOne(r => r.ReceiverUser)
             .WithMany()
-            .HasForeignKey(r => r.ReceiverSpecialistId)
+            .HasForeignKey(r => r.ReceiverUserId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.Property(r=> r.RequestDate)
+        builder.Property(r=> r.RequestedStartDate)
             .IsRequired();
         builder.Property(r => r.Description)
             .HasMaxLength(1000)
+            .IsRequired();
+        builder.Property(r => r.PhoneNumber)
+            .IsRequired();
+        builder.Property(r => r.Address)
             .IsRequired();
         builder.Property(e => e.CreatedAt)
             .IsRequired();

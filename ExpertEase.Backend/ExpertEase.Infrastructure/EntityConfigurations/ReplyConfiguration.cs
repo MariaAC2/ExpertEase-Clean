@@ -8,9 +8,11 @@ public class ReplyConfiguration : IEntityTypeConfiguration<Reply>
 {
     public void Configure(EntityTypeBuilder<Reply> builder)
     {
+        builder.Property(r => r.Id)
+            .IsRequired();
+        builder.HasKey(r => r.Id);
         builder.Property(r => r.RequestId)
             .IsRequired();
-        builder.HasKey(r => r.RequestId);
         builder.HasOne(r => r.Request)
             .WithMany()
             .HasForeignKey(r => r.RequestId)

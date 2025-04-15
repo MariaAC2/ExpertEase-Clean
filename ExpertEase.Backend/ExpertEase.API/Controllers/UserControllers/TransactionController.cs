@@ -15,7 +15,7 @@ public class TransactionController(IUserService userService, ITransactionService
 {
     [Authorize]
     [HttpPost("create")]
-    public async Task<ActionResult<RequestResponse>> AddTransaction([FromBody] TransactionAddDTO transaction)
+    public async Task<ActionResult<RequestResponse>> Add([FromBody] TransactionAddDTO transaction)
     {
         var currentUser = await GetCurrentUser();
 
@@ -26,7 +26,7 @@ public class TransactionController(IUserService userService, ITransactionService
     
     [Authorize]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<RequestResponse<TransactionDTO>>> GetTransaction([FromBody] Guid id)
+    public async Task<ActionResult<RequestResponse<TransactionDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
@@ -49,7 +49,7 @@ public class TransactionController(IUserService userService, ITransactionService
     
     [Authorize]
     [HttpPatch("{id:guid}/cancel")]
-    public async Task<ActionResult<RequestResponse>> CancelTransaction([FromBody] Guid id)
+    public async Task<ActionResult<RequestResponse>> CancelTransaction([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 

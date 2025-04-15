@@ -56,20 +56,22 @@ public sealed class UserProjectionSpec : Specification<User, UserDTO>
         }
     }
 
-    public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id); // This constructor will call the first declared constructor with the default parameter.
+    public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id);
 
-    public UserProjectionSpec(string? search) : this(true) // This constructor will call the first declared constructor with 'true' as the parameter. 
+    public UserProjectionSpec(string? search) : this(true)
     {
         search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
-    
+
         if (search == null)
-        {
             return;
-        }
-    
+
         var searchExpr = $"%{search.Replace(" ", "%")}%";
-    
-        Query.Where(e => EF.Functions.ILike(e.LastName, searchExpr)); // This is an example on how database specific expressions can be used via C# expressions.
-                                                                                          // Note that this will be translated to the database something like "where user.Name ilike '%str%'".
+
+        Query.Where(e =>
+            EF.Functions.ILike(e.FirstName, searchExpr) ||
+            EF.Functions.ILike(e.LastName, searchExpr) ||
+            EF.Functions.ILike(e.Email, searchExpr) ||
+            EF.Functions.ILike(e.Role.ToString(), searchExpr)
+        );
     }
 }

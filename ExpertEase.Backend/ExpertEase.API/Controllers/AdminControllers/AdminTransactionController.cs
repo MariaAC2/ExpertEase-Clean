@@ -14,7 +14,7 @@ public class AdminTransactionController(IUserService userService, ITransactionSe
 {
     [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<RequestResponse<TransactionDTO>>> GetTransaction([FromBody] Guid id)
+    public async Task<ActionResult<RequestResponse<TransactionDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
@@ -37,7 +37,7 @@ public class AdminTransactionController(IUserService userService, ITransactionSe
     
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id:guid}")]
-    public async Task<ActionResult<RequestResponse>> UpdateTransaction([FromBody] TransactionUpdateDTO transaction)
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] TransactionUpdateDTO transaction)
     {
         var currentUser = await GetCurrentUser();
 
@@ -48,7 +48,7 @@ public class AdminTransactionController(IUserService userService, ITransactionSe
     
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
-    public async Task<ActionResult<RequestResponse>> DeleteTransaction([FromBody] Guid id)
+    public async Task<ActionResult<RequestResponse>> Delete([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 

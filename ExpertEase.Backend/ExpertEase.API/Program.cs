@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
+using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Ocsp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,7 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IAccountService, AccountService>()
     .AddScoped<ISpecialistService, SpecialistService>()
     .AddScoped<ITransactionService, TransactionService>()
+    .AddScoped<IRequestService, RequestService>()
     .AddScoped<IMailService, MailService>();
 
 builder.Services.Configure<JwtConfiguration>(

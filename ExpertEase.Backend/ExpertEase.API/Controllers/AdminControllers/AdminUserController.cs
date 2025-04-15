@@ -25,9 +25,8 @@ public class UserController(IUserService userService) : AuthorizedController(use
     }
     
     [Authorize(Roles = "Admin")]
-    [HttpGet] // This attribute will make the controller respond to a HTTP GET request on the route /api/User/GetPage.
-    public async Task<ActionResult<RequestResponse<PagedResponse<UserDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination) // The FromQuery attribute will bind the parameters matching the names of
-    // the PaginationSearchQueryParams properties to the object in the method parameter.
+    [HttpGet]
+    public async Task<ActionResult<RequestResponse<PagedResponse<UserDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination)
     {
         var currentUser = await GetCurrentUser();
 

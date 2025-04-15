@@ -13,7 +13,7 @@ public class SpecialistProfileController(IUserService userService, ISpecialistSe
 {
     [Authorize(Roles = "Specialist")]
     [HttpPut("update")]
-    public async Task<ActionResult<RequestResponse>> UpdateProfile([FromBody] SpecialistUpdateDTO specialist)
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] SpecialistUpdateDTO specialist)
     {
         var currentUser = await GetCurrentUser();
 
@@ -21,8 +21,4 @@ public class SpecialistProfileController(IUserService userService, ISpecialistSe
             CreateRequestResponseFromServiceResponse(await specialistService.UpdateSpecialist(specialist, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
-    
-    // resolve request (accept or deny)
-    // send reply
-    // accept transaction
 }

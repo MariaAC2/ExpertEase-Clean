@@ -48,16 +48,24 @@ public class SpecialistProjectionSpec : Specification<Specialist, SpecialistDTO>
     
     public SpecialistProjectionSpec(string? search) : this(true) // This constructor will call the first declared constructor with 'true' as the parameter. 
     {
-        search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
-    
-        if (search == null)
+        Query.Include(s => s.User); // Include user for joined field access
+
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return;
+            var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
+
+            Query.Where(s =>
+                EF.Functions.ILike(s.User.FirstName, searchExpr) ||
+                EF.Functions.ILike(s.User.LastName, searchExpr) ||
+                EF.Functions.ILike(s.User.Email, searchExpr) ||
+                EF.Functions.ILike(s.User.Role.ToString(), searchExpr) ||
+                
+                EF.Functions.ILike(s.PhoneNumber, searchExpr) ||
+                EF.Functions.ILike(s.Address, searchExpr) ||
+                EF.Functions.ILike(s.Description, searchExpr) ||
+                EF.Functions.ILike(s.YearsExperience.ToString(), searchExpr)
+            );
         }
-    
-        var searchExpr = $"%{search.Replace(" ", "%")}%";
-    
-        Query.Where(e => EF.Functions.ILike(e.User.LastName, searchExpr));
     }
 
 }

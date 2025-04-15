@@ -223,6 +223,8 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository): 
             }
 
         }
+        
+        // add mail service (transaction added)
         return ServiceResponse.CreateSuccessResponse();
     }
 
@@ -267,12 +269,6 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository): 
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the user can cancel the transaction!", ErrorCodes.CannotUpdate));
         }
         
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && 
-            transaction.Status == StatusEnum.Cancelled && transaction.InitiatorUserId != requestingUser.Id)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the own user can cancel the transaction!", ErrorCodes.CannotUpdate));
-        }
-        
         if (transaction.Status == StatusEnum.Rejected && transaction.Description == null)
         {
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.BadRequest, "Description cannot be null", ErrorCodes.CannotUpdate));
@@ -283,6 +279,12 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository): 
         if (transactionToUpdate == null)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Transaction not found!", ErrorCodes.EntityNotFound));
+        }
+        
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && 
+            transaction.Status == StatusEnum.Cancelled && transactionToUpdate.InitiatorUserId != requestingUser.Id)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the own user can cancel the transaction!", ErrorCodes.CannotUpdate));
         }
         
         if (transactionToUpdate.Status != StatusEnum.Pending)
@@ -370,6 +372,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository): 
         
         await repository.UpdateAsync(transactionToUpdate, cancellationToken);
         
+        // add mail service (transaction accepted / rejected)
         return ServiceResponse.CreateSuccessResponse();
     }
     
@@ -401,6 +404,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository): 
         
         await repository.UpdateAsync(result, cancellationToken);
 
+        // add mail service (transaction cancelled)
         return ServiceResponse.CreateSuccessResponse();
     }
     

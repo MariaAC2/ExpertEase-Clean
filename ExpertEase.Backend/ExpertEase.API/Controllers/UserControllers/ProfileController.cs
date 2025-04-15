@@ -14,7 +14,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
 {
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<UserDTO>>> GetProfile()
+    public async Task<ActionResult<RequestResponse<UserDTO>>> Get()
     {
         var currentUser = await GetCurrentUser();
 
@@ -25,7 +25,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
     
     [Authorize]
     [HttpPut("update")]
-    public async Task<ActionResult<RequestResponse>> UpdateProfile([FromBody] UserUpdateDTO user)
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] UserUpdateDTO user)
     {
         var currentUser = await GetCurrentUser();
 
@@ -47,10 +47,4 @@ public class ProfileController(IUserService userService, ISpecialistService spec
             CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialist(specialist, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
-    
-    
-    
-    // send request
-    // resolve reply (accept or deny)
-    // send transaction
 }

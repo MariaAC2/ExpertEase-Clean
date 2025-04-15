@@ -5,7 +5,7 @@ namespace ExpertEase.Domain.Entities;
 public class Transaction: BaseEntity
 {
     public Guid InitiatorUserId { get; set; }
-    public User InitiatorUser { get; set; }
+    public User InitiatorUser { get; set; } = null!;
     public Guid? SenderUserId { get; set; }
     public User? SenderUser { get; set; }
     public Guid? ReceiverUserId { get; set; }

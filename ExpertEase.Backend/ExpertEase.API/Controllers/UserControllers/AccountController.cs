@@ -13,7 +13,7 @@ public class AccountController(IUserService userService, IAccountService account
 {
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<AccountDTO>>> GetAccount()
+    public async Task<ActionResult<RequestResponse<AccountDTO>>> Get()
     {
         var currentUser = await GetCurrentUser();
 
@@ -24,7 +24,7 @@ public class AccountController(IUserService userService, IAccountService account
     
     [Authorize]
     [HttpPut("update_account")]
-    public async Task<ActionResult<RequestResponse>> UpdateAccount([FromBody] AccountUpdateDTO account)
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] AccountUpdateDTO account)
     {
         var currentUser = await GetCurrentUser();
 

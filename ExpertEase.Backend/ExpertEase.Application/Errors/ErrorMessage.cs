@@ -63,7 +63,7 @@ public class RejectReasonMessage
             return new RejectReasonMessage("Exceeds limit", RejectionReason.ExceedsLimit, false);
         }
         if ((transaction.TransactionType == TransactionEnum.Withdraw || transaction.TransactionType == TransactionEnum.Transfer) 
-            && transaction.SenderUser.Account.Balance < transaction.Amount)
+            && transaction.SenderUser != null && transaction.SenderUser.Account.Balance < transaction.Amount)
         {
             return new RejectReasonMessage("Insufficient funds", RejectionReason.InsufficientFunds, false);
         }

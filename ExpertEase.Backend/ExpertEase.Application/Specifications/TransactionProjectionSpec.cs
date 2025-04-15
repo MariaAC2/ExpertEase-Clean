@@ -1,5 +1,4 @@
 ﻿using Ardalis.Specification;
-using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.TransactionDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
@@ -57,17 +56,39 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
     
     public TransactionProjectionSpec(string? search) : this(true) // This constructor will call the first declared constructor with 'true' as the parameter. 
     {
-        search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
-    
-        if (search == null)
+        Query.Include(t => t.InitiatorUser);
+        Query.Include(t => t.SenderUser);
+        Query.Include(t => t.ReceiverUser);
+
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return;
+            var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
+
+            Query.Where(t =>
+                EF.Functions.ILike(t.Description ?? "", searchExpr) ||
+                EF.Functions.ILike(t.ExternalSource ?? "", searchExpr) ||
+
+                // Enum as string matching
+                EF.Functions.ILike(t.TransactionType.ToString(), searchExpr) ||
+                EF.Functions.ILike(t.Status.ToString(), searchExpr) ||
+                EF.Functions.ILike(t.RejectionCode.ToString() ?? "", searchExpr) ||
+
+                // Initiator
+                EF.Functions.ILike(t.InitiatorUser.FirstName, searchExpr) ||
+                EF.Functions.ILike(t.InitiatorUser.LastName, searchExpr) ||
+                EF.Functions.ILike(t.InitiatorUser.Email, searchExpr) ||
+
+                // Sender
+                (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.FirstName, searchExpr)) ||
+                (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.LastName, searchExpr)) ||
+                (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.Email, searchExpr)) ||
+
+                // Receiver
+                (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.FirstName, searchExpr)) ||
+                (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.LastName, searchExpr)) ||
+                (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.Email, searchExpr))
+            );
         }
-    
-        var searchExpr = $"%{search.Replace(" ", "%")}%";
-    
-        Query.Where(e => EF.Functions.ILike(e.InitiatorUser.LastName, searchExpr)); // This is an example on how database specific expressions can be used via C# expressions.
-        // Note that this will be translated to the database something like "where user.Name ilike '%str%'".
     }
 }
 
@@ -75,9 +96,5 @@ public class TransactionUserProjectionSpec : TransactionProjectionSpec
 {
     public TransactionUserProjectionSpec(Guid id) : base() => Query.Where(e => e.InitiatorUserId == id);
     
-    public TransactionUserProjectionSpec(string? search) : base(search)
-    {
-        // Query.Where(e => e.InitiatorUserId == e.SenderUserId || e.InitiatorUserId == e.ReceiverUserId);
-    }
-
+    public TransactionUserProjectionSpec(string? search) : base(search) { }
 }

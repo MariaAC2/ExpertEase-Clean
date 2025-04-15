@@ -14,7 +14,7 @@ public class AdminAccountController(IUserService userService, IAccountService ac
 {
     [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<RequestResponse<AccountDTO>>> GetAccount([FromBody] Guid id)
+    public async Task<ActionResult<RequestResponse<AccountDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
@@ -24,8 +24,8 @@ public class AdminAccountController(IUserService userService, IAccountService ac
     }
     
     [Authorize(Roles = "Admin")]
-    [HttpPut]
-    public async Task<ActionResult<RequestResponse>> UpdateAccount([FromBody] AccountUpdateDTO account)
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] AccountUpdateDTO account)
     {
         var currentUser = await GetCurrentUser();
 
@@ -36,7 +36,7 @@ public class AdminAccountController(IUserService userService, IAccountService ac
     
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
-    public async Task<ActionResult<RequestResponse>> DeleteAccount([FromBody] Guid id)
+    public async Task<ActionResult<RequestResponse>> Delete([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
