@@ -13,10 +13,9 @@ public class ReplyConfiguration : IEntityTypeConfiguration<Reply>
         builder.HasKey(r => r.Id);
         builder.Property(r => r.RequestId)
             .IsRequired();
-        builder.HasOne(r => r.Request)
-            .WithMany()
-            .HasForeignKey(r => r.RequestId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(rp => rp.Request)
+            .WithMany(r => r.Replies)
+            .HasForeignKey(rp => rp.RequestId);
         builder.Property(r => r.StartDate)
             .IsRequired();
         builder.Property(r => r.EndDate)

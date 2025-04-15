@@ -5,7 +5,11 @@ namespace ExpertEase.Domain.Specifications;
 
 public sealed class RequestSpec : Specification<Request>
 {
-    public RequestSpec(Guid id) => Query.Where(e => e.Id == id);
+    public RequestSpec(Guid id)
+    {
+        Query.Include(e => e.Replies);
+        Query.Where(e => e.Id == id);
+    }
 }
 
 public sealed class RequestSearchSpec : Specification<Request>

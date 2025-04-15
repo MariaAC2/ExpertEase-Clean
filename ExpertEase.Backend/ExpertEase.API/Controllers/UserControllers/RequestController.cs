@@ -17,7 +17,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 public class RequestController(IUserService userService, IRequestService requestService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Client")]
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<ActionResult<RequestResponse>> Add([FromBody] RequestAddDTO request)
     {
         var currentUser = await GetCurrentUser();

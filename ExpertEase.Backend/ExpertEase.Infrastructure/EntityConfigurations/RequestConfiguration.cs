@@ -13,8 +13,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request>
         builder.HasKey(r => r.Id);
         builder.HasOne(r => r.SenderUser)
             .WithMany()
-            .HasForeignKey(r => r.SenderUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(r => r.SenderUserId);
         builder.HasOne(r => r.ReceiverUser)
             .WithMany()
             .HasForeignKey(r => r.ReceiverUserId)
@@ -34,5 +33,9 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request>
             .IsRequired();
         builder.Property(r => r.Status)
             .IsRequired();
+        builder.HasMany(r => r.Replies)
+            .WithOne(rp => rp.Request)
+            .HasForeignKey(rp => rp.RequestId)
+            .OnDelete(DeleteBehavior.Cascade); 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.TransactionDTOs;
@@ -16,7 +17,7 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class TransactionService(IRepository<WebAppDatabaseContext> repository): ITransactionService
+public class TransactionService(IRepository<WebAppDatabaseContext> repository, ITransferDescriptionGenerator transferGenerator): ITransactionService
 {
     public async Task<ServiceResponse> AddTransaction(TransactionAddDTO transaction, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {
@@ -24,229 +25,223 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository): 
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User cannot add transaction because it doesn't exist!", ErrorCodes.CannotAdd));
         }
-        switch (transaction.TransactionType)
+
+        if (transaction.TransactionType == TransactionEnum.Deposit)
         {
-            case TransactionEnum.Deposit:
+            if (transaction.ReceiverUserId == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+                    "You can't deposit without a receiver id!"));
+
+            if (transaction.ReceiverUserId != requestingUser.Id)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                    "You can't access this user's account!", ErrorCodes.WrongUser));
+
+            var receiver = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+            
+            if (receiver == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+            
+            var receiverAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
+
+            if (receiverAccount == null)
             {
-                if (transaction.ReceiverUserId == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                        "You can't deposit without a receiver id!"));
-
-                if (transaction.ReceiverUserId != requestingUser.Id)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-                        "You can't access this user's account!", ErrorCodes.WrongUser));
-
-                var receiver = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-                
-                if (receiver == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-                
-                var receiverAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
-
-                if (receiverAccount == null)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                        "Account not found!", ErrorCodes.EntityNotFound));
-                }
-
-                if (requestingUser.Id != receiverAccount.UserId)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
-                        "You are not allowed to access this account!", ErrorCodes.WrongUser));
-                }
-
-                var transactionToValidate = new Transaction
-                {
-                    InitiatorUserId = receiver.Id,
-                    InitiatorUser = receiver,
-                    ReceiverUserId = receiver.Id,
-                    ReceiverUser = receiver,
-                    ReceiverAccountId = receiverAccount.Id,
-                    ReceiverAccount = receiverAccount,
-                    ExternalSource = transaction.ExternalSource,
-                    Amount = transaction.Amount,
-                    Description = transaction.Description,
-                    TransactionType = transaction.TransactionType
-                };
-
-                var validation = RejectReasonMessage.CreateRejectReasonMessage(transactionToValidate);
-
-                if (!validation.IsValid)
-                {
-                    transactionToValidate.Status = StatusEnum.Rejected;
-                    transactionToValidate.RejectionCode = validation.Reason;
-                    transactionToValidate.RejectionDetails = validation.Message;
-
-                    await repository.AddAsync(transactionToValidate, cancellationToken);
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
-                }
-
-                transactionToValidate.Status = StatusEnum.Pending;
-                await repository.AddAsync(transactionToValidate, cancellationToken);
-                break;
-            }
-            case TransactionEnum.Withdraw:
-            {
-                if (transaction.SenderUserId == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                        "You can't withdraw without a sender id!"));
-
-                if (transaction.SenderUserId != requestingUser.Id)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-                        "You can't access this user's account!", ErrorCodes.WrongUser));
-
-                var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-                
-                if (sender == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-                
-                var senderAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
-
-                if (senderAccount == null)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                        "Account not found!", ErrorCodes.EntityNotFound));
-                }
-
-                if (requestingUser.Id != senderAccount.UserId)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
-                        "You are not allowed to access this account!", ErrorCodes.WrongUser));
-                }
-
-                var transactionToValidate = new Transaction
-                {
-                    InitiatorUserId = sender.Id,
-                    InitiatorUser = sender,
-                    SenderUserId = sender.Id,
-                    SenderUser = sender,
-                    SenderAccountId = senderAccount.Id,
-                    SenderAccount = senderAccount,
-                    Amount = transaction.Amount,
-                    ExternalSource = transaction.ExternalSource,
-                    Description = transaction.Description,
-                    TransactionType = transaction.TransactionType
-                };
-
-                var validation = RejectReasonMessage.CreateRejectReasonMessage(transactionToValidate);
-
-                if (!validation.IsValid)
-                {
-                    transactionToValidate.Status = StatusEnum.Rejected;
-                    transactionToValidate.RejectionCode = validation.Reason;
-                    transactionToValidate.RejectionDetails = validation.Message;
-
-                    await repository.AddAsync(transactionToValidate, cancellationToken);
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
-                }
-
-                transactionToValidate.Status = StatusEnum.Pending;
-                await repository.AddAsync(transactionToValidate, cancellationToken);
-                break;
-            }
-            case TransactionEnum.Transfer:
-            {
-                if (transaction.SenderUserId == null || transaction.ReceiverUserId == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                        "You can't transfer without a sender or receiver id!"));
-
-                if (transaction.SenderUserId != requestingUser.Id)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-                        "You can't access this user's account!", ErrorCodes.WrongUser));
-
-                var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-                
-                if (sender == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-                
-                var senderAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
-
-                if (senderAccount == null)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                        "Account not found!", ErrorCodes.EntityNotFound));
-                }
-
-                if (requestingUser.Id != senderAccount.UserId)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
-                        "You are not allowed to access this account!", ErrorCodes.WrongUser));
-                }
-
-                var receiver = await repository.GetAsync(new UserSpec(transaction.ReceiverUserId.Value), cancellationToken);
-                
-                if (receiver == null)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-
-                if (receiver.Role != UserRoleEnum.Specialist)
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Receiver should be a specialist!", ErrorCodes.CannotAdd));
-
-                var receiverAccount = await repository.GetAsync(new AccountUserSpec(receiver.Id), cancellationToken);
-                if (receiverAccount == null)
-                {
-                    return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                        "Receiver's account not found!", ErrorCodes.EntityNotFound));
-                }
-
-                var transactionToValidate = new Transaction
-                {
-                    InitiatorUserId = sender.Id,
-                    InitiatorUser = sender,
-                    SenderUserId = sender.Id,
-                    SenderUser = sender,
-                    ReceiverUserId = receiver.Id,
-                    ReceiverUser = receiver,
-                    SenderAccountId = senderAccount.Id,
-                    SenderAccount = senderAccount,
-                    ReceiverAccountId = receiverAccount.Id,
-                    ReceiverAccount = receiverAccount,
-                    Amount = transaction.Amount,
-                    Description = transaction.Description,
-                    TransactionType = transaction.TransactionType
-                };
-
-                var validation = RejectReasonMessage.CreateRejectReasonMessage(transactionToValidate);
-
-                if (!validation.IsValid)
-                {
-                    transactionToValidate.Status = StatusEnum.Rejected;
-                    transactionToValidate.RejectionCode = validation.Reason;
-                    transactionToValidate.RejectionDetails = validation.Message;
-
-                    await repository.AddAsync(transactionToValidate, cancellationToken);
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
-                }
-
-                transactionToValidate.Status = StatusEnum.Pending;
-                await repository.AddAsync(transactionToValidate, cancellationToken);
-                break;
+                return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+                    "Account not found!", ErrorCodes.EntityNotFound));
             }
 
+            if (requestingUser.Id != receiverAccount.UserId)
+            {
+                return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
+                    "You are not allowed to access this account!", ErrorCodes.WrongUser));
+            }
+
+            var transactionToValidate = new Transaction
+            {
+                InitiatorUserId = receiver.Id,
+                InitiatorUser = receiver,
+                ReceiverUserId = receiver.Id,
+                ReceiverUser = receiver,
+                ReceiverAccountId = receiverAccount.Id,
+                ReceiverAccount = receiverAccount,
+                ExternalSource = transaction.ExternalSource,
+                Amount = transaction.Amount,
+                Description = transaction.Description,
+                TransactionType = transaction.TransactionType
+            };
+
+            var validation = RejectReasonMessage.CreateRejectReasonMessage(transactionToValidate);
+
+            if (!validation.IsValid)
+            {
+                transactionToValidate.Status = StatusEnum.Rejected;
+                transactionToValidate.RejectionCode = validation.Reason;
+                transactionToValidate.RejectionDetails = validation.Message;
+
+                await repository.AddAsync(transactionToValidate, cancellationToken);
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
+            }
+
+            transactionToValidate.Status = StatusEnum.Pending;
+            await repository.AddAsync(transactionToValidate, cancellationToken);
         }
-        
+        else if (transaction.TransactionType == TransactionEnum.Withdraw)
+        {
+            if (transaction.SenderUserId == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+                    "You can't withdraw without a sender id!"));
+
+            if (transaction.SenderUserId != requestingUser.Id)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                    "You can't access this user's account!", ErrorCodes.WrongUser));
+
+            var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+
+            if (sender == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!",
+                    ErrorCodes.EntityNotFound));
+
+            var senderAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
+
+            if (senderAccount == null)
+            {
+                return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+                    "Account not found!", ErrorCodes.EntityNotFound));
+            }
+
+            if (requestingUser.Id != senderAccount.UserId)
+            {
+                return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
+                    "You are not allowed to access this account!", ErrorCodes.WrongUser));
+            }
+
+            var transactionToValidate = new Transaction
+            {
+                InitiatorUserId = sender.Id,
+                InitiatorUser = sender,
+                SenderUserId = sender.Id,
+                SenderUser = sender,
+                SenderAccountId = senderAccount.Id,
+                SenderAccount = senderAccount,
+                Amount = transaction.Amount,
+                ExternalSource = transaction.ExternalSource,
+                Description = transaction.Description,
+                TransactionType = transaction.TransactionType
+            };
+
+            var validation = RejectReasonMessage.CreateRejectReasonMessage(transactionToValidate);
+
+            if (!validation.IsValid)
+            {
+                transactionToValidate.Status = StatusEnum.Rejected;
+                transactionToValidate.RejectionCode = validation.Reason;
+                transactionToValidate.RejectionDetails = validation.Message;
+
+                await repository.AddAsync(transactionToValidate, cancellationToken);
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
+            }
+
+            transactionToValidate.Status = StatusEnum.Pending;
+            await repository.AddAsync(transactionToValidate, cancellationToken);
+        }
+
         // add mail service (transaction added)
         return ServiceResponse.CreateSuccessResponse();
     }
-
-    public async Task<ServiceResponse<TransactionDTO>> GetTransaction(Guid id, CancellationToken cancellationToken = default)
+    
+        public async Task<ServiceResponse> AddTransfer(Request request, Reply reply, UserDTO? requestingUser,
+        CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new TransactionProjectionSpec(id), cancellationToken);
+        if (request.SenderUserId == null || request.ReceiverUserId == null)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+                "You can't transfer without a sender or receiver id!"));
+
+        if (request.SenderUserId != requestingUser.Id)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "You can't access this user's account!", ErrorCodes.WrongUser));
+
+        var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+        
+        if (sender == null)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+        
+        var senderAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
+
+        if (senderAccount == null)
+        {
+            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+                "Account not found!", ErrorCodes.EntityNotFound));
+        }
+
+        if (requestingUser.Id != senderAccount.UserId)
+        {
+            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
+                "You are not allowed to access this account!", ErrorCodes.WrongUser));
+        }
+
+        var receiver = await repository.GetAsync(new UserSpec(request.ReceiverUserId), cancellationToken);
+        
+        if (receiver == null)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+
+        if (receiver.Role != UserRoleEnum.Specialist)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Receiver should be a specialist!", ErrorCodes.CannotAdd));
+
+        var receiverAccount = await repository.GetAsync(new AccountUserSpec(receiver.Id), cancellationToken);
+        if (receiverAccount == null)
+        {
+            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+                "Receiver's account not found!", ErrorCodes.EntityNotFound));
+        }
+        
+        var description = transferGenerator.Generate(request, reply);
+
+        var transactionToValidate = new Transaction
+        {
+            InitiatorUserId = sender.Id,
+            InitiatorUser = sender,
+            SenderUserId = sender.Id,
+            SenderUser = sender,
+            ReceiverUserId = receiver.Id,
+            ReceiverUser = receiver,
+            SenderAccountId = senderAccount.Id,
+            SenderAccount = senderAccount,
+            ReceiverAccountId = receiverAccount.Id,
+            ReceiverAccount = receiverAccount,
+            Amount = reply.Price,
+            Description = description,
+            TransactionType = TransactionEnum.Transfer
+        };
+
+        var validation = RejectReasonMessage.CreateRejectReasonMessage(transactionToValidate);
+
+        if (!validation.IsValid)
+        {
+            transactionToValidate.Status = StatusEnum.Rejected;
+            transactionToValidate.RejectionCode = validation.Reason;
+            transactionToValidate.RejectionDetails = validation.Message;
+
+            await repository.AddAsync(transactionToValidate, cancellationToken);
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
+        }
+
+        transactionToValidate.Status = StatusEnum.Pending;
+        await repository.AddAsync(transactionToValidate, cancellationToken);
+        
+        // Mail service (transfer added)
+        return ServiceResponse.CreateSuccessResponse();
+    }
+
+    public async Task<ServiceResponse<TransactionDTO>> GetTransaction(Specification<Transaction, TransactionDTO> spec, Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.GetAsync(spec, cancellationToken);
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
             ServiceResponse.CreateErrorResponse<TransactionDTO>(new(HttpStatusCode.NotFound, "Transaction not found!", ErrorCodes.EntityNotFound));
     }
     
-    public async Task<ServiceResponse<PagedResponse<TransactionDTO>>> GetTransactions(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<PagedResponse<TransactionDTO>>> GetTransactions(Specification<Transaction, TransactionDTO> spec, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
     {
-        var result = await repository.PageAsync(pagination, new TransactionProjectionSpec(pagination.Search), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
-
-        return ServiceResponse.CreateSuccessResponse(result);
-    }
-
-    public async Task<ServiceResponse<PagedResponse<TransactionDTO>>> GetTransactionsByUser(Guid userId,
-        PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
-    {
-        var result = await repository.PageAsync(pagination, new TransactionUserProjectionSpec(pagination.Search), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
+        var result = await repository.PageAsync(pagination, spec, cancellationToken); // Use the specification and pagination API to get only some entities from the database.
 
         return ServiceResponse.CreateSuccessResponse(result);
     }

@@ -23,8 +23,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.Property(e => e.TransactionType).IsRequired();
         builder.HasOne(e => e.InitiatorUser)
             .WithMany()
-            .HasForeignKey(e => e.InitiatorUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(e => e.InitiatorUserId);
 
         builder.HasOne(e => e.SenderUser)
             .WithMany()

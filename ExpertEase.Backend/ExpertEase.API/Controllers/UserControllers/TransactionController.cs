@@ -2,6 +2,7 @@
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +15,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 public class TransactionController(IUserService userService, ITransactionService transactionService) : AuthorizedController(userService)
 {
     [Authorize]
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<ActionResult<RequestResponse>> Add([FromBody] TransactionAddDTO transaction)
     {
         var currentUser = await GetCurrentUser();
@@ -31,7 +32,7 @@ public class TransactionController(IUserService userService, ITransactionService
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await transactionService.GetTransaction(id)) :
+            CreateRequestResponseFromServiceResponse(await transactionService.GetTransaction(new TransactionUserProjectionSpec(id, currentUser.Result.Id), id)) :
             CreateErrorMessageResult<TransactionDTO>(currentUser.Error);
     }
 
@@ -43,7 +44,7 @@ public class TransactionController(IUserService userService, ITransactionService
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await transactionService.GetTransactionsByUser(currentUser.Result.Id, pagination)) :
+            CreateRequestResponseFromServiceResponse(await transactionService.GetTransactions(new TransactionUserProjectionSpec(pagination.Search, currentUser.Result.Id), pagination)) :
             CreateErrorMessageResult<PagedResponse<TransactionDTO>>(currentUser.Error);
     }
     

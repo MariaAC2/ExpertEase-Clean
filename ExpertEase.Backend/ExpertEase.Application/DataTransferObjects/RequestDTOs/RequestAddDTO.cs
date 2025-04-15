@@ -2,7 +2,6 @@
 
 public class RequestAddDTO
 {
-    public Guid SenderUserId { get; set; }
     public Guid ReceiverUserId { get; set; }
     public DateTime RequestedStartDate { get; set; }
     public string PhoneNumber { get; set; } = null!;

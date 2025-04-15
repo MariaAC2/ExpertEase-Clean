@@ -23,7 +23,7 @@ public class AccountController(IUserService userService, IAccountService account
     }
     
     [Authorize]
-    [HttpPut("update_account")]
+    [HttpPatch("update")]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] AccountUpdateDTO account)
     {
         var currentUser = await GetCurrentUser();

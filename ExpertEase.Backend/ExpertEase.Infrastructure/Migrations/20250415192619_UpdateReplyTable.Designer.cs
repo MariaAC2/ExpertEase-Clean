@@ -3,6 +3,7 @@ using System;
 using ExpertEase.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    partial class WebAppDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250415192619_UpdateReplyTable")]
+    partial class UpdateReplyTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -304,9 +307,9 @@ namespace ExpertEase.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
-                        .WithMany("Requests")
+                        .WithMany()
                         .HasForeignKey("SenderUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ReceiverUser");
@@ -328,9 +331,9 @@ namespace ExpertEase.Infrastructure.Migrations
             modelBuilder.Entity("ExpertEase.Domain.Entities.Transaction", b =>
                 {
                     b.HasOne("ExpertEase.Domain.Entities.User", "InitiatorUser")
-                        .WithMany("Transactions")
+                        .WithMany()
                         .HasForeignKey("InitiatorUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ExpertEase.Domain.Entities.Account", "ReceiverAccount")
@@ -374,11 +377,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Navigation("Account")
                         .IsRequired();
 
-                    b.Navigation("Requests");
-
                     b.Navigation("Specialist");
-
-                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

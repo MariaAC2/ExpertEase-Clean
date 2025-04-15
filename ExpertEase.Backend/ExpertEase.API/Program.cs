@@ -38,6 +38,7 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<ISpecialistService, SpecialistService>()
     .AddScoped<ITransactionService, TransactionService>()
     .AddScoped<IRequestService, RequestService>()
+    .AddScoped<IReplyService, ReplyService>()
     .AddScoped<IMailService, MailService>();
 
 builder.Services.Configure<JwtConfiguration>(
@@ -78,14 +79,14 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 // app.UseStaticFiles();
 //
 // app.UseRouting();
-// app.UseSwagger();
-// app.UseSwaggerUI();
-//
-// app.MapGet("/", context =>
-// {
-//     context.Response.Redirect("/swagger");
-//     return Task.CompletedTask;
-// });
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/swagger");
+    return Task.CompletedTask;
+});
 
 // app.UseEndpoints(endpoints =>
 // {

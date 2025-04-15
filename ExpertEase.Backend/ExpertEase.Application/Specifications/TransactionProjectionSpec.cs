@@ -94,7 +94,22 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
 
 public class TransactionUserProjectionSpec : TransactionProjectionSpec
 {
-    public TransactionUserProjectionSpec(Guid id) : base() => Query.Where(e => e.InitiatorUserId == id);
-    
-    public TransactionUserProjectionSpec(string? search) : base(search) { }
+    public TransactionUserProjectionSpec(Guid id, Guid userId) : base() => Query.Where(e => e.Id == id && e.InitiatorUserId == userId);
+
+    public TransactionUserProjectionSpec(string? search, Guid userId) : base(search)
+    {
+        Query.Include(t => t.InitiatorUser);
+        Query.Where(t => t.InitiatorUserId == userId);
+    }
+}
+
+public class TransactionSpecialistProjectionSpec : TransactionProjectionSpec
+{
+    public TransactionSpecialistProjectionSpec(Guid id, Guid userId) : base() => Query.Where(e => e.Id == id && e.InitiatorUserId == userId);
+
+    public TransactionSpecialistProjectionSpec(string? search, Guid userId) : base(search)
+    {
+        Query.Include(t => t.ReceiverUser);
+        Query.Where(t => t.ReceiverUserId == userId);
+    }
 }

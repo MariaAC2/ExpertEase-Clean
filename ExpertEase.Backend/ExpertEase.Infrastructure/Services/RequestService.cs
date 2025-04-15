@@ -20,16 +20,33 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
     public async Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != request.SenderUserId)
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Client)
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the own user can create requests", ErrorCodes.CannotAdd));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only users can create requests", ErrorCodes.CannotAdd));
         }
         
-        var sender = await repository.GetAsync(new UserSpec(request.SenderUserId), cancellationToken);
+        var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
 
         if (sender == null)
         {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.NotFound, "User with this ID not found", ErrorCodes.EntityNotFound));
+            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
+        }
+
+        if (sender.Id != requestingUser.Id)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the own user can create requests", ErrorCodes.CannotAdd));
+        }
+
+        if (sender.Requests.Any())
+        {
+            var lastReply = sender.Requests
+                .OrderByDescending(r => r.CreatedAt)
+                .First();
+
+            if (lastReply.Status != StatusEnum.Failed || lastReply.Status != StatusEnum.Completed)
+            {
+                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
+            }
         }
         
         var receiver = await repository.GetAsync(new UserSpec(request.ReceiverUserId), cancellationToken);
@@ -44,7 +61,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Requests are sent only to specialists!", ErrorCodes.CannotAdd));
         }
         
-        var existingRequest = await repository.GetAsync(new RequestSearchSpec(request.SenderUserId, request.ReceiverUserId), cancellationToken);
+        var existingRequest = await repository.GetAsync(new RequestSearchSpec(requestingUser.Id, request.ReceiverUserId), cancellationToken);
         
         if (existingRequest != null)
         {
@@ -53,7 +70,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
         
         var requestEntity = new Request
         {
-            SenderUserId = request.SenderUserId,
+            SenderUserId = requestingUser.Id,
             SenderUser = sender,
             ReceiverUserId = request.ReceiverUserId,
             ReceiverUser = receiver,

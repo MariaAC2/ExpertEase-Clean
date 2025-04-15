@@ -2,6 +2,7 @@
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class AdminTransactionController(IUserService userService, ITransactionSe
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await transactionService.GetTransaction(id)) :
+            CreateRequestResponseFromServiceResponse(await transactionService.GetTransaction(new TransactionProjectionSpec(id), id)) :
             CreateErrorMessageResult<TransactionDTO>(currentUser.Error);
     }
 
@@ -31,7 +32,7 @@ public class AdminTransactionController(IUserService userService, ITransactionSe
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await transactionService.GetTransactions(pagination)) :
+            CreateRequestResponseFromServiceResponse(await transactionService.GetTransactions(new TransactionProjectionSpec(pagination.Search), pagination)) :
             CreateErrorMessageResult<PagedResponse<TransactionDTO>>(currentUser.Error);
     }
     

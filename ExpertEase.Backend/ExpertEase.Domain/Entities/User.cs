@@ -14,4 +14,6 @@ public class User : BaseEntity
     public UserRoleEnum Role { get; set; }
     public Specialist? Specialist { get; set; }
     public Account Account { get; set; } = null!;
+    public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public ICollection<Request> Requests { get; set; } = new List<Request>();
 }

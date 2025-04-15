@@ -6,4 +6,6 @@ public enum StatusEnum
     Accepted,
     Rejected,
     Cancelled,
+    Completed,
+    Failed
 }

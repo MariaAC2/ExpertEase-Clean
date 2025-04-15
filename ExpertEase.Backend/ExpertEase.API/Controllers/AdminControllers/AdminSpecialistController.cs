@@ -13,7 +13,7 @@ namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
 [Route("api/admin/specialists/[action]")]
-public class SpecialistController(IUserService _userService, ISpecialistService _specialistService) : AuthorizedController(_userService)
+public class AdminSpecialistController(IUserService _userService, ISpecialistService _specialistService) : AuthorizedController(_userService)
 {
     [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
