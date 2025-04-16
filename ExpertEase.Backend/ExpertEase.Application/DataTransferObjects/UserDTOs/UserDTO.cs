@@ -16,7 +16,7 @@ public class UserDTO
     public string Email { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
     public AccountDTO? Account { get; set; }
-    public SpecialistOnlyDTO? Specialist { get; set; }
+    public SpecialistDTO? Specialist { get; set; }
 }
 
 public class UserTransactionDTO

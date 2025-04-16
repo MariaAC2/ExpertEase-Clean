@@ -37,35 +37,55 @@ public class SpecialistService(
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The specialist already exists!", ErrorCodes.UserAlreadyExists));
         }
-
+        
         user.Role = UserRoleEnum.Specialist;
-        
-        await repository.AddAsync(new Specialist
+
+        user.Specialist = new Specialist
+        {
+            UserId = requestingUser.Id,
+            PhoneNumber = specialist.PhoneNumber,
+            Address = specialist.Address,
+            YearsExperience = specialist.YearsExperience,
+            Description = specialist.Description,
+        };
+
+        if (specialist.Categories != null)
+        {
+            var validCategories = new List<Category>();
+
+            foreach (var categoryName in specialist.Categories)
             {
-                UserId = requestingUser.Id,
-                PhoneNumber = specialist.PhoneNumber,
-                Address = specialist.Address,
-                YearsExperience = specialist.YearsExperience,
-                Description = specialist.Description,
+                var category = await repository.GetAsync(new CategorySpec(categoryName), cancellationToken);
+
+                if (category == null)
+                {
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict,
+                        "Cannot add a category that doesn't exist", ErrorCodes.EntityNotFound));
+                }
+
+                validCategories.Add(category);
             }
-            , cancellationToken);
+
+            user.Specialist.Categories = validCategories;
+        }
         
+        await repository.AddAsync(user.Specialist, cancellationToken);
         var fullName = $"{user.LastName} {user.FirstName}";
         await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
         return ServiceResponse.CreateSuccessResponse();
     }
     
-    public async Task<ServiceResponse<SpecialistDTO>> GetSpecialist(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<UserDTO>> GetSpecialist(Guid userId, CancellationToken cancellationToken = default)
     {
         var result = await repository.GetAsync(new SpecialistProjectionSpec(userId), cancellationToken);
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
-            ServiceResponse.CreateErrorResponse<SpecialistDTO>(CommonErrors.UserNotFound);
+            ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
     }
     
-    public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> GetSpecialists(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<PagedResponse<UserDTO>>> GetSpecialists(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
     {
         var result = await repository.PageAsync(pagination, new SpecialistProjectionSpec(pagination.Search), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
 
@@ -102,7 +122,7 @@ public class SpecialistService(
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin or the own user can delete the user!", ErrorCodes.CannotDelete));
         }
 
-        await repository.DeleteAsync<User>(id, cancellationToken); // Delete the entity.
+        await repository.DeleteAsync<User>(id, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse();
     }

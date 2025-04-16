@@ -20,6 +20,7 @@ public class Transaction: BaseEntity
     public Account? SenderAccount { get; set; }
     public Guid? ReceiverAccountId { get; set; }
     public Account? ReceiverAccount { get; set; }
+    public DateTime? RejectedAt { get; set; }
     public RejectionReason? RejectionCode { get; set; }
     public string? RejectionDetails { get; set; }
 }

@@ -49,5 +49,4 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasForeignKey(e => e.ReceiverAccountId)
             .OnDelete(DeleteBehavior.Restrict);
     }
-
 }

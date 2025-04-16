@@ -8,4 +8,5 @@ public class Specialist : BaseEntity
     public string Description { get; set; } = null!;
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
+    public ICollection<Category> Categories { get; set; } = new List<Category>();
 }

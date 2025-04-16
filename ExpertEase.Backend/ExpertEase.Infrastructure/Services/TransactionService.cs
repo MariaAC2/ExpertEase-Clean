@@ -183,6 +183,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
         if (!validation.IsValid)
         {
             transactionToValidate.Status = StatusEnum.Rejected;
+            transactionToValidate.RejectedAt = DateTime.UtcNow;
             transactionToValidate.RejectionCode = validation.Reason;
             transactionToValidate.RejectionDetails = validation.Message;
 
@@ -272,6 +273,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
     private async Task<ServiceResponse> RejectTransaction(Transaction transaction, CancellationToken cancellationToken)
     {
         transaction.Status = StatusEnum.Rejected;
+        transaction.RejectedAt = DateTime.UtcNow;
         transaction.RejectionCode = RejectionReason.ManualReview;
         transaction.RejectionDetails = transaction.Description;
             

@@ -1,9 +1,11 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
+using ExpertEase.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExpertEase.Application.Specifications;
@@ -13,18 +15,17 @@ namespace ExpertEase.Application.Specifications;
 /// The specification will project the entity onto a DTO so it isn't tracked by the framework.
 /// Note how the constructors call other constructors which can be used to chain them. Also, this is a sealed class, meaning it cannot be further derived.
 /// </summary>
-public sealed class UserProjectionSpec : Specification<User, UserDTO>
+public class UserProjectionSpec : Specification<User, UserDTO>
 {
     /// <summary>
     /// In this constructor is the projection/mapping expression used to get UserDTO object directly from the database.
     /// </summary>
     public UserProjectionSpec(bool orderByCreatedAt = false)
     {
-        // Include the related entities first
         Query.Include(e => e.Account);
         Query.Include(e => e.Specialist);
-
-        // Select into full UserDTO
+        Query.Include(e=> e.Specialist.Categories);
+        
         Query.Select(e => new UserDTO
         {
             Id = e.Id,
@@ -40,12 +41,18 @@ public sealed class UserProjectionSpec : Specification<User, UserDTO>
                 }
                 : null,
             Specialist = e.Specialist != null
-                ? new SpecialistOnlyDTO
+                ? new SpecialistDTO
                 {
                     PhoneNumber = e.Specialist.PhoneNumber,
                     Address = e.Specialist.Address,
                     YearsExperience = e.Specialist.YearsExperience,
-                    Description = e.Specialist.Description
+                    Description = e.Specialist.Description,
+                    Categories = e.Specialist.Categories.Select(c => new CategoryDTO
+                        {
+                            Id = c.Id,
+                            Name = c.Name,
+                            Description = c.Description,
+                        }).ToList()
                 }
                 : null
         });
@@ -56,10 +63,11 @@ public sealed class UserProjectionSpec : Specification<User, UserDTO>
         }
     }
 
-    public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id);
+    public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id && e.Role != UserRoleEnum.Specialist);
 
     public UserProjectionSpec(string? search) : this(true)
     {
+        Query.Where(s=> s.Role != UserRoleEnum.Specialist);
         search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
 
         if (search == null)

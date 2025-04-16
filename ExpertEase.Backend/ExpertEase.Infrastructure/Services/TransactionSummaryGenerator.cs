@@ -30,6 +30,7 @@ public class TransactionSummaryGenerator : ITransactionSummaryGenerator
     {
         return
             $"{Environment.NewLine}The transaction of type {transaction.TransactionType} was rejected by system." +
+            $"{Environment.NewLine}Transaction invalidated at {transaction.RejectedAt.Value:yyyy-MM-dd}." +
             $"{Environment.NewLine}Rejection code {transaction.RejectionCode} Rejection details {transaction.RejectionDetails}" +
             $"{Environment.NewLine}Transaction details:{Environment.NewLine}" +
             (transaction.TransactionType == TransactionEnum.Transfer ? transaction.Summary : GenerateTransactionDetails(transaction));
@@ -39,6 +40,7 @@ public class TransactionSummaryGenerator : ITransactionSummaryGenerator
     {
         return
             $"{Environment.NewLine}The transaction of type {transaction.TransactionType} was rejected by admin." +
+            $"{Environment.NewLine}Transaction rejected at {transaction.RejectedAt.Value:yyyy-MM-dd}." +
             $"{Environment.NewLine}Rejection code {transaction.RejectionCode} Rejection details {transaction.RejectionDetails}" +
             $"{Environment.NewLine}Transaction details:{Environment.NewLine}" +
             (transaction.TransactionType == TransactionEnum.Transfer ? transaction.Summary : GenerateTransactionDetails(transaction));
@@ -48,6 +50,7 @@ public class TransactionSummaryGenerator : ITransactionSummaryGenerator
     {
         return
             $"{Environment.NewLine}The transaction of type {transaction.TransactionType} was accepted by admin." +
+            $"{Environment.NewLine}Transaction accepted at {transaction.UpdatedAt:yyyy-MM-dd}." +
             $"{Environment.NewLine}Transaction details:{Environment.NewLine}" +
             (transaction.TransactionType == TransactionEnum.Transfer ? transaction.Summary : GenerateTransactionDetails(transaction));
     }
@@ -56,6 +59,7 @@ public class TransactionSummaryGenerator : ITransactionSummaryGenerator
     {
         return
             $"{Environment.NewLine}The transaction of type {transaction.TransactionType} was cancelled by user." +
+            $"{Environment.NewLine}Transaction cancelled at {transaction.UpdatedAt:yyyy-MM-dd}." +
             $"{Environment.NewLine}Rejection code {transaction.RejectionCode} Rejection details {transaction.RejectionDetails}" +
             $"{Environment.NewLine}Transaction details:{Environment.NewLine}" +
             (transaction.TransactionType == TransactionEnum.Transfer ? transaction.Summary : GenerateTransactionDetails(transaction));

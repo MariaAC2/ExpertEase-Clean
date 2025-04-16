@@ -69,7 +69,7 @@ public class UserService(
                     Balance = result.Account.Balance
                 },
             Specialist = result.Specialist != null
-                ? new SpecialistOnlyDTO
+                ? new SpecialistDTO
                 {
                     PhoneNumber = result.Specialist.PhoneNumber,
                     Address = result.Specialist.Address,
