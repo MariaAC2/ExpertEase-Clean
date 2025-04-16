@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using ExpertEase.Application.Constants;
 using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
@@ -20,12 +21,20 @@ namespace ExpertEase.Infrastructure.Services;
 public class UserService(
     IRepository<WebAppDatabaseContext> repository,
     ILoginService loginService,
-    IAccountService accountService,
     IMailService mailService): IUserService
 {
     public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await repository.GetAsync(new UserProjectionSpec(id), cancellationToken);
+        
+        return result != null ? 
+            ServiceResponse.CreateSuccessResponse(result) : 
+            ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
+    }
+    
+    public async Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.GetAsync(new AdminUserProjectionSpec(id), cancellationToken);
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
@@ -63,11 +72,14 @@ public class UserService(
             FirstName = result.FirstName,
             LastName = result.LastName,
             Role = result.Role,
-            Account = new AccountDTO
+            Account = result.Account != null
+                ? new AccountDTO
                 {
                     Id = result.Account.Id,
-                    Balance = result.Account.Balance
-                },
+                    Balance = result.Account.Balance,
+                    Currency = result.Account.Currency,
+                }
+                : null,
             Specialist = result.Specialist != null
                 ? new SpecialistDTO
                 {
@@ -75,6 +87,12 @@ public class UserService(
                     Address = result.Specialist.Address,
                     YearsExperience = result.Specialist.YearsExperience,
                     Description = result.Specialist.Description,
+                    Categories = result.Specialist.Categories.Select(c => new CategoryDTO
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                    }).ToList()
                 } : null,
         };
 
@@ -106,19 +124,22 @@ public class UserService(
             Role = user.Role,
             Password = user.Password
         };
-
-        await repository.AddAsync(newUser, cancellationToken); // newUser.Id now populated (if using EF Core)
         
+        await repository.AddAsync(newUser, cancellationToken);
 
         if (newUser.Role != UserRoleEnum.Admin)
         {
-            await accountService.AddAccount(new AccountAddDTO
+            newUser.Account = new Account
             {
                 UserId = newUser.Id,
                 Currency = "RON",
-                InitialBalance = 0
-            }, cancellationToken);
+                Balance = 0
+            };
+            
+            await repository.AddAsync(newUser.Account, cancellationToken);
         }
+        
+        await repository.UpdateAsync(newUser, cancellationToken);
         
         var fullName = $"{user.LastName} {user.FirstName}";
         

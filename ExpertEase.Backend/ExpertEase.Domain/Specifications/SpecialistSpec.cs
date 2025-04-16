@@ -7,7 +7,7 @@ public class SpecialistSpec: Specification<Specialist>
 {
     public SpecialistSpec(Guid id)
     {
-        Query.Include(e=> e.Categories);
         Query.Where(e => e.UserId == id);
+        Query.Include(e=> e.Categories);
     }
 }

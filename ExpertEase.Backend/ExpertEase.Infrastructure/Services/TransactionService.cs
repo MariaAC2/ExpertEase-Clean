@@ -189,20 +189,19 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
 
             summary = transactionGenerator.GenerateInvalidTransactionSummary(transactionToValidate);
             transactionToValidate.Summary = summary;
-
-            await mailService.SendMail(transactionToValidate.InitiatorUser.Email, "Transfer invalid!", 
-                MailTemplates.TransactionInvalidTemplate($"{transactionToValidate.InitiatorUser.FirstName} {transactionToValidate.InitiatorUser.LastName}", summary), true, "ExpertEase Team", cancellationToken);
+            
             await repository.AddAsync(transactionToValidate, cancellationToken);
+            await mailService.SendMail(transactionToValidate.InitiatorUser.Email, "Transfer invalidated!", 
+                MailTemplates.TransactionInvalidTemplate($"{transactionToValidate.InitiatorUser.FirstName} {transactionToValidate.InitiatorUser.LastName}", summary), true, "ExpertEase Team", cancellationToken);
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, validation.Message));
         }
 
         transactionToValidate.Status = StatusEnum.Pending;
         transactionToValidate.Summary = summary;
         
-        // Mail service (transfer added)
+        await repository.AddAsync(transactionToValidate, cancellationToken);
         await mailService.SendMail(transactionToValidate.InitiatorUser.Email, "Transfer added!", 
             MailTemplates.TransactionAddTemplate($"{transactionToValidate.InitiatorUser.FirstName} {transactionToValidate.InitiatorUser.LastName}", transactionToValidate.TransactionType.ToString(), summary), true, "ExpertEase Team", cancellationToken);
-        await repository.AddAsync(transactionToValidate, cancellationToken);
         return ServiceResponse.CreateSuccessResponse();
     }
 
@@ -244,7 +243,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.BadRequest, "Description cannot be null", ErrorCodes.CannotUpdate));
         }
         
-        var transactionToUpdate = await repository.GetAsync(new TransactionIdSpec(transaction.Id), cancellationToken);
+        var transactionToUpdate = await repository.GetAsync(new TransactionSpec(transaction.Id), cancellationToken);
         
         if (transactionToUpdate == null)
         {
@@ -283,7 +282,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
         await repository.UpdateAsync(transaction, cancellationToken);
         await mailService.SendMail(transaction.InitiatorUser.Email, "Transfer rejected!", 
             MailTemplates.TransactionProcessedTemplate($"{transaction.InitiatorUser.FirstName} {transaction.InitiatorUser.LastName}", transaction.TransactionType.ToString(), transaction.Status.ToString(), summary), 
-            true, "ExpertEase Team", cancellationToken);
+             true, "ExpertEase Team", cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -330,9 +329,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
         transaction.Summary = summary;
             
         await repository.UpdateAsync(transaction, cancellationToken);
-        await mailService.SendMail(transaction.InitiatorUser.Email, "Transfer accepted!", 
-            MailTemplates.TransactionProcessedTemplate($"{transaction.InitiatorUser.FirstName} {transaction.InitiatorUser.LastName}", transaction.TransactionType.ToString(), transaction.Status.ToString(), summary), 
-            true, "ExpertEase Team", cancellationToken);
+        await mailService.SendMail(transaction.InitiatorUser.Email, "Transfer accepted!", MailTemplates.TransactionProcessedTemplate($"{transaction.InitiatorUser.FirstName} {transaction.InitiatorUser.LastName}", transaction.TransactionType.ToString(), transaction.Status.ToString(), summary), true, "ExpertEase Team", cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -411,7 +408,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
                 "Only users are allowed to cancel transactions!", ErrorCodes.CannotUpdate));
         }
 
-        var result = await repository.GetAsync(new TransactionIdSpec(id), cancellationToken);
+        var result = await repository.GetAsync(new TransactionSpec(id), cancellationToken);
 
         if (result == null)
         {
@@ -453,7 +450,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
                 "Only admins are allowed to delete transactions!", ErrorCodes.CannotDelete));
         }
 
-        var result = await repository.GetAsync(new TransactionIdSpec(id), cancellationToken);
+        var result = await repository.GetAsync(new TransactionSpec(id), cancellationToken);
 
         if (result == null)
         {

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("/api/profile/{requestId}/replies")]
+[Route("/api/profile/requests/{requestId}/replies")]
 public class ReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {
     
@@ -22,7 +22,7 @@ public class ReplyController(IUserService userService, IReplyService replyServic
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplyUserProjectionSpec(currentUser.Result.Id, requestId, id), id)) :
+            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplyUserProjectionSpec(id, requestId, currentUser.Result.Id), id)) :
             CreateErrorMessageResult<ReplyDTO>(currentUser.Error);
     }
     
@@ -34,7 +34,7 @@ public class ReplyController(IUserService userService, IReplyService replyServic
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.GetReplies(new ReplyUserProjectionSpec(pagination.Search, currentUser.Result.Id, requestId), pagination)) :
+            CreateRequestResponseFromServiceResponse(await replyService.GetReplies(new ReplyUserProjectionSpec(pagination.Search, requestId,  currentUser.Result.Id), pagination)) :
             CreateErrorMessageResult<PagedResponse<ReplyDTO>>(currentUser.Error);
     }
     
@@ -49,7 +49,7 @@ public class ReplyController(IUserService userService, IReplyService replyServic
             CreateErrorMessageResult(currentUser.Error);
     }
     
-    [Authorize(Roles = "Specialist")]
+    [Authorize(Roles = "Client")]
     [HttpPatch("{id:guid}/reject")]
     public async Task<ActionResult<RequestResponse>> Reject([FromBody] ReplyUpdateDTO reply)
     {

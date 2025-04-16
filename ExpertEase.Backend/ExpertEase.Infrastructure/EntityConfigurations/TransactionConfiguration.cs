@@ -18,7 +18,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasMaxLength(100);
         
         builder.Property(e => e.Summary)
-            .HasMaxLength(255)
+            .HasMaxLength(1000)
             .IsRequired();
 
         builder.Property(e => e.Status).IsRequired();

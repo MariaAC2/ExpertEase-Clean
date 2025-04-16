@@ -26,25 +26,25 @@ public class AdminCategoryController(IUserService userService, ICategoryService 
     
     [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<RequestResponse<CategoryDTO>>> GetById([FromRoute] Guid id)
+    public async Task<ActionResult<RequestResponse<CategoryAdminDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await categoryService.GetCategory(id)) :
-            CreateErrorMessageResult<CategoryDTO>(currentUser.Error);
+            CreateErrorMessageResult<CategoryAdminDTO>(currentUser.Error);
     }
     
     [Authorize(Roles = "Admin")]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<PagedResponse<CategoryDTO>>>> GetPage(
+    public async Task<ActionResult<RequestResponse<PagedResponse<CategoryAdminDTO>>>> GetPage(
         [FromQuery] PaginationSearchQueryParams pagination)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await categoryService.GetCategories(pagination)) :
-            CreateErrorMessageResult<PagedResponse<CategoryDTO>>(currentUser.Error);
+            CreateErrorMessageResult<PagedResponse<CategoryAdminDTO>>(currentUser.Error);
     }
     
     [Authorize(Roles = "Admin")]

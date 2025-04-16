@@ -10,5 +10,6 @@ public class RequestDTO
     public string Description { get; set; } = null!;
     public StatusEnum Status { get; set; } = StatusEnum.Pending;
     public UserContactInfoDTO? SenderUser { get; set; }
+    public UserContactInfoDTO ReceiverUser { get; set; }
     public DateTime? RejectedAt { get; set; }
 }

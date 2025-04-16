@@ -21,6 +21,7 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
                 FirstName = e.InitiatorUser.FirstName,
                 LastName = e.InitiatorUser.LastName,
                 Email = e.InitiatorUser.Email,
+                Role = e.InitiatorUser.Role,
             },
             SenderUserId = e.SenderUserId,
             SenderUser = e.SenderUser != null ? new UserTransactionDTO
@@ -29,6 +30,7 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
                 FirstName = e.SenderUser.FirstName,
                 LastName = e.SenderUser.LastName,
                 Email = e.SenderUser.Email,
+                Role = e.SenderUser.Role,
             } : null,
             ReceiverUserId = e.ReceiverUserId,
             ReceiverUser = e.ReceiverUser != null ? new UserTransactionDTO
@@ -37,6 +39,7 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
                 FirstName = e.ReceiverUser.FirstName,
                 LastName = e.ReceiverUser.LastName,
                 Email = e.ReceiverUser.Email,
+                Role = e.ReceiverUser.Role,
             } : null,
             ExternalSource = e.ExternalSource,
             Amount = e.Amount,

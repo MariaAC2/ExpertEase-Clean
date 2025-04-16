@@ -20,7 +20,7 @@ public static class MailTemplates
             <div style=""max-width: 600px; margin: auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"">
                 <h2 style=""color: #333;"">Welcome to ExpertEase, {name}!</h2>
                 <p style=""font-size: 16px; color: #555;"">
-                    Your account was created with success!
+                    Your account was created successfully!
                 </p>
 
                 <p style=""font-size: 16px; color: #555;"">

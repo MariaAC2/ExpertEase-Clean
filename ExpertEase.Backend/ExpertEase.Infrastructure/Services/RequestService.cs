@@ -46,7 +46,12 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
                 .OrderByDescending(r => r.CreatedAt)
                 .First();
 
-            if (lastReply.Status != StatusEnum.Failed || lastReply.Status != StatusEnum.Completed)
+            // if (lastReply != null)
+            // {
+            //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, lastReply.ToString()));
+            // }
+
+            if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Completed)
             {
                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
             }
@@ -64,13 +69,6 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Requests are sent only to specialists!", ErrorCodes.CannotAdd));
         }
         
-        var existingRequest = await repository.GetAsync(new RequestSearchSpec(requestingUser.Id, request.ReceiverUserId), cancellationToken);
-        
-        if (existingRequest != null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "Request already exists", ErrorCodes.CannotAdd));
-        }
-        
         var requestEntity = new Request
         {
             SenderUserId = requestingUser.Id,
@@ -83,6 +81,13 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             Description = request.Description,
             Status = StatusEnum.Pending
         };
+        
+        var existingRequest = await repository.GetAsync(new RequestSearchSpec(requestEntity), cancellationToken);
+        
+        if (existingRequest != null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "Request already exists", ErrorCodes.CannotAdd));
+        }
         
         await repository.AddAsync(requestEntity, cancellationToken);
         

@@ -11,7 +11,7 @@ namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
 [Route("api/admin/users/[action]")]
-public class UserController(IUserService userService) : AuthorizedController(userService)
+public class AdminUserController(IUserService userService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
@@ -20,7 +20,7 @@ public class UserController(IUserService userService) : AuthorizedController(use
         var currentUser = await GetCurrentUser();
         
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await UserService.GetUser(id)) : 
+            CreateRequestResponseFromServiceResponse(await UserService.GetUserAdmin(id)) : 
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
     }
     

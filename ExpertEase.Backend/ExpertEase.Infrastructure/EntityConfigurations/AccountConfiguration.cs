@@ -15,7 +15,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
         builder.Property(a => a.Currency)
-            .HasMaxLength(2)
+            .HasMaxLength(5)
             .IsRequired();
         builder.HasOne(a => a.User)
             .WithOne(u => u.Account)

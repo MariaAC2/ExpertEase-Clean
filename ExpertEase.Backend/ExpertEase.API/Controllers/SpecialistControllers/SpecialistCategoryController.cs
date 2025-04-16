@@ -10,17 +10,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("api/specialists/categories")]
+[Route("api/profile/specialist/categories")]
 public class SpecialistCategoryController(IUserService userService, ICategoryService categoryService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]
     [HttpPost]
-    public async Task<ActionResult<RequestResponse>> Add([FromBody] string name)
+    public async Task<ActionResult<RequestResponse>> Add([FromBody] CategorySpecialistDTO category)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await categoryService.AddCategoryToSpecialist(name, currentUser.Result)) :
+            CreateRequestResponseFromServiceResponse(await categoryService.AddCategoryToSpecialist(category, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
     
@@ -36,24 +36,24 @@ public class SpecialistCategoryController(IUserService userService, ICategorySer
     }
     
     [Authorize(Roles = "Specialist")]
-    [HttpGet("{name}")]
-    public async Task<ActionResult<RequestResponse<CategoryDTO>>> GetByName([FromRoute] string name)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RequestResponse<CategoryDTO>>> GetByName([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
     
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await categoryService.GetCategoryForSpecialist(name, currentUser.Result.Id)) :
+            CreateRequestResponseFromServiceResponse(await categoryService.GetCategoryForSpecialist(id, currentUser.Result.Id)) :
             CreateErrorMessageResult<CategoryDTO>(currentUser.Error);
     }
     
-    [Authorize(Roles = "Admin")]
-    [HttpDelete("{name}")]
-    public async Task<ActionResult<RequestResponse>> Delete([FromRoute] string name)
+    [Authorize(Roles = "Specialist")]
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<RequestResponse>> Delete([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
     
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await categoryService.DeleteCategoryFromSpecialist(name, currentUser.Result)) :
+            CreateRequestResponseFromServiceResponse(await categoryService.DeleteCategoryFromSpecialist(id, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
 }

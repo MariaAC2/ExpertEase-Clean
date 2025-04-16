@@ -11,6 +11,8 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
 {
     public RequestProjectionSpec(bool orderByCreatedAt = false)
     {
+        Query.Include(r => r.SenderUser);
+        Query.Include(r => r.ReceiverUser);
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
@@ -18,7 +20,7 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
             Description = e.Description,
             Status = e.Status,
             RejectedAt = e.Status == StatusEnum.Rejected ? e.RejectedAt : null,
-            SenderUser = e.Status == StatusEnum.Accepted && e.SenderUser != null
+            SenderUser = (e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending && e.SenderUser != null)
                 ? new UserContactInfoDTO
                 {
                     FirstName = e.SenderUser.FirstName,
@@ -27,7 +29,15 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
                     PhoneNumber = e.PhoneNumber,
                     Address = e.Address
                 }
-                : null
+                : null,
+            ReceiverUser = new UserContactInfoDTO
+            {
+                FirstName = e.ReceiverUser.FirstName,
+                LastName = e.ReceiverUser.LastName,
+                Email = e.ReceiverUser.Email,
+                PhoneNumber = e.ReceiverUser.Specialist.PhoneNumber,
+                Address = e.ReceiverUser.Specialist.Address,
+            }
         });
 
         if (orderByCreatedAt)
@@ -36,7 +46,7 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
         }
     }
     
-    public RequestProjectionSpec(Guid id) => Query.Where(e => e.Id == id);
+    public RequestProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id);
     
     public RequestProjectionSpec(string? search) : this(true) // This constructor will call the first declared constructor with 'true' as the parameter. 
     {
@@ -61,9 +71,9 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
 
 public class RequestUserProjectionSpec : RequestProjectionSpec
 {
-    public RequestUserProjectionSpec(Guid id, Guid userId) : base() => Query.Where(e => e.Id == id && e.SenderUserId == userId);
+    public RequestUserProjectionSpec(Guid id, Guid userId) : base(id) => Query.Where(e => e.Id == id && e.SenderUserId == userId);
 
-    public RequestUserProjectionSpec(string? search, Guid userId) : base()
+    public RequestUserProjectionSpec(string? search, Guid userId) : base(search)
     {
         Query.Include(r => r.SenderUser);
         Query.Where(r=> r.SenderUserId == userId);
@@ -72,9 +82,9 @@ public class RequestUserProjectionSpec : RequestProjectionSpec
 
 public class RequestSpecialistProjectionSpec : RequestProjectionSpec
 {
-    public RequestSpecialistProjectionSpec(Guid id, Guid userId) : base() => Query.Where(e =>  e.Id == id && e.ReceiverUserId == userId);
+    public RequestSpecialistProjectionSpec(Guid id, Guid userId) : base(id) => Query.Where(e =>  e.Id == id && e.ReceiverUserId == userId);
 
-    public RequestSpecialistProjectionSpec(string? search, Guid userId) : base()
+    public RequestSpecialistProjectionSpec(string? search, Guid userId) : base(search)
     {
         Query.Include(r => r.ReceiverUser);
         Query.Where(r => r.ReceiverUserId == userId);

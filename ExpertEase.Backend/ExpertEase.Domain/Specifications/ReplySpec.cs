@@ -5,5 +5,9 @@ namespace ExpertEase.Domain.Specifications;
 
 public sealed class ReplySpec : Specification<Reply>
 {
-    public ReplySpec(Guid id) => Query.Where(rep => rep.Id == id);
+    public ReplySpec(Guid id)
+    {
+        Query.Include(e => e.Request);
+        Query.Where(rep => rep.Id == id);
+    }
 }

@@ -24,7 +24,7 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     {
         Query.Include(e => e.Account);
         Query.Include(e => e.Specialist);
-        Query.Include(e=> e.Specialist.Categories);
+        // Query.Include(e=> e.Specialist.Categories);
         
         Query.Select(e => new UserDTO
         {
@@ -37,7 +37,8 @@ public class UserProjectionSpec : Specification<User, UserDTO>
                 ? new AccountDTO
                 {
                     Id = e.Account.Id,
-                    Balance = e.Account.Balance
+                    Balance = e.Account.Balance,
+                    Currency = e.Account.Currency
                 }
                 : null,
             Specialist = e.Specialist != null
@@ -63,7 +64,10 @@ public class UserProjectionSpec : Specification<User, UserDTO>
         }
     }
 
-    public UserProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id && e.Role != UserRoleEnum.Specialist);
+    public UserProjectionSpec(Guid id) : this()
+    {
+        Query.Where(e => e.Id == id);
+    }
 
     public UserProjectionSpec(string? search) : this(true)
     {
@@ -81,5 +85,13 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             EF.Functions.ILike(e.Email, searchExpr) ||
             EF.Functions.ILike(e.Role.ToString(), searchExpr)
         );
+    }
+}
+
+public class AdminUserProjectionSpec : UserProjectionSpec
+{
+    public AdminUserProjectionSpec(Guid id) : base(id) 
+    {
+        Query.Where(e => e.Role != UserRoleEnum.Specialist);
     }
 }

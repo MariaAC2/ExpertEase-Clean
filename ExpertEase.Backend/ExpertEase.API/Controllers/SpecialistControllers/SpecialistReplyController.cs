@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("/api/profile/specialist/{requestId}/replies")]
+[Route("/api/profile/specialist/requests/{requestId}/replies")]
 public class SpecialistReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]
@@ -32,7 +32,7 @@ public class SpecialistReplyController(IUserService userService, IReplyService r
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplySpecialistProjectionSpec(currentUser.Result.Id, requestId, id), id)) :
+            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplySpecialistProjectionSpec(id, requestId, currentUser.Result.Id), id)) :
             CreateErrorMessageResult<ReplyDTO>(currentUser.Error);
     }
     
@@ -44,7 +44,7 @@ public class SpecialistReplyController(IUserService userService, IReplyService r
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.GetReplies(new ReplySpecialistProjectionSpec(pagination.Search, currentUser.Result.Id, requestId), pagination)) :
+            CreateRequestResponseFromServiceResponse(await replyService.GetReplies(new ReplySpecialistProjectionSpec(pagination.Search, requestId,  currentUser.Result.Id), pagination)) :
             CreateErrorMessageResult<PagedResponse<ReplyDTO>>(currentUser.Error);
     }
     

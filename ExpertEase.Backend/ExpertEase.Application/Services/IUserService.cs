@@ -8,7 +8,9 @@ namespace ExpertEase.Application.Services;
 
 public interface IUserService
 {
-    Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default); 
+    Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, CancellationToken cancellationToken = default);
+
     Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     public Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse<LoginResponseDTO>> Login(LoginDTO login, CancellationToken cancellationToken = default);
