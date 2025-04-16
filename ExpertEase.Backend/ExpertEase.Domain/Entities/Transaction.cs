@@ -14,6 +14,7 @@ public class Transaction: BaseEntity
     public TransactionEnum TransactionType { get; set; } = TransactionEnum.Initial;
     public string? ExternalSource { get; set; }
     public string? Description { get; set; }
+    public string Summary { get; set; } = null!;
     public StatusEnum Status { get; set; }
     public Guid? SenderAccountId { get; set; }
     public Account? SenderAccount { get; set; }

@@ -118,13 +118,18 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
     public async Task<ServiceResponse> UpdateReply(ReplyUpdateDTO reply, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Specialist && reply.Status != StatusEnum.Cancelled)
+        if (requestingUser == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Cannot add replies without being authenticated", ErrorCodes.CannotUpdate));
+        }
+        if (requestingUser.Role != UserRoleEnum.Specialist && reply.Status != StatusEnum.Cancelled)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
                 "Only user and admin can accept or reject replies", ErrorCodes.CannotUpdate));
         }
 
-        if (requestingUser != null && requestingUser.Role == UserRoleEnum.Specialist &&
+        if (requestingUser.Role == UserRoleEnum.Specialist &&
             (reply.StartDate != null || reply.EndDate != null || reply.Price != null))
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
@@ -139,13 +144,13 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
                 "Reply not found", ErrorCodes.EntityNotFound));
         }
 
-        if (entity.Status != StatusEnum.Pending)
+        if (entity.Status is not StatusEnum.Pending)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
                 "Only pending replies can be updated", ErrorCodes.CannotUpdate));
         }
         
-        if (requestingUser.Role == UserRoleEnum.Specialist)
+        if (requestingUser is { Role: UserRoleEnum.Specialist })
         {
             entity.StartDate = reply.StartDate ?? entity.StartDate;
             entity.EndDate = reply.EndDate ?? entity.EndDate;
@@ -158,20 +163,26 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
         }
         else
         {
-            if (reply.Status == StatusEnum.Rejected)
+            if (reply.Status is StatusEnum.Rejected)
             {
                 entity.Status = StatusEnum.Rejected;
                 var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
                 
-                if (request.Replies.Any() && request.Replies.Count() == 5)
+                if (request == null)
+                    return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
+                
+                if (request.Replies.Any() && request.Replies.Count == 5)
                 {
                     request.Status = StatusEnum.Failed;
                     await repository.UpdateAsync(request, cancellationToken);
                 }
-            } else if (reply.Status == StatusEnum.Accepted)
+            } else if (reply.Status is StatusEnum.Accepted)
             {
                 entity.Status = StatusEnum.Accepted;
                 var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+                                
+                if (request == null)
+                    return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
                 
                 if (request.Replies.Any())
                 {

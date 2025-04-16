@@ -11,7 +11,7 @@ public enum TransactionEnum
 public enum RejectionReason
 {
     InvalidSender,
-    InvalidRecipient,
+    InvalidReceiver,
     InvalidAmount,
     InsufficientFunds,
     ExceedsLimit,

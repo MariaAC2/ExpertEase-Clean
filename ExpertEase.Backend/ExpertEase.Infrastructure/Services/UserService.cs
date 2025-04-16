@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using ExpertEase.Application.Constants;
-using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
@@ -13,10 +12,8 @@ using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
-using ExpertEase.Infrastructure.Authorization;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Repositories;
-using Microsoft.Extensions.Logging;
 
 namespace ExpertEase.Infrastructure.Services;
 
@@ -66,13 +63,11 @@ public class UserService(
             FirstName = result.FirstName,
             LastName = result.LastName,
             Role = result.Role,
-            Account = result.Account!= null
-                ? new AccountDTO
+            Account = new AccountDTO
                 {
                     Id = result.Account.Id,
                     Balance = result.Account.Balance
-                }
-                : null,
+                },
             Specialist = result.Specialist != null
                 ? new SpecialistOnlyDTO
                 {
@@ -114,14 +109,10 @@ public class UserService(
 
         await repository.AddAsync(newUser, cancellationToken); // newUser.Id now populated (if using EF Core)
         
-        if (newUser == null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Unauthorized, "User must be authenticated!", ErrorCodes.CannotAdd));
-        }
 
         if (newUser.Role != UserRoleEnum.Admin)
         {
-            var account = await accountService.AddAccount(new AccountAddDTO
+            await accountService.AddAccount(new AccountAddDTO
             {
                 UserId = newUser.Id,
                 Currency = "RON",
@@ -131,7 +122,7 @@ public class UserService(
         
         var fullName = $"{user.LastName} {user.FirstName}";
         
-        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase Team", cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }

@@ -6,7 +6,6 @@ using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
-using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
@@ -20,7 +19,11 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
     public async Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Client)
+        if (requestingUser == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "User not found", ErrorCodes.CannotAdd));
+        }
+        if (requestingUser.Role != UserRoleEnum.Client)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only users can create requests", ErrorCodes.CannotAdd));
         }

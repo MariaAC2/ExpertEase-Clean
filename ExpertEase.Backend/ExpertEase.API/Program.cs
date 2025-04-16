@@ -39,6 +39,7 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<ITransactionService, TransactionService>()
     .AddScoped<IRequestService, RequestService>()
     .AddScoped<IReplyService, ReplyService>()
+    .AddScoped<ITransactionSummaryGenerator, TransactionSummaryGenerator>()
     .AddScoped<IMailService, MailService>();
 
 builder.Services.Configure<JwtConfiguration>(

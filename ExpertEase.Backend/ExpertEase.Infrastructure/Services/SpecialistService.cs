@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using ExpertEase.Application.Constants;
-using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
@@ -52,14 +51,14 @@ public class SpecialistService(
             , cancellationToken);
         
         var fullName = $"{user.LastName} {user.FirstName}";
-        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
         return ServiceResponse.CreateSuccessResponse();
     }
     
-    public async Task<ServiceResponse<SpecialistDTO>> GetSpecialist(Guid UserId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<SpecialistDTO>> GetSpecialist(Guid userId, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new SpecialistProjectionSpec(UserId), cancellationToken);
+        var result = await repository.GetAsync(new SpecialistProjectionSpec(userId), cancellationToken);
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 

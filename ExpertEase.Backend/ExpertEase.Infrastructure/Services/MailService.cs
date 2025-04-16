@@ -18,7 +18,6 @@ public class MailService(IOptions<MailConfiguration> mailConfiguration) : IMailS
 {
     private readonly MailConfiguration _mailConfiguration = mailConfiguration.Value;
 
-
     public async Task<ServiceResponse> SendMail(string recipientEmail, string subject, string body, bool isHtmlBody = false, 
         string? senderTitle = null, CancellationToken cancellationToken = default)
     {
