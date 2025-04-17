@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("api/profile/transactions")]
+[Route("api/profile/user/transactions")]
 public class TransactionController(IUserService userService, ITransactionService transactionService) : AuthorizedController(userService)
 {
     [Authorize]

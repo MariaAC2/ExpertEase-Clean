@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("api/profile/account/")]
+[Route("api/profile/user/account/")]
 public class AccountController(IUserService userService, IAccountService accountService): AuthorizedController(userService)
 {
     [Authorize]

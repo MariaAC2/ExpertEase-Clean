@@ -81,14 +81,14 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 // app.UseStaticFiles();
 //
 // app.UseRouting();
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/swagger");
-    return Task.CompletedTask;
-});
+// app.UseSwagger();
+// app.UseSwaggerUI();
+//
+// app.MapGet("/", context =>
+// {
+//     context.Response.Redirect("/swagger");
+//     return Task.CompletedTask;
+// });
 
 // app.UseEndpoints(endpoints =>
 // {

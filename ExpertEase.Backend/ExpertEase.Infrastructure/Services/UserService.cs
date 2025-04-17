@@ -126,23 +126,18 @@ public class UserService(
         };
         
         await repository.AddAsync(newUser, cancellationToken);
-
-        if (newUser.Role != UserRoleEnum.Admin)
-        {
-            newUser.Account = new Account
-            {
-                UserId = newUser.Id,
-                Currency = "RON",
-                Balance = 0
-            };
-            
-            await repository.AddAsync(newUser.Account, cancellationToken);
-        }
         
+        newUser.Account = new Account
+        {
+            UserId = newUser.Id,
+            Currency = "RON",
+            Balance = 0
+        };
+            
+        await repository.AddAsync(newUser.Account, cancellationToken);
         await repository.UpdateAsync(newUser, cancellationToken);
         
         var fullName = $"{user.LastName} {user.FirstName}";
-        
         await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase Team", cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();

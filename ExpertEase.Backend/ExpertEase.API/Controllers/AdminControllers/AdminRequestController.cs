@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
-[Route("/api/profile/requests/[action]")]
+[Route("/api/admin/requests/[action]")]
 public class AdminRequestController(IUserService userService, IRequestService requestService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Admin")]
