@@ -21,6 +21,8 @@ export class LoginComponent {
 
   errors: { [key: string]: string } = {};
 
+  errorMessage: string | null = null;
+
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
@@ -52,7 +54,8 @@ export class LoginComponent {
       },
       error: (err) => {
         console.error('Login failed:', err);
-        // show error to user
+        this.errorMessage = err.error?.errorMessage?.message;
+        console.error('Error message:', this.errorMessage);
       }
     });
   }

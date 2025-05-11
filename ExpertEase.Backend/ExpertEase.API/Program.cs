@@ -76,11 +76,10 @@ var app = builder.Build();
 app.UseCors("AllowAll");
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-//
-// app.UseDefaultFiles();
-// app.UseStaticFiles();
-//
-// app.UseRouting();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+app.UseRouting();
 // app.UseSwagger();
 // app.UseSwaggerUI();
 //
@@ -90,16 +89,11 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 //     return Task.CompletedTask;
 // });
 
-// app.UseEndpoints(endpoints =>
-// {
-//     endpoints.MapControllers();
-// });
 app.MapControllers();
-// app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
-// ✅ Local Function: JWT Auth Setup
 void ConfigureAuthentication()
 {
     builder.Services.AddAuthentication(options =>

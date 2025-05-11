@@ -4,21 +4,33 @@ h2 {
   font-size: 30px;
 }
 
+p {
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+}
+
 .grid-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 32px;
-  max-width: 300px; /* or whatever width you want */
+  gap: 24px; /* space between rows like name/email/password rows */
+  padding: 24px 32px;
+  max-width: 650px; /* increased to fit two inputs side by side */
   margin: 0 auto;
   font-family: 'Roboto Mono', monospace;
 
-  border: 2px solid #c9b7ff;      /* Visible purple border */
-  border-radius: 2px;            /* Rounded corners */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);  /* Soft shadow */
+  border: 2px solid #c9b7ff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.horizontal-pair {
+  display: flex;
+  gap: 20px;
 }
 
 .form-group {
+  flex: 1; /* Makes both fields equally wide */
   display: flex;
   flex-direction: column;
 }
@@ -58,12 +70,52 @@ label {
   font-weight: bold;
   border: 2px solid black;
   border-radius: 5px;
-  padding: 10px 20px;
+  padding: 0; /* remove padding so fixed size applies exactly */
+  width: 300px;
+  height: 44px;   /* fixed height */
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-top: 24px;
+  align-self: center; /* centers the button in flex container */
 }
+
+//.send-button {
+//  background-color: #d9c8ff; /* light purple */
+//  color: black;
+//  font-family: 'Roboto Mono', monospace;
+//  font-size: 16px;
+//  font-weight: bold;
+//  border: 2px solid black;
+//  border-radius: 5px;
+//  padding: 10px;
+//  cursor: pointer;
+//  transition: background-color 0.3s ease;
+//  margin-top: 4px;
+//  margin-bottom: 8px;
+//}
 
 .send-button:hover {
   background-color: #cbb6ff; /* slightly darker on hover */
+}
+
+.error {
+  color: #a00028;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+}
+
+.local-center {
+  text-align: center;
+}
+
+.auth-button {
+  background-color: transparent;
+  border: none;
+  color: black;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.auth-button:hover {
+  color: #6a5799;
 }

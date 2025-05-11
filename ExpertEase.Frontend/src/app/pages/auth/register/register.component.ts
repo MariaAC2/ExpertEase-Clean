@@ -22,6 +22,7 @@ export class RegisterComponent {
   };
 
   errors: { [key: string]: string } = {};
+  errorMessage: string | null = null;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -63,9 +64,24 @@ export class RegisterComponent {
       },
       error: (err) => {
         console.error('Registration failed:', err);
+        this.errorMessage = err.error?.errorMessage?.message;
+        console.error('Error message:', this.errorMessage);
         // show error to user
       }
     });
+    // const simulatedError = {
+    //   error: {
+    //     errorMessage: {
+    //       message: 'The user already exists!',
+    //       code: 'UserAlreadyExists',
+    //       status: 'Conflict'
+    //     }
+    //   }
+    // };
+    //
+    // // simulate error handling logic as if it came from HttpClient
+    // this.errorMessage = simulatedError.error?.errorMessage?.message;
+    // console.error('Simulated error message:', this.errorMessage);
   }
 
   validateEmail(email: string): boolean {

@@ -1,70 +1,79 @@
 <h2>Înregistrare</h2>
 
 <form class="grid-form" (ngSubmit)="onSubmit()">
-  <div class="form-group">
-    <label for="lastName">Nume:</label>
-    <div class="input-box">
-      <input
-        type="text"
-        id="lastName"
-        name="lastName"
-        placeholder="Introdu nume"
-        [(ngModel)]="formData.lastName"
-      />
+  <div class="horizontal-pair">
+    <div class="form-group">
+      <label for="lastName">Nume:</label>
+      <div class="input-box">
+        <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          placeholder="Introdu nume"
+          [(ngModel)]="formData.lastName"
+        />
+      </div>
+      <div class="error" *ngIf="errors['lastName']">
+        {{ errors['lastName'] }}
+      </div>
     </div>
-    <div class="error" *ngIf="errors['lastName']">
-      {{ errors['lastName'] }}
+
+    <div class="form-group">
+      <label for="firstName">Prenume:</label>
+      <div class="input-box">
+        <input
+          type="text"
+          id="firstName"
+          name="firstName"
+          placeholder="Introdu prenume"
+          [(ngModel)]="formData.firstName"
+        />
+      </div>
+      <div class="error" *ngIf="errors['firstName']">
+        {{ errors['firstName'] }}
+      </div>
     </div>
   </div>
 
-  <div class="form-group">
-    <label for="firstName">Prenume:</label>
-    <div class="input-box">
-      <input
-        type="text"
-        id="firstName"
-        name="firstName"
-        placeholder="Introdu prenume"
-        [(ngModel)]="formData.firstName"
-      />
+  <div class="horizontal-pair">
+    <div class="form-group">
+      <label for="email">Adresă e-mail:</label>
+      <div class="input-box">
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Introdu adresă e-mail"
+          [(ngModel)]="formData.email"
+        />
+      </div>
+      <div class="error" *ngIf="errors['email']">
+        {{ errors['email'] }}
+      </div>
     </div>
-    <div class="error" *ngIf="errors['firstName']">
-      {{ errors['firstName'] }}
-    </div>
-  </div>
 
-  <div class="form-group">
-    <label for="email">Adresă e-mail:</label>
-    <div class="input-box">
-      <input
-        type="email"
-        id="email"
-        name="email"
-        placeholder="Introdu adresă e-mail"
-        [(ngModel)]="formData.email"
-      />
-    </div>
-    <div class="error" *ngIf="errors['email']">
-      {{ errors['email'] }}
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="password">Parolă:</label>
-    <div class="input-box">
-      <input
-        type="password"
-        id="password"
-        name="password"
-        placeholder="Introdu parolă"
-        [(ngModel)]="formData.password"
-      />
-    </div>
-    <div class="error" *ngIf="errors['password']">
-      {{ errors['password'] }}
+    <div class="form-group">
+      <label for="password">Parolă:</label>
+      <div class="input-box">
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Introdu parolă"
+          [(ngModel)]="formData.password"
+        />
+      </div>
+      <div class="error" *ngIf="errors['password']">
+        {{ errors['password'] }}
+      </div>
     </div>
   </div>
-  <button type="submit" class="send-button">Trimite</button>
+  <div class="form-group">
+    <button type="submit" class="send-button">Trimite</button>
+    <div *ngIf="errorMessage" class="error local-center">
+      {{ errorMessage }}
+    </div>
+  </div>
 </form>
 
 <p class="auth-switch">
