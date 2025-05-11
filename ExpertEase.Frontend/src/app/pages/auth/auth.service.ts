@@ -9,6 +9,11 @@ export class AuthService {
 
   registerUser(data: any) {
     console.log(data);
-    return this.http.post(`${this.baseUrl}/Users/register`, data);
+    return this.http.post(`${this.baseUrl}/auth/register`, data);
+  }
+
+  loginUser(data: any) {
+    console.log(data);
+    return this.http.post(`${this.baseUrl}/auth/login`, data);
   }
 }

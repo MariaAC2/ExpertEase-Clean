@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {CommonModule} from '@angular/common';
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth.service';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -18,12 +19,11 @@ export class RegisterComponent {
     lastName: '',
     email: '',
     password: ''
-    // confirm_password: ''
   };
 
   errors: { [key: string]: string } = {};
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     this.errors = {}; // clear previous errors
@@ -48,10 +48,6 @@ export class RegisterComponent {
       this.errors['password'] = 'Parola trebuie să aibă minim 6 caractere.';
     }
 
-    // if (this.formData.password !== this.formData.confirm_password) {
-    //   this.errors['confirm_password'] = 'Parolele nu coincid.';
-    // }
-
     if (Object.keys(this.errors).length === 0) {
       console.log('Form is valid:', this.formData);
       // proceed with submission
@@ -62,6 +58,7 @@ export class RegisterComponent {
     this.authService.registerUser(this.formData).subscribe({
       next: (res) => {
         console.log('User registered!', res);
+        this.router.navigate(['/home']);
         // maybe redirect or show success message
       },
       error: (err) => {
@@ -75,6 +72,10 @@ export class RegisterComponent {
     // Basic email validation regex
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
+  }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 }
 
