@@ -6,6 +6,7 @@ import {SolicitationsComponent} from './pages/solicitations/solicitations.compon
 import {AccountComponent} from './pages/account/account.component';
 import {RegisterComponent} from './pages/auth/register/register.component';
 import {LoginComponent} from './pages/auth/login/login.component';
+import {AdminComponent} from './pages/admin/admin.component';
 
 export const routes: Routes = [
   {
@@ -31,6 +32,10 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent
+  },
+  {
+    path: 'admin',
+    component: AdminComponent
   },
   {
     path: '',

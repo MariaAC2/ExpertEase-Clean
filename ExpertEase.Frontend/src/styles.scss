@@ -1,9 +1,59 @@
+//html, body {
+//  margin: 0;
+//  padding: 0;
+//}
+//
+//// Logo button for home
+//.logo-button {
+//  background: none;
+//  border: none;
+//  padding: 0;
+//  cursor: pointer;
+//  display: flex;
+//  align-items: center;
+//  position: relative; /* Needed for tooltip positioning */
+//}
+//
+//.logo-button img {
+//  height: auto;
+//  width: auto;
+//  transform: scale(1.4); /* 1.2 times bigger */
+//  transform-origin: center; /* scale from center, not top-left */
+//}
+//
+////// Toggle button for accessibility
+////.toggle-btn {
+////  cursor: pointer;
+////  transition: all 0.3s ease;
+////}
+//
+//.toggle-btn::after {
+//  content: attr(data-btn);
+//  position: absolute;
+//  //top: 100%;              /* places it right below the button */
+//  //left: 50%;              /* center relative to the button */
+//  top: 0;
+//  // transform: translateX(-50%); /* shift left by half its width = perfect centering */
+//  background-color: white;
+//  border: 1px solid black;
+//  color: #333;
+//  padding: 3px 3px;
+//  font-size: 12px;
+//  white-space: nowrap;
+//  opacity: 0;
+//  pointer-events: none;
+//  transition: opacity 0.3s ease;
+//}
+//
+//.toggle-btn:hover::after {
+//  opacity: 1; /* Show the tooltip on hover */
+//}
+
 html, body {
   margin: 0;
   padding: 0;
 }
 
-// Logo button for home
 .logo-button {
   background: none;
   border: none;
@@ -11,36 +61,39 @@ html, body {
   cursor: pointer;
   display: flex;
   align-items: center;
+  width: fit-content;
+  position: relative; /* ✅ Anchor for tooltip positioning */
 }
 
+/* Logo scaling */
 .logo-button img {
-  height: 40px;
+  height: auto;
   width: auto;
+  transform: scale(1.4);
+  transform-origin: center;
+  display: block;
 }
 
-// Toggle button for accessibility
-.toggle-btn {
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
+/* Tooltip styling */
 .toggle-btn::after {
   content: attr(data-btn);
-  position: relative;
-  top: 30px;
-  right: 20px;
+  position: absolute;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
   background-color: white;
   border: 1px solid black;
   color: #333;
-  padding: 3px 3px;
+  padding: 3px 6px;
   font-size: 12px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  z-index: 100;
 }
 
 .toggle-btn:hover::after {
-  opacity: 1; /* Show the tooltip on hover */
+  opacity: 1;
 }
-

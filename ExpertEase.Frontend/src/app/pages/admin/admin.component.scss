@@ -1,0 +1,59 @@
+.grid-form {
+  position: absolute;
+  top: calc(50vh - 250px);    /* Adjust this offset to half the form's height */
+  left: calc(50vw - 400px);   /* Adjust this offset to half the form's width */
+
+  width: 800px;               /* Fixed width used in the left calc() above */
+  height: 500px;              /* Fixed height used in the top calc() above */
+
+  display: flex;
+  flex-direction: column;
+  padding: 40px 60px;
+
+  border: 3px solid black;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #cfbdfe;
+
+  box-sizing: border-box;
+}
+
+.button-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* ✅ 3 equal-width columns */
+  gap: 32px;
+  width: 100%;
+  justify-items: center; /* center buttons horizontally in their grid cells */
+  margin-top: 24px;
+}
+
+.admin-button {
+  width: calc(100%);   /* ~4 buttons per row with spacing (adjust as needed) */
+  height: calc(25vw / 5);    /* or use 10vh if you want height based on screen height */
+
+  background-color: #e6dfff;
+  color: black;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  border: 3px solid #4b358e;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, text-decoration 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.admin-button:hover {
+  text-decoration: underline;       /* slightly darker on hover */
+}
+
+
+///* Optional tweaks for small screens */
+//@media (max-width: 480px) {
+//  .grid-form {
+//    padding: 16px 20px;   /* reduce padding on small devices */
+//  }
+//}

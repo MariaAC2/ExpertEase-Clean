@@ -85,3 +85,16 @@ label {
 .local-center {
   text-align: center;
 }
+
+@media (max-width: 768px) {
+  .grid-form {
+    flex-direction: column; /* stack inputs vertically */
+    padding: 16px;
+    gap: 16px; /* smaller gap for mobile */
+  }
+
+  .horizontal-pair {
+    flex-direction: column !important;
+    gap: 16px; /* space between stacked inputs */
+  }
+}

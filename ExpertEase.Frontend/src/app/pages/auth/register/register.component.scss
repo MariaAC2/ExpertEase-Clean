@@ -1,13 +1,13 @@
-h2 {
-  text-align: center;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 30px;
-}
-
 p {
   text-align: center;
   font-family: 'Roboto Mono', monospace;
   font-size: 16px;
+}
+
+h2 {
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 30px;
 }
 
 .grid-form {
@@ -78,21 +78,6 @@ label {
   align-self: center; /* centers the button in flex container */
 }
 
-//.send-button {
-//  background-color: #d9c8ff; /* light purple */
-//  color: black;
-//  font-family: 'Roboto Mono', monospace;
-//  font-size: 16px;
-//  font-weight: bold;
-//  border: 2px solid black;
-//  border-radius: 5px;
-//  padding: 10px;
-//  cursor: pointer;
-//  transition: background-color 0.3s ease;
-//  margin-top: 4px;
-//  margin-bottom: 8px;
-//}
-
 .send-button:hover {
   background-color: #cbb6ff; /* slightly darker on hover */
 }
@@ -118,4 +103,17 @@ label {
 
 .auth-button:hover {
   color: #6a5799;
+}
+
+@media (max-width: 768px) {
+  .grid-form {
+    flex-direction: column; /* stack inputs vertically */
+    padding: 16px;
+    gap: 16px; /* smaller gap for mobile */
+  }
+
+  .horizontal-pair {
+    flex-direction: column !important;
+    gap: 16px; /* space between stacked inputs */
+  }
 }

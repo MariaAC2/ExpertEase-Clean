@@ -12,6 +12,11 @@ import {CommonModule} from '@angular/common';
 })
 export class AppComponent {
   title = 'ExpertEase.Frontend';
+  navbarOpen = false;
+
+  toggleNavbar(): void {
+    this.navbarOpen = !this.navbarOpen;
+  }
 
   constructor(private router: Router) {
     this.router.events
