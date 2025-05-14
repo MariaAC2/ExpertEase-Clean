@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 
 namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 
@@ -7,6 +8,7 @@ namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 /// </summary>
 public record UserUpdateDTO
 {
+    [Required]
     public Guid Id { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }

@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
-[Route("api/admin/users/[action]")]
+[Route("api/admin/users/")]
+[Tags("AdminUsers")]
 public class AdminUserController(IUserService userService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Admin")]
@@ -69,7 +70,6 @@ public class AdminUserController(IUserService userService) : AuthorizedControlle
 
         return CreateRequestResponseFromServiceResponse(response);
     }
-
     
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]

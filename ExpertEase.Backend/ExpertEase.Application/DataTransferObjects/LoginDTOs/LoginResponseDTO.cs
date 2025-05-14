@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.UserDTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 
 namespace ExpertEase.Application.DataTransferObjects.LoginDTOs;
 
@@ -7,6 +8,8 @@ namespace ExpertEase.Application.DataTransferObjects.LoginDTOs;
 /// </summary>
 public class LoginResponseDTO
 {
+    [Required]
     public string Token { get; set; } = null!;
+    [Required]
     public UserDTO User { get; set; } = null!;
 }

@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
-[Route("api/admin/categories/[action]")]
+[Route("api/admin/categories/")]
+[Tags("AdminCategories")]
 public class AdminCategoryController(IUserService userService, ICategoryService categoryService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Admin")]

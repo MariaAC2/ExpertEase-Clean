@@ -9,7 +9,7 @@
     "test": "ng test",
     "clean:wwwroot": "powershell -Command \"Remove-Item -Recurse -Force \"../ExpertEase.Backend/ExpertEase.API/wwwroot/**\"\"",
     "clean:dist": "powershell -Command \"Remove-Item -Recurse -Force \"dist/**\"\"",
-    "copy:to-wwwroot": "cpy \"dist/expert-ease.frontend/browser/**\" \"../ExpertEase.Backend/ExpertEase.API/wwwroot\" --parents",
+    "copy:to-wwwroot": "cpy \"dist/expert-ease.frontend/browser/**\" \"../ExpertEase.Backend/ExpertEase.API/wwwroot\" --flat",
     "build:wwwroot": "npm run clean:dist && npm run clean:wwwroot && npm run build && npm run copy:to-wwwroot"
   },
   "private": true,

@@ -12,7 +12,7 @@ namespace ExpertEase.Application.Specifications;
 
 public class SpecialistProjectionSpec : UserProjectionSpec
 {
-    public SpecialistProjectionSpec(Guid id) : base() => Query.Where(e => e.Specialist.UserId == id && e.Role == UserRoleEnum.Specialist);
+    public SpecialistProjectionSpec(Guid id) : base() => Query.Where(e => e.Specialist != null && e.Specialist.UserId == id && e.Role == UserRoleEnum.Specialist);
     
     public SpecialistProjectionSpec(string? search) : base(true) 
     {

@@ -12,6 +12,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/profile/user/transactions")]
+[Tags("UserTransactions")]
 public class TransactionController(IUserService userService, ITransactionService transactionService) : AuthorizedController(userService)
 {
     [Authorize]

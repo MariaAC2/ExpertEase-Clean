@@ -10,6 +10,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/profile/user")]
+[Tags("UserProfile")]
 public class ProfileController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
     [Authorize]

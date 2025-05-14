@@ -12,6 +12,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("/api/profile/user/requests/{requestId}/replies")]
+[Tags("UserReplies")]
 public class ReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {
     
@@ -22,7 +23,7 @@ public class ReplyController(IUserService userService, IReplyService replyServic
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplyUserProjectionSpec(id, requestId, currentUser.Result.Id), id)) :
+            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplyUserProjectionSpec(id, requestId, currentUser.Result.Id))) :
             CreateErrorMessageResult<ReplyDTO>(currentUser.Error);
     }
     
@@ -51,9 +52,20 @@ public class ReplyController(IUserService userService, IReplyService replyServic
     
     [Authorize(Roles = "Client")]
     [HttpPatch("{id:guid}/reject")]
-    public async Task<ActionResult<RequestResponse>> Reject([FromBody] ReplyUpdateDTO reply)
+    public async Task<ActionResult<RequestResponse>> Reject([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
+        
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+        
+        var reply = new ReplyStatusUpdateDTO
+        {
+            Id = id,
+            Status = Domain.Enums.StatusEnum.Rejected
+        };
         
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await replyService.UpdateReply(reply, currentUser.Result)) :

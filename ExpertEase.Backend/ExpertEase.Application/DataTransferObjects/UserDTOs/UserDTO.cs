@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Domain.Enums;
 
@@ -10,10 +11,15 @@ namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 /// </summary>
 public class UserDTO
 {
+    [Required]
     public Guid Id { get; set; }
+    [Required]
     public string FirstName { get; set; } = null!;
+    [Required]
     public string LastName { get; set; } = null!;
+    [Required]
     public string Email { get; set; } = null!;
+    [Required]
     public UserRoleEnum Role { get; set; }
     public AccountDTO? Account { get; set; }
     public SpecialistDTO? Specialist { get; set; }
@@ -21,18 +27,28 @@ public class UserDTO
 
 public class UserTransactionDTO
 {
+    [Required]
     public Guid Id { get; set; }
+    [Required]
     public string FirstName { get; set; } = null!;
+    [Required]
     public string LastName { get; set; } = null!;
+    [Required]
     public string Email { get; set; } = null!;
+    [Required]
     public UserRoleEnum Role { get; set; }
 }
 
 public class UserContactInfoDTO
 {
+    [Required]
     public string FirstName { get; set; } = null!;
+    [Required]
     public string LastName { get; set; } = null!;
+    [Required]
     public string Email { get; set; } = null!;
+    [Required]
     public string PhoneNumber { get; set; } = null!;
+    [Required]
     public string Address { get; set; } = null!;
 }

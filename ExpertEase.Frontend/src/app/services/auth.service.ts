@@ -15,7 +15,6 @@ export class AuthService {
 
   loginUser(data: any) {
     console.log(data);
-    // return this.http.post(`${this.baseUrl}/auth/login`, data);
     return this.http.post(`${this.baseUrl}/auth/login`, data).pipe(
       tap((result: any) => {
         const token = result.response?.token;

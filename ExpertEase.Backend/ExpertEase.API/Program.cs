@@ -29,7 +29,10 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SupportNonNullableReferenceTypes();
+});
 builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
 builder.Services.AddScoped<ILoginService, LoginService>()
@@ -80,8 +83,8 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
-// app.UseSwagger();
-// app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 //
 // app.MapGet("/", context =>
 // {

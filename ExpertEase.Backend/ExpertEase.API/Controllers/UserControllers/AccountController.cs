@@ -9,6 +9,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/profile/user/account/")]
+[Tags("UserAccount")]
 public class AccountController(IUserService userService, IAccountService accountService): AuthorizedController(userService)
 {
     [Authorize]

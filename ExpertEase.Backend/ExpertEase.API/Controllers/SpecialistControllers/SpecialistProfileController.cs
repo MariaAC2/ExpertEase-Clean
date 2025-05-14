@@ -5,10 +5,11 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.UserControllers;
+namespace ExpertEase.API.Controllers.SpecialistControllers;
 
 [ApiController]
 [Route("api/profile/specialist")]
+[Tags("SpecialistProfile")]
 public class SpecialistProfileController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]

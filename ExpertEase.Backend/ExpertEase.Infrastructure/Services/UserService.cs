@@ -142,6 +142,55 @@ public class UserService(
         
         return ServiceResponse.CreateSuccessResponse();
     }
+    
+    public async Task<ServiceResponse> AddUserSpecialist(UserSpecialistAddDTO user, UserDTO? requestingUser, CancellationToken cancellationToken = default)
+    {
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin) // Verify who can add the user, you can change this however you se fit.
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can add users!", ErrorCodes.CannotAdd));
+        }
+
+        var result = await repository.GetAsync(new UserSpec(user.Email), cancellationToken);
+
+        if (result != null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user already exists!", ErrorCodes.UserAlreadyExists));
+        }
+
+        var newUser = new User
+        {
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Role = UserRoleEnum.Specialist,
+            Password = user.Password,
+            Specialist = new Specialist
+            {
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                YearsExperience = user.YearsExperience,
+                Description = user.Description,
+                Categories = new List<Category>()
+            }
+        };
+        
+        await repository.AddAsync(newUser, cancellationToken);
+        
+        newUser.Account = new Account
+        {
+            UserId = newUser.Id,
+            Currency = "RON",
+            Balance = 0
+        };
+            
+        await repository.AddAsync(newUser.Account, cancellationToken);
+        await repository.UpdateAsync(newUser, cancellationToken);
+        
+        // var fullName = $"{user.LastName} {user.FirstName}";
+        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase Team", cancellationToken);
+        
+        return ServiceResponse.CreateSuccessResponse();
+    }
 
     public async Task<ServiceResponse> UpdateUser(UserUpdateDTO user, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {

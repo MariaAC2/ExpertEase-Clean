@@ -15,6 +15,8 @@ public interface IUserService
     public Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse<LoginResponseDTO>> Login(LoginDTO login, CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddUser(UserAddDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> AddUserSpecialist(UserSpecialistAddDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+
     Task<ServiceResponse> UpdateUser(UserUpdateDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteUser(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
 }

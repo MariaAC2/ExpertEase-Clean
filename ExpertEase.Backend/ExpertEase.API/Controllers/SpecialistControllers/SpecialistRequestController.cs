@@ -3,15 +3,15 @@ using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
-using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.UserControllers;
+namespace ExpertEase.API.Controllers.SpecialistControllers;
 
 [ApiController]
 [Route("/api/profile/specialist/requests")]
+[Tags("SpecialistRequests")]
 public class SpecialistRequestController(IUserService userService, IRequestService requestService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]

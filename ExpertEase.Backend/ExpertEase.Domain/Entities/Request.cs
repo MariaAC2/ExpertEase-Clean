@@ -14,7 +14,6 @@ public class Request: BaseEntity
     public string Description { get; set; } = null!;
     public DateTime? RejectedAt { get; set; }
     public StatusEnum Status { get; set; } = StatusEnum.Pending;
-    
     public ICollection<Reply> Replies { get; set; } = new List<Reply>();
     
     public override string ToString()

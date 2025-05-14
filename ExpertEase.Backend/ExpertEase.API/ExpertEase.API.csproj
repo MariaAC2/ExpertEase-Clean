@@ -29,4 +29,17 @@
       <Folder Include="wwwroot\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\browser\favicon.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\index.html" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\logo.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ESONYHRN.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\polyfills-FFHMD2TL.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-SXL4ZYB7.css" />
+    </ItemGroup>
+
+<!--    <Target Name="BuildAngular" BeforeTargets="Build">-->
+<!--        <Exec Command="npm run build:wwwroot" WorkingDirectory="..\..\ExpertEase.Frontend" />-->
+<!--    </Target>-->
+
 </Project>

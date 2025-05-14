@@ -10,6 +10,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("api/auth/")]
+[Tags("Auth")]
 public class AuthController(IUserService _userService) : ResponseController
 {
     [HttpPost("login")]

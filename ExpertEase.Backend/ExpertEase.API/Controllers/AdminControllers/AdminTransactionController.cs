@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
-[Route("api/admin/transactions/[action]")]
+[Route("api/admin/transactions/")]
+[Tags("AdminTransactions")]
 public class AdminTransactionController(IUserService userService, ITransactionService transactionService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Admin")]

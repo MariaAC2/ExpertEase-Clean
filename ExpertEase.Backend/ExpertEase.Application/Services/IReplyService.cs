@@ -9,7 +9,7 @@ namespace ExpertEase.Application.Services;
 
 public interface IReplyService
 {
-    Task<ServiceResponse<ReplyDTO>> GetReply(Specification<Reply, ReplyDTO> spec, Guid id, CancellationToken cancellationToken = default); 
+    Task<ServiceResponse<ReplyDTO>> GetReply(Specification<Reply, ReplyDTO> spec, CancellationToken cancellationToken = default); 
     Task<ServiceResponse<PagedResponse<ReplyDTO>>> GetReplies(Specification<Reply, ReplyDTO> spec, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     // public Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

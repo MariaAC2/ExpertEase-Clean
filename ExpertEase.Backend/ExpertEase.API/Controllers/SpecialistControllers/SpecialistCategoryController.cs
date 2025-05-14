@@ -1,5 +1,4 @@
 ﻿using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
-using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -7,10 +6,11 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.UserControllers;
+namespace ExpertEase.API.Controllers.SpecialistControllers;
 
 [ApiController]
 [Route("api/profile/specialist/categories")]
+[Tags("SpecialistCategories")]
 public class SpecialistCategoryController(IUserService userService, ICategoryService categoryService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]

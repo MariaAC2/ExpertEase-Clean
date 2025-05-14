@@ -12,7 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
-[Route("api/admin/specialists/[action]")]
+[Route("api/admin/specialists/")]
+[Tags("AdminSpecialists")]
 public class AdminSpecialistController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Admin")]
@@ -35,6 +36,18 @@ public class AdminSpecialistController(IUserService userService, ISpecialistServ
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(pagination)) :
             CreateErrorMessageResult<PagedResponse<UserDTO>>(currentUser.Error);
+    }
+    
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    public async Task<ActionResult<RequestResponse>> Add([FromBody] UserSpecialistAddDTO user)
+    {
+        var currentUser = await GetCurrentUser();
+        user.Password = PasswordUtils.HashPassword(user.Password);
+
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await UserService.AddUserSpecialist(user, currentUser.Result)) :
+            CreateErrorMessageResult(currentUser.Error);
     }
 
     [Authorize(Roles = "Admin")]

@@ -35,8 +35,8 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
                 FirstName = e.ReceiverUser.FirstName,
                 LastName = e.ReceiverUser.LastName,
                 Email = e.ReceiverUser.Email,
-                PhoneNumber = e.ReceiverUser.Specialist.PhoneNumber,
-                Address = e.ReceiverUser.Specialist.Address,
+                PhoneNumber = e.ReceiverUser.Specialist != null ? e.ReceiverUser.Specialist.PhoneNumber : "",
+                Address = e.ReceiverUser.Specialist != null ? e.ReceiverUser.Specialist.Address : "",
             }
         });
 

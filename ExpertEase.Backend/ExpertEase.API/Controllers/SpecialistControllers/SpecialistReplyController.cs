@@ -1,5 +1,4 @@
 ﻿using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
-using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -8,10 +7,11 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.UserControllers;
+namespace ExpertEase.API.Controllers.SpecialistControllers;
 
 [ApiController]
 [Route("/api/profile/specialist/requests/{requestId}/replies")]
+[Tags("SpecialistReplies")]
 public class SpecialistReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]
@@ -32,7 +32,7 @@ public class SpecialistReplyController(IUserService userService, IReplyService r
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplySpecialistProjectionSpec(id, requestId, currentUser.Result.Id), id)) :
+            CreateRequestResponseFromServiceResponse(await replyService.GetReply(new ReplySpecialistProjectionSpec(id, requestId, currentUser.Result.Id))) :
             CreateErrorMessageResult<ReplyDTO>(currentUser.Error);
     }
     

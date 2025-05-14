@@ -14,6 +14,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
 [Route("/api/profile/user/requests")]
+[Tags("UserRequests")]
 public class RequestController(IUserService userService, IRequestService requestService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Client")]
@@ -51,7 +52,7 @@ public class RequestController(IUserService userService, IRequestService request
     }
 
     [Authorize(Roles = "Client")]
-    [HttpPatch("update")]
+    [HttpPatch]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] RequestUpdateDTO request)
     {
         var currentUser = await GetCurrentUser();
