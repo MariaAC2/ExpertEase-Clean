@@ -1,4 +1,5 @@
 ﻿using Ardalis.Specification;
+using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
@@ -13,6 +14,7 @@ public interface IReplyService
     Task<ServiceResponse<PagedResponse<ReplyDTO>>> GetReplies(Specification<Reply, ReplyDTO> spec, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     // public Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
-    Task<ServiceResponse> UpdateReply(ReplyUpdateDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> UpdateReply(ReplyUpdateDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> UpdateReplyStatus(StatusUpdateDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteReply(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
 }

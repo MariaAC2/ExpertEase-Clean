@@ -25,7 +25,7 @@ public class AdminAccountController(IUserService userService, IAccountService ac
     }
     
     [Authorize(Roles = "Admin")]
-    [HttpPut("{id:guid}")]
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] AccountUpdateDTO account)
     {
         var currentUser = await GetCurrentUser();

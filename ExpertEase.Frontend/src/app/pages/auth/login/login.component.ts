@@ -1,31 +1,32 @@
 import { Component } from '@angular/core';
-import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
-import {AuthService} from '../../../services/auth.service';
-import {Router} from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../services/auth.service';
+import { Router } from '@angular/router';
+import { LoginDTO } from '../../../models/api.models'; // Adjust path as needed
 
 @Component({
   selector: 'app-login',
+  standalone: true,
   imports: [
-      CommonModule,
-      FormsModule,
+    CommonModule,
+    FormsModule
   ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  formData = {
+  formData: LoginDTO = {
     email: '',
     password: ''
   };
 
   errors: { [key: string]: string } = {};
-
   errorMessage: string | null = null;
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  onSubmit() {
+  onSubmit(): void {
     this.errors = {};
 
     if (!this.formData.email.trim()) {
@@ -38,11 +39,9 @@ export class LoginComponent {
       this.errors['password'] = 'Parola trebuie să aibă minim 6 caractere.';
     }
 
-    if (Object.keys(this.errors).length === 0) {
-      console.log('Form is valid:', this.formData);
-      // proceed with submission
-    } else {
+    if (Object.keys(this.errors).length > 0) {
       console.warn('Form errors:', this.errors);
+      return;
     }
 
     this.authService.loginUser(this.formData).subscribe({
@@ -50,11 +49,10 @@ export class LoginComponent {
         console.log(res);
         console.log('Login submitted with:', this.formData);
         this.router.navigate(['/home']);
-        // maybe redirect or show success message
       },
       error: (err) => {
         console.error('Login failed:', err);
-        this.errorMessage = err.error?.errorMessage?.message;
+        this.errorMessage = err.error?.errorMessage?.message || 'Eroare necunoscută.';
         console.error('Error message:', this.errorMessage);
       }
     });

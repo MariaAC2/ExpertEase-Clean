@@ -232,13 +232,13 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can accept or reject transaction!", ErrorCodes.CannotUpdate));
         }
 
-        if (requestingUser != null && requestingUser.Role == UserRoleEnum.Admin &&
+        if (requestingUser is { Role: UserRoleEnum.Admin } &&
             transaction.Status == StatusEnum.Cancelled)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the user can cancel the transaction!", ErrorCodes.CannotUpdate));
         }
         
-        if (transaction.Status == StatusEnum.Rejected && transaction.Description == null)
+        if (transaction is { Status: StatusEnum.Rejected, Description: null })
         {
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.BadRequest, "Description cannot be null", ErrorCodes.CannotUpdate));
         }

@@ -38,8 +38,8 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\styles-SXL4ZYB7.css" />
     </ItemGroup>
 
-<!--    <Target Name="BuildAngular" BeforeTargets="Build">-->
-<!--        <Exec Command="npm run build:wwwroot" WorkingDirectory="..\..\ExpertEase.Frontend" />-->
-<!--    </Target>-->
+    <Target Name="BuildAngular" BeforeTargets="Build">
+        <Exec Command="npm run build:wwwroot" WorkingDirectory="..\..\ExpertEase.Frontend" />
+    </Target>
 
 </Project>

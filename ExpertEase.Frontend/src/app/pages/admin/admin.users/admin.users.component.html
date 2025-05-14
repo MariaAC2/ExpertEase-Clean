@@ -29,26 +29,26 @@
 <!--  </div>-->
 <!--</div>-->
 
-<div *ngIf="loading">Se încarcă utilizatorii...</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<!--<div *ngIf="loading">Se încarcă utilizatorii...</div>-->
+<!--<div *ngIf="error" class="error">{{ error }}</div>-->
 
-<table *ngIf="!loading && users.length > 0" class="admin-table">
-  <thead>
-  <tr>
-    <th>ID</th>
-    <th>Nume</th>
-    <th>Email</th>
-    <th>Rol</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr *ngFor="let user of users">
-    <td>{{ user.id }}</td>
-    <td>{{ user.firstName }} {{ user.lastName }}</td>
-    <td>{{ user.email }}</td>
-    <td>{{ user.role }}</td>
-  </tr>
-  </tbody>
-</table>
+<!--<table *ngIf="!loading && users.length > 0" class="admin-table">-->
+<!--  <thead>-->
+<!--  <tr>-->
+<!--    <th>ID</th>-->
+<!--    <th>Nume</th>-->
+<!--    <th>Email</th>-->
+<!--    <th>Rol</th>-->
+<!--  </tr>-->
+<!--  </thead>-->
+<!--  <tbody>-->
+<!--  <tr *ngFor="let user of users">-->
+<!--    <td>{{ user.id }}</td>-->
+<!--    <td>{{ user.firstName }} {{ user.lastName }}</td>-->
+<!--    <td>{{ user.email }}</td>-->
+<!--    <td>{{ user.role }}</td>-->
+<!--  </tr>-->
+<!--  </tbody>-->
+<!--</table>-->
 
-<div *ngIf="!loading && users.length === 0">Nu există utilizatori de afișat.</div>
+<!--<div *ngIf="!loading && users.length === 0">Nu există utilizatori de afișat.</div>-->

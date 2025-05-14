@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Ardalis.Specification;
+using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
@@ -115,7 +116,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
         return ServiceResponse.CreateSuccessResponse(result);
     }
     
-    public async Task<ServiceResponse> UpdateReply(ReplyStatusUpdateDTO reply, UserDTO? requestingUser = null,
+    public async Task<ServiceResponse> UpdateReplyStatus(StatusUpdateDTO reply, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser == null)
@@ -187,100 +188,42 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
         return ServiceResponse.CreateSuccessResponse();
     }
 
-    // public async Task<ServiceResponse> UpdateReply(ReplyUpdateDTO reply, UserDTO? requestingUser = null,
-    //     CancellationToken cancellationToken = default)
-    // {
-    //     if (requestingUser == null)
-    //     {
-    //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-    //             "Cannot add replies without being authenticated", ErrorCodes.CannotUpdate));
-    //     }
-    //     if (requestingUser.Role == UserRoleEnum.Specialist && reply.Status != StatusEnum.Cancelled)
-    //     {
-    //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-    //             "Only user and admin can accept or reject replies", ErrorCodes.CannotUpdate));
-    //     }
-    //
-    //     if (requestingUser.Role == UserRoleEnum.Specialist &&
-    //         (reply.StartDate != null || reply.EndDate != null || reply.Price != null))
-    //     {
-    //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-    //             "Only specialist can modify service info", ErrorCodes.CannotUpdate));
-    //     }
-    //     
-    //     var entity = await repository.GetAsync(new ReplySpec(reply.Id), cancellationToken);
-    //     
-    //     if (entity == null)
-    //     {
-    //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
-    //             "Reply not found", ErrorCodes.EntityNotFound));
-    //     }
-    //
-    //     // if (entity.Status is not StatusEnum.Pending)
-    //     // {
-    //     //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-    //     //         "Only pending replies can be updated", ErrorCodes.CannotUpdate));
-    //     // }
-    //     
-    //     if (requestingUser is { Role: UserRoleEnum.Specialist })
-    //     {
-    //         entity.StartDate = reply.StartDate ?? entity.StartDate;
-    //         entity.EndDate = reply.EndDate ?? entity.EndDate;
-    //         entity.Price = reply.Price ?? entity.Price;
-    //
-    //         if (reply.Status == StatusEnum.Cancelled)
-    //         {
-    //             reply.Status = StatusEnum.Cancelled;
-    //         }
-    //         
-    //         await repository.UpdateAsync(entity, cancellationToken);
-    //     }
-    //     else
-    //     {
-    //         if (reply.Status is StatusEnum.Rejected)
-    //         {
-    //             entity.Status = StatusEnum.Rejected;
-    //             await repository.UpdateAsync(entity, cancellationToken);
-    //             var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
-    //             
-    //             if (request == null)
-    //                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-    //             
-    //             if (request.Replies.Any() && request.Replies.Count == 5)
-    //             {
-    //                 request.Status = StatusEnum.Failed;
-    //                 await repository.UpdateAsync(request, cancellationToken);
-    //             }
-    //         } else if (reply.Status is StatusEnum.Accepted)
-    //         {
-    //             entity.Status = StatusEnum.Accepted;
-    //             await repository.UpdateAsync(entity, cancellationToken);
-    //             var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
-    //                             
-    //             if (request == null)
-    //                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-    //             
-    //             if (request.Replies.Any())
-    //             {
-    //                 request.Status = StatusEnum.Completed;
-    //                 await repository.UpdateAsync(request, cancellationToken);
-    //                 // create transfer transaction
-    //                 var transferResult = await transactionService.AddTransfer(request, entity, requestingUser, cancellationToken);
-    //
-    //                 if (!transferResult.IsOk)
-    //                 {
-    //                     return transferResult;
-    //                 }
-    //             }
-    //         }
-    //         else
-    //         {
-    //             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-    //                 "Other types of status codes not permitted", ErrorCodes.CannotUpdate));
-    //         }
-    //     }
-    //     return ServiceResponse.CreateSuccessResponse();
-    // }
+    public async Task<ServiceResponse> UpdateReply(ReplyUpdateDTO reply, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (requestingUser == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Cannot add replies without being authenticated", ErrorCodes.CannotUpdate));
+        }
+    
+        if (requestingUser.Role != UserRoleEnum.Specialist)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Only specialist can modify service info", ErrorCodes.CannotUpdate));
+        }
+        
+        var entity = await repository.GetAsync(new ReplySpec(reply.Id), cancellationToken);
+        
+        if (entity == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
+                "Reply not found", ErrorCodes.EntityNotFound));
+        }
+    
+        // if (entity.Status is not StatusEnum.Pending)
+        // {
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+        //         "Only pending replies can be updated", ErrorCodes.CannotUpdate));
+        // }
+        
+        entity.StartDate = reply.StartDate ?? entity.StartDate;
+        entity.EndDate = reply.EndDate ?? entity.EndDate;
+        entity.Price = reply.Price ?? entity.Price;
+        
+        await repository.UpdateAsync(entity, cancellationToken);
+        return ServiceResponse.CreateSuccessResponse();
+    }
     
     public async Task<ServiceResponse> DeleteReply(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
     {

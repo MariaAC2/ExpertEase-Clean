@@ -1,4 +1,5 @@
 ﻿using Ardalis.Specification;
+using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
@@ -14,5 +15,6 @@ public interface IRequestService
     public Task<ServiceResponse<int>> GetRequestCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateRequest(RequestUpdateDTO request, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> UpdateRequestStatus(StatusUpdateDTO request, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteRequest(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
 }

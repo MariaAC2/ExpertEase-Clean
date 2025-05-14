@@ -15,7 +15,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
 {
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<UserDTO>>> Get()
+    public async Task<ActionResult<RequestResponse<UserDTO>>> GetById()
     {
         var currentUser = await GetCurrentUser();
 
@@ -25,7 +25,7 @@ public class ProfileController(IUserService userService, ISpecialistService spec
     }
     
     [Authorize]
-    [HttpPatch("update")]
+    [HttpPatch]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] UserUpdateDTO user)
     {
         var currentUser = await GetCurrentUser();

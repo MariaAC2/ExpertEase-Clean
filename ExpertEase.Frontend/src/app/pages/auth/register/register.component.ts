@@ -1,20 +1,22 @@
 import { Component } from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import {Router} from '@angular/router';
+import { UserRegisterDTO } from '../../../models/api.models'; // adjust path if needed
 
 @Component({
   selector: 'app-register',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule
   ],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.scss'
+  styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent {
-  formData = {
+  formData: UserRegisterDTO = {
     firstName: '',
     lastName: '',
     email: '',
@@ -26,9 +28,10 @@ export class RegisterComponent {
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  onSubmit() {
+  onSubmit(): void {
     this.errors = {}; // clear previous errors
 
+    // Validate input
     if (!this.formData.lastName.trim()) {
       this.errors['lastName'] = 'Numele este obligatoriu.';
     }
@@ -49,49 +52,30 @@ export class RegisterComponent {
       this.errors['password'] = 'Parola trebuie să aibă minim 6 caractere.';
     }
 
-    if (Object.keys(this.errors).length === 0) {
-      console.log('Form is valid:', this.formData);
-      // proceed with submission
-    } else {
+    if (Object.keys(this.errors).length > 0) {
       console.warn('Form errors:', this.errors);
+      return;
     }
 
+    // Send request
     this.authService.registerUser(this.formData).subscribe({
       next: (res) => {
         console.log('User registered!', res);
         this.router.navigate(['/home']);
-        // maybe redirect or show success message
       },
       error: (err) => {
         console.error('Registration failed:', err);
-        this.errorMessage = err.error?.errorMessage?.message;
-        console.error('Error message:', this.errorMessage);
-        // show error to user
+        this.errorMessage = err.error?.errorMessage?.message || 'Eroare necunoscută.';
       }
     });
-    // const simulatedError = {
-    //   error: {
-    //     errorMessage: {
-    //       message: 'The user already exists!',
-    //       code: 'UserAlreadyExists',
-    //       status: 'Conflict'
-    //     }
-    //   }
-    // };
-    //
-    // // simulate error handling logic as if it came from HttpClient
-    // this.errorMessage = simulatedError.error?.errorMessage?.message;
-    // console.error('Simulated error message:', this.errorMessage);
   }
 
   validateEmail(email: string): boolean {
-    // Basic email validation regex
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   }
 
-  goToLogin() {
+  goToLogin(): void {
     this.router.navigate(['/login']);
   }
 }
-

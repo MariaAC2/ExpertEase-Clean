@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.RequestDTOs;
+﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -39,21 +40,43 @@ public class SpecialistRequestController(IUserService userService, IRequestServi
 
     [Authorize(Roles = "Specialist")]
     [HttpPatch("{id:guid}/accept")]
-    public async Task<ActionResult<RequestResponse>> Accept([FromBody] RequestUpdateDTO request)
+    public async Task<ActionResult<RequestResponse>> Accept([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
-        return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await requestService.UpdateRequest(request, currentUser.Result)) :
-            CreateErrorMessageResult(currentUser.Error);
+        
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+        
+        var request = new StatusUpdateDTO
+        {
+            Id = id,
+            Status = Domain.Enums.StatusEnum.Accepted
+        };
+
+        return CreateRequestResponseFromServiceResponse(
+            await requestService.UpdateRequestStatus(request, currentUser.Result));
     }
     
     [Authorize(Roles = "Specialist")]
     [HttpPatch("{id:guid}/reject")]
-    public async Task<ActionResult<RequestResponse>> Reject([FromBody] RequestUpdateDTO request)
+    public async Task<ActionResult<RequestResponse>> Reject([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
-        return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await requestService.UpdateRequest(request, currentUser.Result)) :
-            CreateErrorMessageResult(currentUser.Error);
+        
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+        
+        var request = new StatusUpdateDTO
+        {
+            Id = id,
+            Status = Domain.Enums.StatusEnum.Rejected
+        };
+
+        return CreateRequestResponseFromServiceResponse(
+            await requestService.UpdateRequestStatus(request, currentUser.Result));
     }
 }

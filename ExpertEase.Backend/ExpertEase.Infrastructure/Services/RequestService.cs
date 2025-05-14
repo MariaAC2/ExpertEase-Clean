@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Ardalis.Specification;
+using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
@@ -120,20 +121,35 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
     public async Task<ServiceResponse> UpdateRequest(RequestUpdateDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role == UserRoleEnum.Client && request.Status != StatusEnum.Cancelled)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Users cannot accept or reject request", ErrorCodes.CannotUpdate));
-        }
-        
         if (requestingUser != null && requestingUser.Role != UserRoleEnum.Client && 
             (request.Description != null || request.PhoneNumber != null || request.Address != null || request.RequestedStartDate != null))
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Non users cannot update request info", ErrorCodes.CannotUpdate));
         }
         
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Client && request.Status == null)
+        var entity = await repository.GetAsync(new RequestSpec(request.Id), cancellationToken);
+
+        if (entity == null)
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Status should be provided to be changed", ErrorCodes.CannotUpdate));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound));
+        }
+        
+        entity.RequestedStartDate = request.RequestedStartDate ?? entity.RequestedStartDate;
+        entity.PhoneNumber = request.PhoneNumber ?? entity.PhoneNumber;
+        entity.Address = request.Address ?? entity.Address;
+        entity.Description = request.Description ?? entity.Description;
+        
+        await repository.UpdateAsync(entity, cancellationToken);
+        
+        return ServiceResponse.CreateSuccessResponse();
+    }
+    
+        public async Task<ServiceResponse> UpdateRequestStatus(StatusUpdateDTO request, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (requestingUser != null && requestingUser.Role == UserRoleEnum.Client && request.Status != StatusEnum.Cancelled)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Users cannot accept or reject request", ErrorCodes.CannotUpdate));
         }
         
         var entity = await repository.GetAsync(new RequestSpec(request.Id), cancellationToken);
@@ -148,18 +164,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Request is already processed", ErrorCodes.CannotUpdate));
         }
         
-        entity.RequestedStartDate = request.RequestedStartDate ?? entity.RequestedStartDate;
-        entity.PhoneNumber = request.PhoneNumber ?? entity.PhoneNumber;
-        entity.Address = request.Address ?? entity.Address;
-        entity.Description = request.Description ?? entity.Description;
-        
-        if (request.Status != null)
-        {
-            entity.Status = request.Status.Value;
-            entity.RejectedAt = request.Status == StatusEnum.Rejected ? DateTime.UtcNow : null;
-        }
-        
-        // cancel logic (after reply implementation)
+        entity.Status = request.Status;
         
         await repository.UpdateAsync(entity, cancellationToken);
         

@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.RequestDTOs;
+﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.TransactionDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
@@ -52,7 +53,7 @@ public class RequestController(IUserService userService, IRequestService request
     }
 
     [Authorize(Roles = "Client")]
-    [HttpPatch]
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] RequestUpdateDTO request)
     {
         var currentUser = await GetCurrentUser();
@@ -60,5 +61,26 @@ public class RequestController(IUserService userService, IRequestService request
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await requestService.UpdateRequest(request, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
+    }
+    
+    [Authorize(Roles = "Client")]
+    [HttpPatch("{id:guid}/cancel")]
+    public async Task<ActionResult<RequestResponse>> Update([FromRoute] Guid id)
+    {
+        var currentUser = await GetCurrentUser();
+        
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+        
+        var reply = new StatusUpdateDTO
+        {
+            Id = id,
+            Status = Domain.Enums.StatusEnum.Cancelled,
+        };
+
+        return CreateRequestResponseFromServiceResponse(
+            await requestService.UpdateRequestStatus(reply, currentUser.Result));
     }
 }

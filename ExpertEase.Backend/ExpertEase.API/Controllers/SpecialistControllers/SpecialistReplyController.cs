@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
+﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -57,5 +58,26 @@ public class SpecialistReplyController(IUserService userService, IReplyService r
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await replyService.UpdateReply(reply, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
+    }
+    
+    [Authorize(Roles = "Specialist")]
+    [HttpPatch("{id:guid}/cancel")]
+    public async Task<ActionResult<RequestResponse>> Cancel([FromRoute] Guid id)
+    {
+        var currentUser = await GetCurrentUser();
+        
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+        
+        var reply = new StatusUpdateDTO
+        {
+            Id = id,
+            Status = Domain.Enums.StatusEnum.Cancelled
+        };
+
+        return CreateRequestResponseFromServiceResponse(
+            await replyService.UpdateReplyStatus(reply, currentUser.Result));
     }
 }

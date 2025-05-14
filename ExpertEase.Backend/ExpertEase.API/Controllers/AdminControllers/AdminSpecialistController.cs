@@ -51,7 +51,7 @@ public class AdminSpecialistController(IUserService userService, ISpecialistServ
     }
 
     [Authorize(Roles = "Admin")]
-    [HttpPut("{id:guid}")]
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] SpecialistUpdateDTO specialist)
     {
         var currentUser = await GetCurrentUser();

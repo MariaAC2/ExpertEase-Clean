@@ -84,7 +84,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSwagger();
-app.UseSwaggerUI();
+// app.UseSwaggerUI();
 //
 // app.MapGet("/", context =>
 // {

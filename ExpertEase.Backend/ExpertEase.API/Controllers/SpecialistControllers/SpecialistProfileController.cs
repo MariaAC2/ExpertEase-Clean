@@ -13,7 +13,7 @@ namespace ExpertEase.API.Controllers.SpecialistControllers;
 public class SpecialistProfileController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]
-    [HttpPatch("update")]
+    [HttpPatch]
     public async Task<ActionResult<RequestResponse>> Update([FromBody] SpecialistUpdateDTO specialist)
     {
         var currentUser = await GetCurrentUser();

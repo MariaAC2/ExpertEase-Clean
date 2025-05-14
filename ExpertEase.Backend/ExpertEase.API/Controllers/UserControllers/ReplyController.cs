@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
+﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
@@ -41,13 +42,22 @@ public class ReplyController(IUserService userService, IReplyService replyServic
     
     [Authorize(Roles = "Client")]
     [HttpPatch("{id:guid}/accept")]
-    public async Task<ActionResult<RequestResponse>> Accept([FromBody] ReplyUpdateDTO reply)
+    public async Task<ActionResult<RequestResponse>> Accept([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
         
-        return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.UpdateReply(reply, currentUser.Result)) :
-            CreateErrorMessageResult(currentUser.Error);
+        if (currentUser.Result == null)
+        {
+            return CreateErrorMessageResult(currentUser.Error);
+        }
+        
+        var reply = new StatusUpdateDTO
+        {
+            Id = id,
+            Status = Domain.Enums.StatusEnum.Accepted
+        };
+
+        return CreateRequestResponseFromServiceResponse(await replyService.UpdateReplyStatus(reply, currentUser.Result));
     }
     
     [Authorize(Roles = "Client")]
@@ -61,14 +71,13 @@ public class ReplyController(IUserService userService, IReplyService replyServic
             return CreateErrorMessageResult(currentUser.Error);
         }
         
-        var reply = new ReplyStatusUpdateDTO
+        var reply = new StatusUpdateDTO
         {
             Id = id,
             Status = Domain.Enums.StatusEnum.Rejected
         };
-        
-        return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await replyService.UpdateReply(reply, currentUser.Result)) :
-            CreateErrorMessageResult(currentUser.Error);
+
+        return CreateRequestResponseFromServiceResponse(
+            await replyService.UpdateReplyStatus(reply, currentUser.Result));
     }
 }
