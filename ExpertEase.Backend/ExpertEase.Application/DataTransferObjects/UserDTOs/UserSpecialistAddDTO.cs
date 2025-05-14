@@ -1,6 +1,6 @@
 ﻿namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 
-public class UserSpecialistDTO
+public class UserSpecialistAddDTO
 {
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;

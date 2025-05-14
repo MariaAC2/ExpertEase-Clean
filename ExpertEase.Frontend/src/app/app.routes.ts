@@ -7,6 +7,8 @@ import {AccountComponent} from './pages/account/account.component';
 import {RegisterComponent} from './pages/auth/register/register.component';
 import {LoginComponent} from './pages/auth/login/login.component';
 import {AdminComponent} from './pages/admin/admin.component';
+import {AdminUsersComponent} from './pages/admin/admin.users/admin.users.component';
+import {AdminSpecialistsComponent} from './pages/admin/admin.specialists/admin.specialists.component';
 
 export const routes: Routes = [
   {
@@ -35,7 +37,15 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    component: AdminComponent
+    component: AdminComponent,
+  },
+  {
+    path: 'admin/users',
+    component: AdminUsersComponent,
+  },
+  {
+    path: 'admin/specialists',
+    component: AdminSpecialistsComponent,
   },
   {
     path: '',

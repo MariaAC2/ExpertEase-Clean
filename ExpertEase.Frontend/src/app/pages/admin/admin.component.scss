@@ -20,10 +20,10 @@
 
 .button-group {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* ✅ 3 equal-width columns */
+  grid-template-columns: repeat(3, 1fr);
   gap: 32px;
   width: 100%;
-  justify-items: center; /* center buttons horizontally in their grid cells */
+  justify-items: center;
   margin-top: 24px;
 }
 
