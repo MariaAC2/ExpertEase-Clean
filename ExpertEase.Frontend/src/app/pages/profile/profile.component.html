@@ -1,0 +1,47 @@
+<div class="account-card">
+  <div class="account-header">
+    <div class="avatar">
+      <img src="/assets/Generic avatar.svg" alt="User avatar" />
+    </div>
+
+    <div class="account-info">
+      <p><strong>Nume:</strong> {{ user.firstName }} {{ user.lastName }}</p>
+      <p><strong>Adresa mail:</strong> {{ user.email }}</p>
+      <p><strong>Parolă:</strong> ********</p>
+      <p><strong>Creat la data de:</strong> {{ user.createdAt | date:'dd.MM.yyyy' }}</p>
+    </div>
+    <app-icon-button
+      [label]="'Editează profilul'"
+      [icon]="'assets/icons/edit.svg'"
+      (onClick)="onEdit()">
+    </app-icon-button>
+  </div>
+
+  <div class="account-actions">
+    <app-icon-button
+      [label]="'Recenziile tale'"
+      [icon]="'assets/icons/reviews.svg'"
+      (onClick)="goToReviews()">
+    </app-icon-button>
+    <app-icon-button
+      [label]="'Istoric servicii'"
+      [icon]="'assets/icons/history.svg'"
+      (onClick)="goToHistory()">
+    </app-icon-button>
+    <app-icon-button
+      [label]="'Contul ExpertEase'"
+      [icon]="'assets/icons/account.svg'"
+      (onClick)="goToExpertEase()">
+    </app-icon-button>
+    <app-icon-button
+      [label]="'Setările contului'"
+      [icon]="'assets/icons/settings.svg'"
+      (onClick)="goToSettings()">
+    </app-icon-button>
+    <app-icon-button
+      [label]="'Deconectează-te'"
+      [icon]="'assets/icons/logout.svg'"
+      (onClick)="logout()">
+    </app-icon-button>
+  </div>
+</div>

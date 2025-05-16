@@ -1,14 +1,16 @@
 import { Routes } from '@angular/router';
 import {HomeComponent} from './pages/home/home.component';
 import {AboutComponent} from './pages/about/about.component';
-import {NotFoundComponent} from './pages/not-found/not-found.component';
 import {SolicitationsComponent} from './pages/solicitations/solicitations.component';
-import {AccountComponent} from './pages/account/account.component';
 import {RegisterComponent} from './pages/auth/register/register.component';
 import {LoginComponent} from './pages/auth/login/login.component';
 import {AdminComponent} from './pages/admin/admin.component';
 import {AdminUsersComponent} from './pages/admin/admin.users/admin.users.component';
 import {AdminSpecialistsComponent} from './pages/admin/admin.specialists/admin.specialists.component';
+import {RoleGuard} from './pages/auth/role.guard';
+import {UnauthorizedComponent} from './pages/unauthorized/unauthorized.component';
+import {AuthGuard} from './pages/auth/auth.guard';
+import {ProfileComponent} from './pages/profile/profile.component';
 
 export const routes: Routes = [
   {
@@ -24,8 +26,8 @@ export const routes: Routes = [
     component: SolicitationsComponent
   },
   {
-    path: 'account',
-    component: AccountComponent
+    path: 'profile',
+    component: ProfileComponent
   },
   {
     path: 'register',
@@ -37,15 +39,21 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminComponent,
+    // data: { roles: ['Admin'] }
   },
   {
     path: 'admin/users',
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminUsersComponent,
+    // data: { roles: ['Admin'] }
   },
   {
     path: 'admin/specialists',
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminSpecialistsComponent,
+    // data: { roles: ['Admin'] }
   },
   {
     path: '',
@@ -54,6 +62,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    component: NotFoundComponent
+    component: UnauthorizedComponent
   },
 ];

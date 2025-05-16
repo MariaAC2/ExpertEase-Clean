@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import {NavigationEnd, Router, RouterLink, RouterOutlet} from '@angular/router';
 import {filter} from 'rxjs';
 import {CommonModule} from '@angular/common';
+import {AuthService} from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +19,7 @@ export class AppComponent {
     this.navbarOpen = !this.navbarOpen;
   }
 
-  constructor(private router: Router) {
+  constructor(public authService: AuthService, private router: Router) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(event => {

@@ -1,0 +1,4 @@
+<button class="icon-button" (click)="onClick.emit()">
+  <img *ngIf="icon" [src]="icon" alt="icon" class="button-icon" />
+  <span>{{ label }}</span>
+</button>

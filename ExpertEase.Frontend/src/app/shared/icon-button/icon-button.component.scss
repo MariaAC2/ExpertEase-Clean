@@ -1,0 +1,26 @@
+.icon-button {
+  width: 260px;           // or whatever fixed width you want
+  height: 55px;           // matches your screenshot
+  display: flex;
+  align-items: center;
+  gap: 12px; /* spacing between icon and text */
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 3px solid #4f378a;
+  background-color: #f3e6ff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+
+  &:hover {
+    background-color: #e1cdff;
+  }
+
+  .button-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+}

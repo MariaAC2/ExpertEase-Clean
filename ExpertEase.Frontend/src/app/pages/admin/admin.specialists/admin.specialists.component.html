@@ -1,35 +1,101 @@
-<div class="admin-wrapper">
-  <div class="admin-table-container">
-    <h2>Administrează specialiștii</h2>
+<div class="pagination-wrapper">
+  <div class="page-size-selector">
+    <label for="pageSize">Afișează pe pagină:</label>
+    <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)">
+      <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+    </select>
+  </div>
 
-    <table class="admin-table">
-      <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nume</th>
-        <th>Email</th>
-        <th>Parolă</th>
-        <th>Număr de telefon</th>
-        <th>Adresă</th>
-        <th>Ani de experiență</th>
-        <th>Descriere</th>
-        <th>Categorii</th>
-        <th>Acțiuni</th>
-      </tr>
-      </thead>
-      <tbody>
-      <!--    <tr *ngFor="let user of users; let i = index">-->
-      <!--      <td>{{ user.id }}</td>-->
-      <!--      <td>{{ user.name }}</td>-->
-      <!--      <td>{{ user.email }}</td>-->
-      <!--      <td>{{ user.role }}</td>-->
-      <!--      <td>-->
-      <!--        <a class="action-link edit" (click)="editUser(user)">edit</a>-->
-      <!--        <a class="action-link delete" (click)="deleteUser(user)">delete</a>-->
-      <!--        <a class="action-link view" (click)="viewUser(user)">view</a>-->
-      <!--      </td>-->
-      <!--    </tr>-->
-      </tbody>
-    </table>
+  <div class="pagination-controls">
+    <button (click)="goToPreviousPage()" [disabled]="currentPage === 1">← Anterior</button>
+    <span>Pagina {{ currentPage }} din {{ getTotalPages() }}</span>
+    <button (click)="goToNextPage()" [disabled]="currentPage === getTotalPages()">Următoarea →</button>
   </div>
 </div>
+
+<!--<div class="admin-wrapper">-->
+<!--  <div class="admin-table-container">-->
+<!--    <h2>Administrează toți utilizatorii</h2>-->
+<!--    <button class="add-btn" (click)="openAddUserForm()">Adaugă utilizator</button>-->
+
+<!--    <table class="admin-table">-->
+<!--      <thead>-->
+<!--      <tr>-->
+<!--        <th>ID</th>-->
+<!--        <th>Nume</th>-->
+<!--        <th>Email</th>-->
+<!--        <th>Rol</th>-->
+<!--        <th>Acțiuni</th>-->
+<!--      </tr>-->
+<!--      </thead>-->
+<!--      <tbody>-->
+<!--          <tr *ngFor="let user of users">-->
+<!--            <td>{{ user.id }}</td>-->
+<!--            <td>{{ user.lastName }} {{ user.firstName }}</td>-->
+<!--            <td>{{ user.email }}</td>-->
+<!--            <td>{{ user.role }}</td>-->
+<!--            <td>-->
+<!--              <a class="action-link edit">Modifică</a>-->
+<!--              <a class="action-link delete">Șterge</a>-->
+<!--            </td>-->
+<!--          </tr>-->
+<!--      </tbody>-->
+<!--    </table>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--<app-dynamic-table [columns]="columns" [data]="users"></app-dynamic-table>-->
+
+<div class="admin-wrapper">
+  <div class="admin-table-container">
+    <h2>Administrează toți specialiștii</h2>
+    <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+    <button class="add-btn" (click)="openAddUserForm()">Adaugă specialist</button>
+    <app-dynamic-table
+      [columns]="columns"
+      [data]="users">
+    </app-dynamic-table>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isAddUserFormVisible">
+  <div class="modal">
+    <button class="close-button" (click)="closeAddUserForm()">×</button>
+    <app-dynamic-form
+      [fields]="addEntityFormFields"
+      [submitText]="'Adaugă'"
+      (formSubmit)="addEntity($event)">
+    </app-dynamic-form>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isUpdateUserFormVisible">
+  <div class="modal">
+    <button class="close-button" (click)="closeUpdateUserForm()">×</button>
+    <app-dynamic-form
+      [fields]="updateEntityFormFields"
+      [initialData]="formData"
+      [submitText]="'Actualizează'"
+      (formSubmit)="updateEntity($event)">
+    </app-dynamic-form>
+  </div>
+</div>
+
+<div class="admin-overlay" *ngIf="isUserDetailsVisible">
+  <div class="modal">
+    <button class="close-button" (click)="closeUserDetails()">×</button>
+    <app-admin-details
+      *ngIf="isUserDetailsVisible"
+      [entity]="entityDetails"
+      [title]="'Detalii specialist'"
+      (close)="closeUserDetails()">
+    </app-admin-details>
+  </div>
+</div>
+
+<!--<app-admin-details-->
+<!--  *ngIf="isUserDetailsVisible"-->
+<!--  [entity]="formData"-->
+<!--  (close)="closeUserDetails()">-->
+<!--</app-admin-details>-->
+

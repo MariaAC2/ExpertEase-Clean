@@ -1,43 +1,18 @@
-<h2>Logare</h2>
+<h2>Autentificare</h2>
 
-<form class="grid-form" (ngSubmit)="onSubmit()">
-  <div class="horizontal-pair">
-    <div class="form-group">
-      <label for="email">Adresă e-mail:</label>
-      <div class="input-box">
-        <input
-          type="email"
-          id="email"
-          name="email"
-          placeholder="Introdu adresă e-mail"
-          [(ngModel)]="formData.email"
-        />
-      </div>
-      <div class="error" *ngIf="errors['email']">
-        {{ errors['email'] }}
-      </div>
-    </div>
+<app-dynamic-form
+  [fields]="formFields"
+  [submitText]="'Trimite'"
+  (formSubmit)="loginUser($event)">
+</app-dynamic-form>
 
-    <div class="form-group">
-      <label for="password">Parolă:</label>
-      <div class="input-box">
-        <input
-          type="password"
-          id="password"
-          name="password"
-          placeholder="Introdu parolă"
-          [(ngModel)]="formData.password"
-        />
-      </div>
-      <div class="error" *ngIf="errors['password']">
-        {{ errors['password'] }}
-      </div>
-    </div>
-  </div>
-  <div class="form-group">
-    <button type="submit" class="send-button">Trimite</button>
-    <div *ngIf="errorMessage" class="error local-center">
-      {{ errorMessage }}
-    </div>
-  </div>
-</form>
+<!--<div *ngIf="errorMessage" class="error-message">-->
+<!--  {{ errorMessage }}-->
+<!--</div>-->
+
+<p class="auth-switch">
+  Nu ai cont?
+  <button (click)="goToRegister()" class="auth-button">Înregistrează-te</button>
+</p>
+<!--</div>-->
+

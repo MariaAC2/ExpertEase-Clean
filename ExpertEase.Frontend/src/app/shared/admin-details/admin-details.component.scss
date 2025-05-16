@@ -1,0 +1,58 @@
+.admin-wrapper {
+  padding: 24px 32px;
+  font-family: 'Roboto Mono', monospace;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.divider {
+  border: none;
+  height: 3px;
+  background-color: #bfa3ff; // light purple
+  margin: 16px 0;
+}
+
+.card {
+  background-color: #e3d1ff;
+  padding: 32px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  font-family: 'Roboto Mono', monospace;
+  border: 2px solid #bfa3ff;
+  position: relative;
+}
+
+.admin-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3); // Optional: modal background
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+//.admin-modal {
+//  position: relative;
+//  background: #fff;
+//  max-width: 600px;
+//  width: 90%;
+//}
+
+.admin-modal {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  max-width: 700px;
+  width: 90%;
+}

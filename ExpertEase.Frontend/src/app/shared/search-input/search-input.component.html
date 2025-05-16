@@ -1,0 +1,15 @@
+<div class="search-box">
+  <input
+    type="text"
+    placeholder="Caută ..."
+    [(ngModel)]="searchTerm"
+  />
+
+  <button
+    class="search-icon-button"
+    (click)="onSearchChanged()"
+    aria-label="Search"
+  >
+    <i class="fas fa-search"></i>
+  </button>
+</div>

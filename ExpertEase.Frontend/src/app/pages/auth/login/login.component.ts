@@ -1,60 +1,56 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
-import { LoginDTO } from '../../../models/api.models'; // Adjust path as needed
+import { AuthService } from '../../../services/auth.service';
+import { LoginDTO } from '../../../models/api.models';
+import { FormField, dtoToFormFields } from '../../../models/form.models'; // adjust path
+import { DynamicFormComponent } from '../../../shared/dynamic-form/dynamic-form.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    DynamicFormComponent
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  formData: LoginDTO = {
-    email: '',
-    password: ''
-  };
-
-  errors: { [key: string]: string } = {};
+  formFields: FormField[] = [];
+  formData: { [key: string]: any } = {};
   errorMessage: string | null = null;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) {
+    const dto: LoginDTO = {
+      email: '',
+      password: ''
+    };
 
-  onSubmit(): void {
-    this.errors = {};
+    this.formFields = dtoToFormFields(dto, {
+      email: { type: 'email' },
+      password: { type: 'password' }
+    });
+  }
 
-    if (!this.formData.email.trim()) {
-      this.errors['email'] = 'Adresa de email este obligatorie.';
-    }
+  loginUser(data: { [key: string]: any }) {
+    const loginData: LoginDTO = data as LoginDTO;
 
-    if (!this.formData.password) {
-      this.errors['password'] = 'Parola este obligatorie.';
-    } else if (this.formData.password.length < 6) {
-      this.errors['password'] = 'Parola trebuie să aibă minim 6 caractere.';
-    }
-
-    if (Object.keys(this.errors).length > 0) {
-      console.warn('Form errors:', this.errors);
-      return;
-    }
-
-    this.authService.loginUser(this.formData).subscribe({
+    this.authService.loginUser(loginData).subscribe({
       next: (res) => {
-        console.log(res);
-        console.log('Login submitted with:', this.formData);
+        console.log('Login successful:', res);
         this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error('Login failed:', err);
         this.errorMessage = err.error?.errorMessage?.message || 'Eroare necunoscută.';
-        console.error('Error message:', this.errorMessage);
       }
     });
+  }
+
+  goToRegister(): void {
+    this.router.navigate(['/register']);
   }
 }

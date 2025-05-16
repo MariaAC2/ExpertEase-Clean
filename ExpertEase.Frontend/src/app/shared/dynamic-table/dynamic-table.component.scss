@@ -1,4 +1,4 @@
-﻿.admin-wrapper {
+.admin-wrapper {
   text-align: center;
 }
 
@@ -50,6 +50,10 @@
   font-weight: bold;
 }
 
+.action-link.view {
+  color: blue;
+}
+
 .action-link.edit {
   color: green;
 }
@@ -58,6 +62,20 @@
   color: red;
 }
 
-.action-link.view {
-  color: #4b358e;
+.add-btn {
+  background-color: #916fc7;
+  color: white;
+  border: 3px solid #4b358e;
+  margin-top: 14px;
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.add-btn:hover {
+  background-color: #3a2973;
 }

@@ -3,15 +3,23 @@
 //     Generated using the NSwag toolchain v14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0)) (http://NSwag.org)
 // </auto-generated>
 //----------------------
+
+export interface RequestResponse<T> {
+  response?: T;
+  errorMessage?: ErrorMessage;
+}
+
+export interface PagedResponse<T> {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  data?: T[];
+}
+
 export interface AccountDTO {
     id: string;
     currency: string;
     balance: number;
-}
-
-export interface AccountDTORequestResponse {
-    response?: AccountDTO;
-    errorMessage?: ErrorMessage;
 }
 
 export interface AccountUpdateDTO {
@@ -33,44 +41,10 @@ export interface CategoryAdminDTO {
     specialistIds: string[];
 }
 
-export interface CategoryAdminDTOPagedResponse {
-    page?: number;
-    pageSize?: number;
-    totalCount?: number;
-    data?: CategoryAdminDTO[];
-}
-
-export interface CategoryAdminDTOPagedResponseRequestResponse {
-    response?: CategoryAdminDTOPagedResponse;
-    errorMessage?: ErrorMessage;
-}
-
-export interface CategoryAdminDTORequestResponse {
-    response?: CategoryAdminDTO;
-    errorMessage?: ErrorMessage;
-}
-
 export interface CategoryDTO {
     id: string;
     name: string;
     description?: string | undefined;
-}
-
-export interface CategoryDTOPagedResponse {
-    page?: number;
-    pageSize?: number;
-    totalCount?: number;
-    data?: CategoryDTO[];
-}
-
-export interface CategoryDTOPagedResponseRequestResponse {
-    response?: CategoryDTOPagedResponse;
-    errorMessage?: ErrorMessage;
-}
-
-export interface CategoryDTORequestResponse {
-    response?: CategoryDTO;
-    errorMessage?: ErrorMessage;
 }
 
 export interface CategorySpecialistDTO {
@@ -179,11 +153,6 @@ export interface LoginResponseDTO {
     user: UserDTO;
 }
 
-export interface LoginResponseDTORequestResponse {
-    response?: LoginResponseDTO;
-    errorMessage?: ErrorMessage;
-}
-
 export enum RejectionReason {
     InvalidSender = "InvalidSender",
     InvalidReceiver = "InvalidReceiver",
@@ -209,23 +178,6 @@ export interface ReplyDTO {
     status: StatusEnum;
 }
 
-export interface ReplyDTOPagedResponse {
-    page?: number;
-    pageSize?: number;
-    totalCount?: number;
-    data?: ReplyDTO[];
-}
-
-export interface ReplyDTOPagedResponseRequestResponse {
-    response?: ReplyDTOPagedResponse;
-    errorMessage?: ErrorMessage;
-}
-
-export interface ReplyDTORequestResponse {
-    response?: ReplyDTO;
-    errorMessage?: ErrorMessage;
-}
-
 export interface ReplyUpdateDTO {
     id: string;
     startDate?: Date | undefined;
@@ -249,28 +201,6 @@ export interface RequestDTO {
     senderUser?: UserContactInfoDTO;
     receiverUser: UserContactInfoDTO;
     rejectedAt?: Date | undefined;
-}
-
-export interface RequestDTOPagedResponse {
-    page?: number;
-    pageSize?: number;
-    totalCount?: number;
-    data?: RequestDTO[];
-}
-
-export interface RequestDTOPagedResponseRequestResponse {
-    response?: RequestDTOPagedResponse;
-    errorMessage?: ErrorMessage;
-}
-
-export interface RequestDTORequestResponse {
-    response?: RequestDTO;
-    errorMessage?: ErrorMessage;
-}
-
-export interface RequestResponse {
-    readonly response?: string | undefined;
-    errorMessage?: ErrorMessage;
 }
 
 export interface RequestUpdateDTO {
@@ -341,23 +271,6 @@ export interface TransactionDTO {
     rejectionDetails?: string | undefined;
 }
 
-export interface TransactionDTOPagedResponse {
-    page?: number;
-    pageSize?: number;
-    totalCount?: number;
-    data?: TransactionDTO[];
-}
-
-export interface TransactionDTOPagedResponseRequestResponse {
-    response?: TransactionDTOPagedResponse;
-    errorMessage?: ErrorMessage;
-}
-
-export interface TransactionDTORequestResponse {
-    response?: TransactionDTO;
-    errorMessage?: ErrorMessage;
-}
-
 export enum TransactionEnum {
     Initial = "Initial",
     Deposit = "Deposit",
@@ -392,26 +305,10 @@ export interface UserDTO {
     firstName: string;
     lastName: string;
     email: string;
+    password: string;
     role: UserRoleEnum;
-    account?: AccountDTO;
-    specialist?: SpecialistDTO;
-}
-
-export interface UserDTOPagedResponse {
-    page?: number;
-    pageSize?: number;
-    totalCount?: number;
-    data?: UserDTO[];
-}
-
-export interface UserDTOPagedResponseRequestResponse {
-    response?: UserDTOPagedResponse;
-    errorMessage?: ErrorMessage;
-}
-
-export interface UserDTORequestResponse {
-    response?: UserDTO;
-    errorMessage?: ErrorMessage;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface UserRegisterDTO {
@@ -425,17 +322,6 @@ export enum UserRoleEnum {
     Admin = "Admin",
     Specialist = "Specialist",
     Client = "Client",
-}
-
-export interface UserSpecialistAddDTO {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    phoneNumber: string;
-    address: string;
-    yearsExperience: number;
-    description: string;
 }
 
 export interface UserTransactionDTO {
@@ -453,3 +339,39 @@ export interface UserUpdateDTO {
     password?: string | undefined;
     specialist?: SpecialistUpdateDTO;
 }
+
+export interface UserSpecialistAddDTO {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  address: string;
+  yearsExperience: number;
+  description: string;
+}
+
+export interface UserSpecialistDTO {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  address: string;
+  yearsExperience: number;
+  description: string;
+  categories: CategoryDTO[];
+}
+
+export interface UserSpecialistUpdateDTO {
+  id: string;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  password?: string | undefined;
+  phoneNumber?: string | undefined;
+  address?: string | undefined;
+  yearsExperience?: number | undefined;
+  description?: string | undefined;
+}
+

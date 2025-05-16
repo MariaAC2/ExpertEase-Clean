@@ -25,8 +25,24 @@
   <!-- Navigation links -->
   <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
     <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
-    <li><a routerLink="/solicitations" routerLinkActive="active">Mesajele mele</a></li>
-    <li><a routerLink="/register" routerLinkActive="active">Contul meu</a></li>
+    <li><a routerLink="/solicitations" routerLinkActive="active">Mesajele tale</a></li>
+<!--    <li>-->
+<!--      <a-->
+<!--        [routerLink]="authService.getToken() ? '/profile' : '/register'"-->
+<!--        routerLinkActive="active">-->
+<!--        {{ authService.getToken() ? 'Contul meu' : 'Înregistrează-te!' }}-->
+<!--      </a>-->
+<!--    </li>-->
+    <li>
+      <a
+        routerLink="/profile"
+        routerLinkActive="active">Contul tău
+      </a>
+    </li>
+
+<!--    <li *ngIf="authService.getUserRole() === 'Admin'">-->
+<!--      <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>-->
+<!--    </li>-->
     <li><a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a></li>
   </ul>
 </nav>

@@ -1,0 +1,98 @@
+<!--&lt;!&ndash;<table class="admin-table">&ndash;&gt;-->
+<!--&lt;!&ndash;  <thead>&ndash;&gt;-->
+<!--&lt;!&ndash;  <tr>&ndash;&gt;-->
+<!--&lt;!&ndash;    <th *ngFor="let col of columns">{{ col.header }}</th>&ndash;&gt;-->
+<!--&lt;!&ndash;  </tr>&ndash;&gt;-->
+<!--&lt;!&ndash;  </thead>&ndash;&gt;-->
+<!--&lt;!&ndash;  <tbody>&ndash;&gt;-->
+<!--&lt;!&ndash;  <tr *ngFor="let row of data">&ndash;&gt;-->
+<!--&lt;!&ndash;    <td *ngFor="let col of columns">&ndash;&gt;-->
+<!--&lt;!&ndash;      <ng-container *ngIf="col.type !== 'action'; else actionCell">&ndash;&gt;-->
+<!--&lt;!&ndash;        {{ row[col.key] }}&ndash;&gt;-->
+<!--&lt;!&ndash;      </ng-container>&ndash;&gt;-->
+
+<!--&lt;!&ndash;      <ng-template #actionCell>&ndash;&gt;-->
+<!--&lt;!&ndash;        <ng-container *ngFor="let action of col.actions">&ndash;&gt;-->
+<!--&lt;!&ndash;          <a class="action-link" [ngClass]="action.class" (click)="action.callback(row)">&ndash;&gt;-->
+<!--&lt;!&ndash;            {{ action.label }}&ndash;&gt;-->
+<!--&lt;!&ndash;          </a>&ndash;&gt;-->
+<!--&lt;!&ndash;        </ng-container>&ndash;&gt;-->
+<!--&lt;!&ndash;      </ng-template>&ndash;&gt;-->
+<!--&lt;!&ndash;    </td>&ndash;&gt;-->
+<!--&lt;!&ndash;  </tr>&ndash;&gt;-->
+<!--&lt;!&ndash;  </tbody>&ndash;&gt;-->
+<!--&lt;!&ndash;</table>&ndash;&gt;-->
+
+<!--<div class="admin-wrapper">-->
+<!--  <div class="admin-table-container">-->
+<!--    <h2>{{ title }}</h2>-->
+<!--    <button class="add-btn" *ngIf="addButtonLabel && addClicked" (click)="addClicked()">-->
+<!--      {{ addButtonLabel }}-->
+<!--    </button>-->
+
+<!--    <table class="admin-table">-->
+<!--      <thead>-->
+<!--      <tr>-->
+<!--        <th *ngFor="let col of columns">{{ col.header }}</th>-->
+<!--      </tr>-->
+<!--      </thead>-->
+<!--      <tbody>-->
+<!--      <tr *ngFor="let row of data">-->
+<!--        <td *ngFor="let col of columns">-->
+<!--          <ng-container *ngIf="col.type !== 'action'; else actionCell">-->
+<!--            &lt;!&ndash; Special case for computed fields like full name &ndash;&gt;-->
+<!--            <ng-container *ngIf="col.compute; else directValue">-->
+<!--              {{ col.compute(row) }}-->
+<!--            </ng-container>-->
+<!--            <ng-template #directValue>-->
+<!--              {{ row[col.key] }}-->
+<!--            </ng-template>-->
+<!--          </ng-container>-->
+
+<!--          <ng-template #actionCell>-->
+<!--            <a *ngFor="let action of col.actions"-->
+<!--               class="action-link"-->
+<!--               [ngClass]="action.class"-->
+<!--               (click)="action.callback(row)">-->
+<!--              {{ action.label }}-->
+<!--            </a>-->
+<!--          </ng-template>-->
+<!--        </td>-->
+<!--      </tr>-->
+<!--      </tbody>-->
+<!--    </table>-->
+<!--  </div>-->
+<!--</div>-->
+
+<table class="admin-table">
+  <thead>
+  <tr>
+    <th *ngFor="let col of columns">{{ col.header }}</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let row of data">
+    <td *ngFor="let col of columns">
+      <ng-container *ngIf="col.type !== 'action'; else actionCell">
+        <!-- Special case for computed fields like full name -->
+        <ng-container *ngIf="col.compute; else directValue">
+          {{ col.compute(row) }}
+        </ng-container>
+        <ng-template #directValue>
+          {{ row[col.key] }}
+        </ng-template>
+      </ng-container>
+
+      <ng-template #actionCell>
+        <a *ngFor="let action of col.actions"
+           class="action-link"
+           [ngClass]="action.class"
+           (click)="action.callback(row)">
+          {{ action.label }}
+        </a>
+      </ng-template>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
