@@ -1,6 +1,9 @@
 ﻿namespace ExpertEase.Domain.Enums;
 
-public class JobStatusEnum
+public enum JobStatusEnum
 {
-    
+    Confirmed,
+    Completed,
+    Cancelled,
+    Reviewed
 }

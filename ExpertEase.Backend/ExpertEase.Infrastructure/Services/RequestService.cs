@@ -52,7 +52,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, lastReply.ToString()));
             // }
 
-            if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Completed)
+            if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Confirmed)
             {
                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
             }
@@ -89,7 +89,17 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "Request already exists", ErrorCodes.CannotAdd));
         }
+
+        if (sender.ContactInfo == null)
+        {
+            sender.ContactInfo = new ContactInfo
+            {
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address
+            };
+        }
         
+        await repository.UpdateAsync(sender, cancellationToken);
         await repository.AddAsync(requestEntity, cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();

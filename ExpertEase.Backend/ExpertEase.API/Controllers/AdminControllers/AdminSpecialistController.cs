@@ -18,35 +18,35 @@ public class AdminSpecialistController(IUserService userService, ISpecialistServ
 {
     [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<RequestResponse<UserDTO>>> GetById([FromRoute] Guid id)
+    public async Task<ActionResult<RequestResponse<SpecialistDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
         
         return currentUser.Result != null ? 
             CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialist(id)) : 
-            CreateErrorMessageResult<UserDTO>(currentUser.Error);
+            CreateErrorMessageResult<SpecialistDTO>(currentUser.Error);
     }
     
     [Authorize(Roles = "Admin")]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<PagedResponse<UserDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination)
+    public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination)
     {
         var currentUser = await GetCurrentUser();
-
+    
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(pagination)) :
-            CreateErrorMessageResult<PagedResponse<UserDTO>>(currentUser.Error);
+            CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(currentUser.Error);
     }
     
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    public async Task<ActionResult<RequestResponse>> Add([FromBody] UserSpecialistAddDTO user)
+    public async Task<ActionResult<RequestResponse>> Add([FromBody] SpecialistAddDTO user)
     {
         var currentUser = await GetCurrentUser();
         user.Password = PasswordUtils.HashPassword(user.Password);
-
+    
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await UserService.AddUserSpecialist(user, currentUser.Result)) :
+            CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialist(user, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
 
@@ -74,7 +74,7 @@ public class AdminSpecialistController(IUserService userService, ISpecialistServ
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await specialistService.DeleteSpecialist(id)) :
+            CreateRequestResponseFromServiceResponse(await UserService.DeleteUser(id)) :
             CreateErrorMessageResult(currentUser.Error);
     }
 }

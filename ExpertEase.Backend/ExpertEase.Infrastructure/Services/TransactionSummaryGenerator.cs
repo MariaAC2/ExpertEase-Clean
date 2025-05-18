@@ -11,9 +11,9 @@ public class TransactionSummaryGenerator : ITransactionSummaryGenerator
         return $"User {request.SenderUser.FirstName} {request.SenderUser.LastName} has a problem with the following description: {request.Description}." +
                $"{Environment.NewLine}Specialist {request.ReceiverUser.FirstName} {request.ReceiverUser.LastName} accepted solving the problem." +
                $"{Environment.NewLine}The service is at address {request.Address}, from {reply.StartDate:yyyy-MM-dd HH:mm} to {reply.EndDate:yyyy-MM-dd HH:mm} with a price of {reply.Price:C}." +
-               $"{Environment.NewLine}User contact information: {request.SenderUser.Email}, {request.PhoneNumber}." +
+               $"{Environment.NewLine}User contact information: {request.SenderUser.Email}, {request.SenderUser.ContactInfo.PhoneNumber}." +
                $"{Environment.NewLine}Specialist contact information: {request.ReceiverUser.Email}" +
-               (request.ReceiverUser.Specialist != null ? $", {request.ReceiverUser.Specialist.PhoneNumber}" : "") + ".";
+               (request.ReceiverUser.SpecialistProfile != null ? $", {request.ReceiverUser.ContactInfo.PhoneNumber}" : "") + ".";
     }
 
     public string GenerateTransactionDetails(Transaction transaction)

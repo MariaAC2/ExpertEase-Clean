@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("/api/profile/user/requests/{requestId}/replies")]
+[Route("/api/profile/exchanges/requests/{requestId}/replies")]
 [Tags("UserReplies")]
 public class ReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {

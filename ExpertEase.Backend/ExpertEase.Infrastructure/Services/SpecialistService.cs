@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using ExpertEase.Application.Constants;
-using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
@@ -15,115 +13,99 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class SpecialistService(
-    IRepository<WebAppDatabaseContext> repository,
-    IMailService mailService): ISpecialistService
+public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : ISpecialistService
 {
-    public async Task<ServiceResponse> AddSpecialist(SpecialistAddDTO specialist, UserDTO? requestingUser = null,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse> AddSpecialist(SpecialistAddDTO user, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {
-        if (requestingUser == null)
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin) // Verify who can add the user, you can change this however you se fit.
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User cannot become specialist because it doesn't exist!", ErrorCodes.CannotAdd));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can add users!", ErrorCodes.CannotAdd));
         }
-        var user = await repository.GetAsync(new UserSpec(requestingUser.Email), cancellationToken);
-        if (user == null)
+
+        var result = await repository.GetAsync(new UserSpec(user.Email), cancellationToken);
+
+        if (result != null)
         {
-            return ServiceResponse.CreateErrorResponse(CommonErrors.UserNotFound);
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user already exists!", ErrorCodes.UserAlreadyExists));
         }
-        
-        var existingSpecialist = await repository.GetAsync(new SpecialistSpec(specialist.UserId), cancellationToken);
-        if (existingSpecialist != null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The specialist already exists!", ErrorCodes.UserAlreadyExists));
-        }
-        
-        user.Role = UserRoleEnum.Specialist;
 
-        user.Specialist = new Specialist
+        var newUser = new User
         {
-            UserId = requestingUser.Id,
-            PhoneNumber = specialist.PhoneNumber,
-            Address = specialist.Address,
-            YearsExperience = specialist.YearsExperience,
-            Description = specialist.Description,
-        };
-
-        if (specialist.Categories != null)
-        {
-            var validCategories = new List<Category>();
-
-            foreach (var categoryName in specialist.Categories)
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Role = UserRoleEnum.Specialist,
+            Password = user.Password,
+            ContactInfo = new ContactInfo
             {
-                var category = await repository.GetAsync(new CategorySpec(categoryName), cancellationToken);
-
-                if (category == null)
-                {
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict,
-                        "Cannot add a category that doesn't exist", ErrorCodes.EntityNotFound));
-                }
-
-                validCategories.Add(category);
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address
+            },
+            SpecialistProfile = new SpecialistProfile
+            {
+                YearsExperience = user.YearsExperience,
+                YearsExperienceString = user.YearsExperience.ToString(),
+                Description = user.Description,
+                Categories = new List<Category>()
             }
-
-            user.Specialist.Categories = validCategories;
-        }
+        };
         
-        await repository.AddAsync(user.Specialist, cancellationToken);
-        var fullName = $"{user.LastName} {user.FirstName}";
-        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        await repository.AddAsync(newUser, cancellationToken);
+        
+        newUser.Account = new Account
+        {
+            UserId = newUser.Id,
+            Currency = "RON",
+            Balance = 0
+        };
+            
+        await repository.AddAsync(newUser.Account, cancellationToken);
+        await repository.UpdateAsync(newUser, cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }
-    
-    public async Task<ServiceResponse<UserDTO>> GetSpecialist(Guid userId, CancellationToken cancellationToken = default)
+
+    public async Task<ServiceResponse<SpecialistDTO>> GetSpecialist(Guid id, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new SpecialistProjectionSpec(userId), cancellationToken);
+        var result = await repository.GetAsync(new SpecialistProjectionSpec(id), cancellationToken);
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
-            ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
+            ServiceResponse.CreateErrorResponse<SpecialistDTO>(CommonErrors.UserNotFound);
     }
     
-    public async Task<ServiceResponse<PagedResponse<UserDTO>>> GetSpecialists(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> GetSpecialists(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
     {
-        var result = await repository.PageAsync(pagination, new SpecialistProjectionSpec(pagination.Search), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
-
+        var result = await repository.PageAsync(pagination, new SpecialistProjectionSpec(pagination.Search), cancellationToken);
+        
         return ServiceResponse.CreateSuccessResponse(result);
     }
-
-    public async Task<ServiceResponse> UpdateSpecialist(SpecialistUpdateDTO specialist, UserDTO? requestingUser = null,
+    
+    public async Task<ServiceResponse> UpdateSpecialist(SpecialistUpdateDTO user, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != specialist.UserId) // Verify who can add the user, you can change this however you se fit.
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin) // Verify who can add the user, you can change this however you se fit.
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin or the own user can update the user!", ErrorCodes.CannotUpdate));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can add users!", ErrorCodes.CannotAdd));
         }
 
-        var entity = await repository.GetAsync(new SpecialistSpec(specialist.UserId), cancellationToken); 
+        var result = await repository.GetAsync(new UserSpec(user.Id), cancellationToken);
 
-        if (entity != null)
+        if (result == null)
         {
-            entity.PhoneNumber = specialist.PhoneNumber ?? entity.PhoneNumber;
-            entity.Address = specialist.Address ?? entity.Address;
-            entity.YearsExperience = specialist.YearsExperience ?? entity.YearsExperience;
-            entity.Description = specialist.Description ?? entity.Description;
-
-            await repository.UpdateAsync(entity, cancellationToken);
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user doesn't exist!", ErrorCodes.UserAlreadyExists));
         }
 
-        return ServiceResponse.CreateSuccessResponse();
-    }
-    
-    public async Task<ServiceResponse> DeleteSpecialist(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
-    {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != id) // Verify who can add the user, you can change this however you se fit.
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin or the own user can delete the user!", ErrorCodes.CannotDelete));
-        }
+        result.FirstName = user.FirstName ?? result.FirstName;
+        result.LastName = user.LastName ?? result.LastName;
+        result.ContactInfo.PhoneNumber = user.PhoneNumber ?? result.ContactInfo.PhoneNumber;
+        result.ContactInfo.Address = user.Address ?? result.ContactInfo.Address;
+        result.SpecialistProfile.YearsExperience = user.YearsExperience ?? result.SpecialistProfile.YearsExperience;
+        result.SpecialistProfile.Description = user.Description ?? result.SpecialistProfile.Description;
 
-        await repository.DeleteAsync<User>(id, cancellationToken);
-
+        await repository.UpdateAsync(result, cancellationToken);
+        
         return ServiceResponse.CreateSuccessResponse();
     }
 }

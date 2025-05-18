@@ -26,20 +26,40 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <_ContentIncludedByDefault Remove="wwwroot\browser\favicon.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\index.html" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\logo.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-ESONYHRN.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\polyfills-FFHMD2TL.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\styles-SXL4ZYB7.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\avatar.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\Generic avatar.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\account.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\edit.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\history.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\logout.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\reviews.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\settings.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-2WZJXNUY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-RBLPHJDV.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-JRRVGQC3.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-brands-400-Q3XCMWHQ.woff2" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-brands-400-R2XQZCET.ttf" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-regular-400-QSNYFYRT.woff2" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-regular-400-XUOPSR7E.ttf" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-solid-900-5ZUYHGA7.woff2" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-solid-900-PJNKLK6W.ttf" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-v4compatibility-LFEHZI6Y.woff2" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-v4compatibility-YY67RJWG.ttf" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-IPL5NEBV.css" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">
-        <Exec Command="npm run build:wwwroot" WorkingDirectory="..\..\ExpertEase.Frontend" />
+        <Exec Command="ng build --configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />
+        <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />
     </Target>
-
 </Project>

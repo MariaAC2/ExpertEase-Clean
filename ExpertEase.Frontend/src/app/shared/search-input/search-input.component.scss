@@ -7,6 +7,7 @@
   border-radius: 5px;
   display: flex;
   align-items: center;
+  gap: 20px;
 }
 
 .search-box input {
@@ -14,7 +15,6 @@
   padding: 15px 50px 15px 20px; /* space for icon */
   border: none;
   background: transparent;
-  font-size: 1.2rem;
   outline: none;
   font-family: 'Roboto Mono', monospace;
   font-size: 12px;

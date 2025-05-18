@@ -7,6 +7,7 @@ namespace ExpertEase.Application.Errors;
 /// </summary>
 public static class CommonErrors
 {
+    public static ErrorMessage NotAllowed => new(HttpStatusCode.Forbidden, "You are not allowed to do this action!");
     public static ErrorMessage UserNotFound => new(HttpStatusCode.NotFound, "User doesn't exist!", ErrorCodes.EntityNotFound);
     public static ErrorMessage EntityNotFound => new(HttpStatusCode.NotFound, "Entity doesn't exist!", ErrorCodes.EntityNotFound);
     public static ErrorMessage FileNotFound => new(HttpStatusCode.NotFound, "File not found on disk!", ErrorCodes.PhysicalFileNotFound);

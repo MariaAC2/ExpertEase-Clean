@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
@@ -12,7 +12,6 @@ export class SearchInputComponent {
   searchTerm: string = '';
 
   @Output() searchChanged = new EventEmitter<string>();
-
   onSearchChanged() {
     this.searchChanged.emit(this.searchTerm.trim());
   }

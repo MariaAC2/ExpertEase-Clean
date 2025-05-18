@@ -2,12 +2,10 @@
 
 namespace ExpertEase.Domain.Entities;
 
-public class Job : BaseEntity
+public class ServiceTask : BaseEntity
 {
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
     public Guid SpecialistId { get; set; }
-    public Specialist Specialist { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string Description { get; set; } = null!;
@@ -16,4 +14,5 @@ public class Job : BaseEntity
     public DateTime? CompletedAt { get; set; }
     public DateTime? CancelledAt { get; set; }
     public decimal Price { get; set; }
+    public Reply Reply { get; set; } = null!;
 }

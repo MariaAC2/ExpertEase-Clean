@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import {HomeComponent} from './pages/home/home.component';
 import {AboutComponent} from './pages/about/about.component';
-import {SolicitationsComponent} from './pages/solicitations/solicitations.component';
 import {RegisterComponent} from './pages/auth/register/register.component';
 import {LoginComponent} from './pages/auth/login/login.component';
 import {AdminComponent} from './pages/admin/admin.component';
@@ -11,6 +10,9 @@ import {RoleGuard} from './pages/auth/role.guard';
 import {UnauthorizedComponent} from './pages/unauthorized/unauthorized.component';
 import {AuthGuard} from './pages/auth/auth.guard';
 import {ProfileComponent} from './pages/profile/profile.component';
+import {MessagesComponent} from './pages/messages/messages.component';
+import {SpecialistDetailsComponent} from './shared/specialist-details/specialist-details.component';
+import {RequestFormComponent} from './shared/request-form/request-form.component';
 
 export const routes: Routes = [
   {
@@ -22,12 +24,16 @@ export const routes: Routes = [
     component: AboutComponent
   },
   {
-    path: 'solicitations',
-    component: SolicitationsComponent
+    path: 'messages',
+    component: MessagesComponent
   },
   {
     path: 'profile',
     component: ProfileComponent
+  },
+  {
+    path: 'request-form',
+    component: RequestFormComponent
   },
   {
     path: 'register',
@@ -36,6 +42,10 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent
+  },
+  {
+    path: 'specialist-details',
+    component: SpecialistDetailsComponent
   },
   {
     path: 'admin',

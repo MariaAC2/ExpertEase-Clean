@@ -23,8 +23,7 @@ public sealed class RequestSearchSpec : Specification<Request>
             e.ReceiverUserId == request.ReceiverUserId &&
             e.RequestedStartDate == request.RequestedStartDate &&
             e.PhoneNumber == request.PhoneNumber &&
-            e.Address == request.Address &&
-            e.Description == request.Description
+            e.Address == request.Address
         );
     }
 }

@@ -11,7 +11,7 @@ namespace ExpertEase.API.Controllers.UserControllers;
 [ApiController]
 [Route("api/profile/user")]
 [Tags("UserProfile")]
-public class ProfileController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
+public class ProfileController(IUserService userService, ISpecialistProfileService specialistService) : AuthorizedController(userService)
 {
     [Authorize]
     [HttpGet]
@@ -40,12 +40,12 @@ public class ProfileController(IUserService userService, ISpecialistService spec
     
     [Authorize(Roles = "Client")]
     [HttpPut("become_specialist")]
-    public async Task<ActionResult<RequestResponse>> BecomeSpecialist([FromBody] SpecialistAddDTO specialist)
+    public async Task<ActionResult<RequestResponse>> BecomeSpecialist([FromBody] SpecialistProfileAddDTO specialistProfile)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialist(specialist, currentUser.Result)) :
+            CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialistProfile(specialistProfile, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
 }

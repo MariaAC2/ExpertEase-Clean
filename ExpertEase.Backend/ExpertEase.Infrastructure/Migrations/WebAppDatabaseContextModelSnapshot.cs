@@ -178,6 +178,41 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.ToTable("Request");
                 });
 
+            modelBuilder.Entity("ExpertEase.Domain.Entities.Review", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ReceiverUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverUserId");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.ToTable("Review");
+                });
+
             modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -313,10 +348,18 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<int>("Rating")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleString")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -348,7 +391,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.HasOne("ExpertEase.Domain.Entities.User", "User")
                         .WithOne("Account")
                         .HasForeignKey("ExpertEase.Domain.Entities.Account", "UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -375,6 +418,25 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
                         .WithMany("Requests")
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReceiverUser");
+
+                    b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.Review", b =>
+                {
+                    b.HasOne("ExpertEase.Domain.Entities.User", "ReceiverUser")
+                        .WithMany()
+                        .HasForeignKey("ReceiverUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
+                        .WithMany("Reviews")
                         .HasForeignKey("SenderUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -445,6 +507,8 @@ namespace ExpertEase.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Requests");
+
+                    b.Navigation("Reviews");
 
                     b.Navigation("Specialist");
 

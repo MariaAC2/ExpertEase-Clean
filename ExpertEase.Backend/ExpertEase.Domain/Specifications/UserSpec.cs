@@ -15,7 +15,7 @@ public sealed class UserSpec : Specification<User>
         Query.Where(e => e.Id == id);
 
         Query.Include(e => e.Account);
-        Query.Include(e => e.Specialist);
+        Query.Include(e => e.SpecialistProfile);
         Query.Include(e=> e.Requests)
             .ThenInclude(r => r.ReceiverUser);
     }
@@ -24,7 +24,7 @@ public sealed class UserSpec : Specification<User>
     {
         Query.Where(e => e.Email == email);
         Query.Include(e => e.Account);
-        Query.Include(e => e.Specialist);
+        Query.Include(e => e.SpecialistProfile);
         Query.Include(e => e.Requests);
     }
 }

@@ -38,13 +38,19 @@ builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebApp
 builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IUserService, UserService>()
     .AddScoped<IAccountService, AccountService>()
-    .AddScoped<ISpecialistService, SpecialistService>()
+    .AddScoped<ISpecialistProfileService, SpecialistProfileService>()
     .AddScoped<ITransactionService, TransactionService>()
     .AddScoped<IRequestService, RequestService>()
     .AddScoped<IReplyService, ReplyService>()
     .AddScoped<ITransactionSummaryGenerator, TransactionSummaryGenerator>()
     .AddScoped<ICategoryService, CategoryService>()
-    .AddScoped<IMailService, MailService>();
+    .AddScoped<IMailService, MailService>()
+    .AddScoped<ISpecialistService, SpecialistService>();
+//     .AddScoped<IExchangeService, ExchangeService>();
+//     .AddScoped<IReviewService, ReviewService>();
+//     .AddScoped<IServiceTaskService, ServiceTaskService>();
+
+
 
 builder.Services.Configure<JwtConfiguration>(
     builder.Configuration.GetSection("JwtConfiguration"));
@@ -84,16 +90,16 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSwagger();
-// app.UseSwaggerUI();
-//
-// app.MapGet("/", context =>
-// {
-//     context.Response.Redirect("/swagger");
-//     return Task.CompletedTask;
-// });
 
-app.MapControllers();
-app.MapFallbackToFile("index.html");
+app.UseAuthentication(); // If you're using JWT or cookies
+app.UseAuthorization();  // 🔑 REQUIRED if you're using [Authorize]
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    // endpoints.MapFallbackToFile("index.html");
+    endpoints.MapFallbackToFile("browser/index.html");
+});
 
 app.Run();
 

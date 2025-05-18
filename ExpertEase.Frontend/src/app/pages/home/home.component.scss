@@ -1,0 +1,52 @@
+.user-list app-specialist-card {
+  border-bottom: 1px solid #b7a4dd;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-list app-specialist-card:last-child {
+  border-bottom: none;
+}
+
+.separator {
+  height: 3px;
+  background-color: #b7a4dd;
+  //margin: 1rem 0;
+  width: 100%;
+}
+
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.home-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.home-header h1 {
+  margin: 0.5rem 0;       /* reduce vertical margins */
+  text-align: center;     /* keep centered if not already */
+}
+
+.brand-highlight {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #3c1a7d; /* Optional: give it a standout color */
+}
+
+.home-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}

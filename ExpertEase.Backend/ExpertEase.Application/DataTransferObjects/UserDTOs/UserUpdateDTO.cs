@@ -14,5 +14,5 @@ public record UserUpdateDTO
     public string? LastName { get; init; }
     public string? Password { get; init; }
     
-    public SpecialistUpdateDTO? Specialist { get; init; } = null;
+    public SpecialistProfileUpdateDTO? Specialist { get; init; } = null;
 }

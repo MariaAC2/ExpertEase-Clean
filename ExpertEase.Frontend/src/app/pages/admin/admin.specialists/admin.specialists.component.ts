@@ -160,12 +160,15 @@ dummy_user = {
     }
   ];
 
-  defaultUser: UserAddDTO = {
+  defaultUser: UserSpecialistAddDTO = {
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    role: UserRoleEnum.Client
+    phoneNumber: '',
+    address: '',
+    yearsExperience: 0,
+    description: '',
   };
   formData: { [key: string]: any } = {};
 
@@ -174,10 +177,8 @@ dummy_user = {
   addEntityFormFields = dtoToFormFields(this.defaultUser, {
     email: { type: 'email' },
     password: { type: 'password' },
-    role: {
-      type: 'select',
-      options: Object.values(UserRoleEnum) // ['Admin', 'Specialist', 'Client']
-    }
+    yearsExperience: { type: 'number', placeholder: 'Ex: 5' },
+    description: { type: 'textarea', placeholder: 'Descrie serviciile oferite' }
   });
 
   updateEntityFormFields = dtoToFormFields(
@@ -194,12 +195,15 @@ dummy_user = {
   constructor(private adminService: AdminSpecialistsService) {}
 
   ngOnInit(): void {
-    const defaultFormValues: UserAddDTO = {
+    const defaultFormValues: UserSpecialistAddDTO = {
       firstName: '',
       lastName: '',
       email: '',
       password: '',
-      role: UserRoleEnum.Client
+      phoneNumber: '',
+      address: '',
+      yearsExperience: 0,
+      description: '',
     };
 
     this.formData = { ...defaultFormValues };
@@ -299,7 +303,7 @@ dummy_user = {
 
   closeUserDetails() {
     this.isUserDetailsVisible = false;
-    this.selectedUser = null;
+    this.entityDetails = {};
   }
 
   closeUpdateUserForm() {

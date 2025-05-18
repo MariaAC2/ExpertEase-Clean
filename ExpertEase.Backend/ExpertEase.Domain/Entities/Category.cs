@@ -4,7 +4,7 @@ public class Category : BaseEntity
 {
     public string Name { get; set; } = null!;
     public string? Description { get; set; } = null!;
-    public ICollection<Specialist> Specialists { get; set; } = new List<Specialist>();
+    public ICollection<SpecialistProfile> Specialists { get; set; } = new List<SpecialistProfile>();
     
     public override string ToString()
     {

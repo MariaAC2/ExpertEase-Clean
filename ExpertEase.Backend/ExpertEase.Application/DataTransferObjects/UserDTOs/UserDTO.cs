@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ExpertEase.Application.DataTransferObjects.AccountDTOs;
+using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 
 namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
@@ -21,8 +23,13 @@ public class UserDTO
     public string Email { get; set; } = null!;
     [Required]
     public UserRoleEnum Role { get; set; }
-    public AccountDTO? Account { get; set; }
-    public SpecialistDTO? Specialist { get; set; }
+    public string RoleString { get; set; } = null!;
+    [Required]
+    public DateTime CreatedAt { get; set; }
+    [Required]
+    public DateTime UpdatedAt { get; set; }
+    public ContactInfoDTO? ContactInfo { get; set; }
+    public SpecialistProfileDTO? Specialist { get; set; }
 }
 
 public class UserTransactionDTO
@@ -39,16 +46,22 @@ public class UserTransactionDTO
     public UserRoleEnum Role { get; set; }
 }
 
-public class UserContactInfoDTO
+public class ContactInfoDTO
 {
+    [Required]
+    public string PhoneNumber { get; set; } = null!;
+    [Required]
+    public string Address { get; set; } = null!;
+}
+
+public class UserExchangeDTO
+{
+    [Required]
+    public Guid Id { get; set; }
     [Required]
     public string FirstName { get; set; } = null!;
     [Required]
     public string LastName { get; set; } = null!;
     [Required]
-    public string Email { get; set; } = null!;
-    [Required]
-    public string PhoneNumber { get; set; } = null!;
-    [Required]
-    public string Address { get; set; } = null!;
+    public List<RequestDTO> Requests { get; set; } = new List<RequestDTO>();
 }

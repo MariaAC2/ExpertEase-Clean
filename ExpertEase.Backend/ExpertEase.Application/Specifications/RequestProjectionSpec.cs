@@ -1,4 +1,5 @@
 ﻿using Ardalis.Specification;
+using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
@@ -13,31 +14,28 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
     {
         Query.Include(r => r.SenderUser);
         Query.Include(r => r.ReceiverUser);
+        Query.Include(r => r.Replies);
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
-            RejectedAt = e.Status == StatusEnum.Rejected ? e.RejectedAt : null,
-            SenderUser = (e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending && e.SenderUser != null)
-                ? new UserContactInfoDTO
-                {
-                    FirstName = e.SenderUser.FirstName,
-                    LastName = e.SenderUser.LastName,
-                    Email = e.SenderUser.Email,
-                    PhoneNumber = e.PhoneNumber,
-                    Address = e.Address
-                }
-                : null,
-            ReceiverUser = new UserContactInfoDTO
+            SenderContactInfo = 
+                e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
+                    ? new ContactInfoDTO
+                    {
+                        PhoneNumber = e.PhoneNumber,
+                        Address = e.Address
+                    }
+                    : null,
+            Replies = e.Replies.Select(r => new ReplyDTO
             {
-                FirstName = e.ReceiverUser.FirstName,
-                LastName = e.ReceiverUser.LastName,
-                Email = e.ReceiverUser.Email,
-                PhoneNumber = e.ReceiverUser.Specialist != null ? e.ReceiverUser.Specialist.PhoneNumber : "",
-                Address = e.ReceiverUser.Specialist != null ? e.ReceiverUser.Specialist.Address : "",
-            }
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+                Price = r.Price,
+                Status = r.Status,
+            }).ToList()
         });
 
         if (orderByCreatedAt)

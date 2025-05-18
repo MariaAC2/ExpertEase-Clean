@@ -1,0 +1,80 @@
+.card {
+  display: flex;
+  align-items: center;
+  background-color: #cfbdfe;
+  padding: 20px;
+  width: 100vw;               /* Use full viewport width */
+  gap: 20px;
+  justify-content: space-between;
+  box-sizing: border-box;
+  font-family: 'Roboto Mono', monospace;
+}
+
+//.avatar {
+//  font-size: 64px;
+//  color: #999;
+//}
+
+.avatar img {
+  width: 64px;     /* or smaller like 32px */
+  height: 64px;
+}
+
+.info {
+  flex: 1;
+}
+
+.full-name {
+  //text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.full-name:hover {
+  text-decoration: underline;
+}
+
+.details-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.categories, .experience, .description {
+  font-size: 0.95rem;
+}
+
+.label {
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+.tag {
+  background-color: #333;
+  color: white;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-right: 4px;
+  font-size: 0.85rem;
+}
+
+.request-btn {
+  background-color: #9a83db;
+  padding: 32px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+}
+

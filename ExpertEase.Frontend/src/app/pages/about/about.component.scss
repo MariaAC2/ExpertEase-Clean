@@ -1,0 +1,44 @@
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.home-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-header h1 {
+  margin: 0.5rem 0;       /* reduce vertical margins */
+  text-align: center;     /* keep centered if not already */
+}
+
+.brand-highlight {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #3c1a7d; /* Optional: give it a standout color */
+}
+
+.home-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.about-info {
+  padding: 16px;
+  font-family: 'Roboto Mono', monospace; /* or another monospace */
+  font-size: 16px;
+  line-height: 1;
+  color: #222;
+  white-space: pre-wrap;         /* allows line breaks from HTML */
+}
+

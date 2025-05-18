@@ -38,7 +38,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.BadRequest, "Cannot reply to an unaccepted request", ErrorCodes.CannotAdd));
         }
         
-        if (request.Status == StatusEnum.Failed || request.Status == StatusEnum.Completed)
+        if (request.Status == StatusEnum.Failed || request.Status == StatusEnum.Confirmed)
         {
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot reply to a completed or failed request", ErrorCodes.CannotAdd));
         }
@@ -169,7 +169,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
             
             if (request.Replies.Any())
             {
-                request.Status = StatusEnum.Completed;
+                request.Status = StatusEnum.Confirmed;
                 await repository.UpdateAsync(request, cancellationToken);
                 // create transfer transaction
                 var transferResult = await transactionService.AddTransfer(request, entity, requestingUser, cancellationToken);

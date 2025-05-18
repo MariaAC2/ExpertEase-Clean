@@ -1,1 +1,44 @@
-<p>home works!</p>
+<div class="home-wrapper">
+  <div class="home-header">
+    <h1 style="font-style: italic;">Ai o țeavă spartă?</h1>
+    <h1 style="font-style: italic;">Ți s-a stricat chiuveta?</h1>
+    <h1>Nu-i problemă, găsește specialistul potrivit pe <strong class="brand-highlight">ExpertEase</strong>!</h1>
+  </div>
+
+  <div class="home-content">
+    <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+  </div>
+
+  <p>Peste <strong>100 de specialiști</strong> înregistrați pe platforma noastră!</p>
+</div>
+
+<div class="user-list">
+  <ng-container *ngFor="let user of dummyUsers; let i = index">
+    <app-specialist-card
+      [firstName]="user.firstName"
+      [lastName]="user.lastName"
+      [categories]="getCategoryNames(user.categories)"
+      [yearsExperience]="user.yearsExperience.toString()"
+      [description]="user.description">
+    </app-specialist-card>
+
+    <!-- Add separator between cards, but not after the last one -->
+    <div class="separator" *ngIf="i < dummyUsers.length - 1"></div>
+  </ng-container>
+</div>
+
+<div class="pagination-wrapper">
+  <div class="page-size-selector">
+    <label for="pageSize">Afișează pe pagină:</label>
+    <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)">
+      <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+    </select>
+  </div>
+
+  <div class="pagination-controls">
+    <button (click)="goToPreviousPage()" [disabled]="currentPage === 1">&#8592;</button>
+    <span>Pagina {{ currentPage }} din {{ getTotalPages() }}</span>
+    <button (click)="goToNextPage()" [disabled]="currentPage === getTotalPages()">&#8594;</button>
+  </div>
+</div>
+

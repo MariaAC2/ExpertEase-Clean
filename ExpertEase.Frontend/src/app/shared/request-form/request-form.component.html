@@ -1,0 +1,33 @@
+<div class="overlay">
+  <div class="request-form-wrapper">
+    <h2>Trimite o solicitare</h2>
+
+    <form (ngSubmit)="submitRequest()" #requestForm="ngForm" class="request-form">
+      <div class="form-row">
+        <label>
+          Data și ora dorite:
+          <input type="datetime-local" name="startDate" [(ngModel)]="request.requestedStartDate" required />
+        </label>
+
+        <label>
+          Număr de telefon:
+          <input type="tel" name="phoneNumber" [(ngModel)]="request.phoneNumber" required />
+        </label>
+      </div>
+
+      <label>
+        Adresă:
+        <input type="text" name="address" [(ngModel)]="request.address" required />
+      </label>
+
+      <label>
+        Descrierea solicitării:
+        <textarea name="description" rows="4" [(ngModel)]="request.description" required></textarea>
+      </label>
+
+      <div class="center-button">
+        <button type="submit" (click)="submitRequest()">Trimite solicitarea</button>
+      </div>
+    </form>
+  </div>
+</div>

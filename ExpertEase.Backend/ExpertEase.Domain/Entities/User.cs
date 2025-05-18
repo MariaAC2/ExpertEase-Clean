@@ -12,8 +12,12 @@ public class User : BaseEntity
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
-    public Specialist? Specialist { get; set; }
+    public string RoleString { get; set; } = null!;
+    public ContactInfo? ContactInfo { get; set; }
+    public SpecialistProfile? SpecialistProfile { get; set; }
     public Account Account { get; set; } = null!;
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public ICollection<Request> Requests { get; set; } = new List<Request>();
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public int Rating = 0;
 }

@@ -7,6 +7,7 @@ using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace ExpertEase.Application.Specifications;
 
@@ -23,7 +24,7 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     public UserProjectionSpec(bool orderByCreatedAt = false)
     {
         Query.Include(e => e.Account);
-        Query.Include(e => e.Specialist);
+        Query.Include(e => e.SpecialistProfile);
         // Query.Include(e=> e.Specialist.Categories);
         
         Query.Select(e => new UserDTO
@@ -33,22 +34,20 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             FirstName = e.FirstName,
             LastName = e.LastName,
             Role = e.Role,
-            Account = e.Account != null
-                ? new AccountDTO
+            RoleString = e.RoleString,
+            ContactInfo = e.ContactInfo != null
+                ? new ContactInfoDTO
                 {
-                    Id = e.Account.Id,
-                    Balance = e.Account.Balance,
-                    Currency = e.Account.Currency
+                    PhoneNumber = e.ContactInfo.PhoneNumber,
+                    Address = e.ContactInfo.Address
                 }
                 : null,
-            Specialist = e.Specialist != null
-                ? new SpecialistDTO
+            Specialist = e.SpecialistProfile != null
+                ? new SpecialistProfileDTO
                 {
-                    PhoneNumber = e.Specialist.PhoneNumber,
-                    Address = e.Specialist.Address,
-                    YearsExperience = e.Specialist.YearsExperience,
-                    Description = e.Specialist.Description,
-                    Categories = e.Specialist.Categories.Select(c => new CategoryDTO
+                    YearsExperience = e.SpecialistProfile.YearsExperience,
+                    Description = e.SpecialistProfile.Description,
+                    Categories = e.SpecialistProfile.Categories.Select(c => new CategoryDTO
                         {
                             Id = c.Id,
                             Name = c.Name,
@@ -69,22 +68,41 @@ public class UserProjectionSpec : Specification<User, UserDTO>
         Query.Where(e => e.Id == id);
     }
 
+    // public UserProjectionSpec(string? search) : this(true)
+    // {
+    //     Query.Where(s=> s.Role != UserRoleEnum.Specialist);
+    //     search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
+    //
+    //     if (search == null)
+    //         return;
+    //
+    //     var searchExpr = $"%{search.Replace(" ", "%")}%";
+    //
+    //     Query.Where(e =>
+    //         EF.Functions.ILike(e.FirstName, searchExpr) ||
+    //         EF.Functions.ILike(e.LastName, searchExpr) ||
+    //         EF.Functions.ILike(e.RoleString, searchExpr)
+    //     );
+    // }
     public UserProjectionSpec(string? search) : this(true)
     {
-        Query.Where(s=> s.Role != UserRoleEnum.Specialist);
-        search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
+        Query.Where(s => s.Role != UserRoleEnum.Specialist);
 
-        if (search == null)
+        if (string.IsNullOrWhiteSpace(search))
             return;
 
-        var searchExpr = $"%{search.Replace(" ", "%")}%";
+        var terms = search.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        Query.Where(e =>
-            EF.Functions.ILike(e.FirstName, searchExpr) ||
-            EF.Functions.ILike(e.LastName, searchExpr) ||
-            EF.Functions.ILike(e.Email, searchExpr) ||
-            EF.Functions.ILike(e.Role.ToString(), searchExpr)
-        );
+        foreach (var term in terms)
+        {
+            var searchExpr = $"%{term}%";
+
+            Query.Where(e =>
+                EF.Functions.ILike(e.FirstName, searchExpr) ||
+                EF.Functions.ILike(e.LastName, searchExpr) ||
+                EF.Functions.ILike(e.RoleString, searchExpr));
+        }
     }
 }
 

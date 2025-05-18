@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.SpecialistControllers;
 
 [ApiController]
-[Route("/api/profile/specialist/requests/{requestId}/replies")]
+[Route("/api/profile/exchanges/requests/{requestId}/replies")]
 [Tags("SpecialistReplies")]
 public class SpecialistReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {

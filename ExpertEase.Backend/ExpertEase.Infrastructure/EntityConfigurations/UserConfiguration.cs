@@ -33,21 +33,32 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
         builder.Property(e => e.Role)
             .HasConversion(new EnumToStringConverter<UserRoleEnum>())
-            .HasMaxLength(255)
+            .IsRequired();
+        builder.Property(e=>e.RoleString)
             .IsRequired();
         builder.Property(e => e.CreatedAt)
             .IsRequired();
         builder.Property(e => e.UpdatedAt)
             .IsRequired();
-        builder.HasOne(u => u.Specialist)
+        builder.Property(u => u.Rating)
+            .HasDefaultValue(0);
+        builder.HasOne(u => u.SpecialistProfile)
             .WithOne(s => s.User)
-            .HasForeignKey<Specialist>(s => s.UserId)
+            .HasForeignKey<SpecialistProfile>(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(u=>u.Account)
+            .WithOne(a => a.User)
+            .HasForeignKey<Account>(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Transactions)
             .WithOne(t => t.InitiatorUser)
             .HasForeignKey(t => t.InitiatorUserId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Requests)
+            .WithOne(r => r.SenderUser)
+            .HasForeignKey(r => r.SenderUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(u => u.Reviews)
             .WithOne(r => r.SenderUser)
             .HasForeignKey(r => r.SenderUserId)
             .OnDelete(DeleteBehavior.Cascade);

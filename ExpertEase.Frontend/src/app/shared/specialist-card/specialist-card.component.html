@@ -1,0 +1,62 @@
+<div class="card">
+  <div class="avatar">
+    <img src="/assets/avatar.svg" alt="User avatar" />
+  </div>
+  <div class="info">
+    <h2 class="full-name" (click)="goToDetails()">
+      {{ firstName }} {{ lastName }}
+    </h2>
+  <div class="details-block">
+    <div class="row">
+      <div class="categories">
+        <span class="label">Categorii:</span>
+        <span class="tag" *ngFor="let cat of categories">{{ cat }}</span>
+      </div>
+
+      <div class="experience">
+        <span class="label">Ani experiență:</span>
+        {{ yearsExperience }}
+      </div>
+    </div>
+
+    <div class="description">
+      <span class="label">Descriere:</span>
+      {{ description }}
+    </div>
+  </div>
+  </div>
+
+  <button class="request-btn" (click)="goToSendRequest()">Fă o solicitare</button>
+
+<!--  <div class="content">-->
+
+<!--    <div class="categories">-->
+<!--      <span class="label">Categorii:</span>-->
+<!--      <span class="tag" *ngFor="let cat of categories">{{ cat }}</span>-->
+<!--    </div>-->
+
+<!--&lt;!&ndash;    <div class="rating">&ndash;&gt;-->
+<!--&lt;!&ndash;      <span *ngFor="let star of [1,2,3,4,5]; let i = index">&ndash;&gt;-->
+<!--&lt;!&ndash;        <i class="fas" [class.fa-star]="i < rating" [class.fa-star-half-alt]="i === Math.floor(rating) && rating % 1 !== 0" [class.fa-star-o]="i >= rating"></i>&ndash;&gt;-->
+<!--&lt;!&ndash;      </span>&ndash;&gt;-->
+<!--&lt;!&ndash;    </div>&ndash;&gt;-->
+
+<!--    <div class="description">-->
+<!--      <span class="label">Descriere:</span>-->
+<!--      {{ description }}-->
+<!--    </div>-->
+
+<!--    <div class="experience">-->
+<!--      <span class="label">Ani experiență:</span>-->
+<!--      {{ yearsExperience }}-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  <div class="side-info">-->
+<!--&lt;!&ndash;    <div class="experience">&ndash;&gt;-->
+<!--&lt;!&ndash;      <span class="label">Ani experiență:</span>&ndash;&gt;-->
+<!--&lt;!&ndash;      {{ yearsExperience }}&ndash;&gt;-->
+<!--&lt;!&ndash;    </div>&ndash;&gt;-->
+<!--    <button class="request-btn">Fă o solicitare</button>-->
+<!--  </div>-->
+</div>

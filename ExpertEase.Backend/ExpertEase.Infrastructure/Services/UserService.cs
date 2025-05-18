@@ -72,22 +72,18 @@ public class UserService(
             FirstName = result.FirstName,
             LastName = result.LastName,
             Role = result.Role,
-            Account = result.Account != null
-                ? new AccountDTO
+            ContactInfo = result.ContactInfo != null
+                ? new ContactInfoDTO
                 {
-                    Id = result.Account.Id,
-                    Balance = result.Account.Balance,
-                    Currency = result.Account.Currency,
-                }
-                : null,
-            Specialist = result.Specialist != null
-                ? new SpecialistDTO
+                    PhoneNumber = result.ContactInfo.PhoneNumber,
+                    Address = result.ContactInfo.Address,
+                } : null,
+            Specialist = result.SpecialistProfile != null
+                ? new SpecialistProfileDTO
                 {
-                    PhoneNumber = result.Specialist.PhoneNumber,
-                    Address = result.Specialist.Address,
-                    YearsExperience = result.Specialist.YearsExperience,
-                    Description = result.Specialist.Description,
-                    Categories = result.Specialist.Categories.Select(c => new CategoryDTO
+                    YearsExperience = result.SpecialistProfile.YearsExperience,
+                    Description = result.SpecialistProfile.Description,
+                    Categories = result.SpecialistProfile.Categories.Select(c => new CategoryDTO
                     {
                         Id = c.Id,
                         Name = c.Name,
@@ -122,56 +118,8 @@ public class UserService(
             FirstName = user.FirstName,
             LastName = user.LastName,
             Role = user.Role,
+            RoleString = user.Role.ToString(),
             Password = user.Password
-        };
-        
-        await repository.AddAsync(newUser, cancellationToken);
-        
-        newUser.Account = new Account
-        {
-            UserId = newUser.Id,
-            Currency = "RON",
-            Balance = 0
-        };
-            
-        await repository.AddAsync(newUser.Account, cancellationToken);
-        await repository.UpdateAsync(newUser, cancellationToken);
-        
-        // var fullName = $"{user.LastName} {user.FirstName}";
-        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase Team", cancellationToken);
-        
-        return ServiceResponse.CreateSuccessResponse();
-    }
-    
-    public async Task<ServiceResponse> AddUserSpecialist(UserSpecialistAddDTO user, UserDTO? requestingUser, CancellationToken cancellationToken = default)
-    {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin) // Verify who can add the user, you can change this however you se fit.
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can add users!", ErrorCodes.CannotAdd));
-        }
-
-        var result = await repository.GetAsync(new UserSpec(user.Email), cancellationToken);
-
-        if (result != null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user already exists!", ErrorCodes.UserAlreadyExists));
-        }
-
-        var newUser = new User
-        {
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Role = UserRoleEnum.Specialist,
-            Password = user.Password,
-            Specialist = new Specialist
-            {
-                PhoneNumber = user.PhoneNumber,
-                Address = user.Address,
-                YearsExperience = user.YearsExperience,
-                Description = user.Description,
-                Categories = new List<Category>()
-            }
         };
         
         await repository.AddAsync(newUser, cancellationToken);

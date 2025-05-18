@@ -285,16 +285,16 @@ export interface TransactionUpdateDTO {
 }
 
 export interface UserAddDTO {
-    firstName: string;
     lastName: string;
+    firstName: string;
     email: string;
     password: string;
     role: UserRoleEnum;
 }
 
 export interface UserContactInfoDTO {
-    firstName: string;
     lastName: string;
+    firstName: string;
     email: string;
     phoneNumber: string;
     address: string;
@@ -302,8 +302,8 @@ export interface UserContactInfoDTO {
 
 export interface UserDTO {
     id: string;
-    firstName: string;
     lastName: string;
+    firstName: string;
     email: string;
     password: string;
     role: UserRoleEnum;
@@ -312,8 +312,8 @@ export interface UserDTO {
 }
 
 export interface UserRegisterDTO {
-    firstName: string;
     lastName: string;
+    firstName: string;
     email: string;
     password: string;
 }
@@ -341,8 +341,8 @@ export interface UserUpdateDTO {
 }
 
 export interface UserSpecialistAddDTO {
-  firstName: string;
   lastName: string;
+  firstName: string;
   email: string;
   password: string;
   phoneNumber: string;

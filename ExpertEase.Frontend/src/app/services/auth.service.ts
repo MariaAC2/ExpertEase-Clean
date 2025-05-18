@@ -13,18 +13,18 @@ export interface DecodedToken {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private baseUrl = 'http://localhost:5241/api';
+  private baseUrl = 'http://localhost:5241/api/auth';
 
   constructor(private http: HttpClient) {}
 
   registerUser(data: UserRegisterDTO) {
     console.log(data);
-    return this.http.post(`${this.baseUrl}/auth/register`, data);
+    return this.http.post(`${this.baseUrl}/register`, data);
   }
 
   loginUser(data: LoginDTO) {
     console.log(data);
-    return this.http.post<RequestResponse<LoginResponseDTO>>(`${this.baseUrl}/auth/login`, data).pipe(
+    return this.http.post<RequestResponse<LoginResponseDTO>>(`${this.baseUrl}/login`, data).pipe(
       tap((result) => {
         const token = result.response?.token;
 

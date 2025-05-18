@@ -101,6 +101,7 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
         return ServiceResponse.CreateSuccessResponse();
     }
     
+    // Asta e o unealta care ne va ajuta mai tarziu
     public async Task<ServiceResponse> AddTransfer(Request request, Reply reply, UserDTO? requestingUser,
         CancellationToken cancellationToken = default)
     {

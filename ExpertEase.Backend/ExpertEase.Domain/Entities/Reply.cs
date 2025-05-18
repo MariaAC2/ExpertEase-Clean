@@ -10,6 +10,8 @@ public class Reply : BaseEntity
     public DateTime EndDate { get; set; }
     public decimal Price { get; set; }
     public StatusEnum Status { get; set; }
+    public DateTime? RejectedAt { get; set; }
+    public ServiceTask? ServiceTask { get; set; }
     
     public override string ToString()
     {

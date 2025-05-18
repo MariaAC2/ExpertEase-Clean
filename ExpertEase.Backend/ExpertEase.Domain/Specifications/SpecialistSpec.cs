@@ -3,7 +3,7 @@ using ExpertEase.Domain.Entities;
 
 namespace ExpertEase.Domain.Specifications;
 
-public class SpecialistSpec: Specification<Specialist>
+public class SpecialistSpec: Specification<SpecialistProfile>
 {
     public SpecialistSpec(Guid id)
     {
