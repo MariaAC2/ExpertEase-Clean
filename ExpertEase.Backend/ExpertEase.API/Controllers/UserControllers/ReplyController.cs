@@ -12,11 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("/api/profile/exchanges/requests/{requestId}/replies")]
+[Route("/api/user/requests/{requestId}/replies")]
 [Tags("UserReplies")]
 public class ReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {
-    
     [Authorize(Roles = "Client")]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ReplyDTO>>> GetById(Guid requestId, [FromRoute] Guid id)

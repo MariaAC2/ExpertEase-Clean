@@ -12,8 +12,9 @@ namespace ExpertEase.Application.Specifications;
 
 public class SpecialistProfileProjectionSpec : Specification<User, SpecialistProfileDTO>
 {
-    public SpecialistProfileProjectionSpec()
+    public SpecialistProfileProjectionSpec(Guid id)
     {
+        Query.Where(e => e.SpecialistProfile != null && e.SpecialistProfile.UserId == id && e.Role == UserRoleEnum.Specialist);
         Query.Include(e => e.SpecialistProfile)
             .ThenInclude(e => e.Categories);
         Query.Select(e => new SpecialistProfileDTO
@@ -27,5 +28,4 @@ public class SpecialistProfileProjectionSpec : Specification<User, SpecialistPro
             }).ToList()
         });
     }
-    public SpecialistProfileProjectionSpec(Guid id) : base() => Query.Where(e => e.SpecialistProfile != null && e.SpecialistProfile.UserId == id && e.Role == UserRoleEnum.Specialist);
 }

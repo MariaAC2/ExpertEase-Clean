@@ -11,8 +11,6 @@ public class ReplyConfiguration : IEntityTypeConfiguration<Reply>
         builder.Property(r => r.Id)
             .IsRequired();
         builder.HasKey(r => r.Id);
-        builder.Property(r => r.RequestId)
-            .IsRequired();
         builder.HasOne(rp => rp.Request)
             .WithMany(r => r.Replies)
             .HasForeignKey(rp => rp.RequestId);
@@ -24,5 +22,9 @@ public class ReplyConfiguration : IEntityTypeConfiguration<Reply>
             .IsRequired();
         builder.Property(r => r.Status)
             .IsRequired();
+        builder.HasOne(r => r.ServiceTask)
+            .WithOne(st => st.Reply)
+            .HasForeignKey<ServiceTask>(st => st.ReplyId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

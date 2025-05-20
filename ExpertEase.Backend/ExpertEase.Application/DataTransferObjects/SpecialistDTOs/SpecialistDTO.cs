@@ -8,9 +8,7 @@ public class SpecialistDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
-    public string FirstName { get; set; } = null!;
-    [Required]
-    public string LastName { get; set; } = null!;
+    public string FullName { get; set; } = null!;
     [Required]
     public string Email { get; set; } = null!;
     [Required]
@@ -25,6 +23,20 @@ public class SpecialistDTO
     public DateTime CreatedAt { get; set; }
     [Required]
     public DateTime UpdatedAt { get; set; }
+    
+    public List<CategoryDTO> Categories { get; set; } = null!;
+}
+
+public class SpecialistDetailsDTO
+{
+    [Required]
+    public Guid Id { get; set; }
+    [Required]
+    public string FullName { get; set; } = null!;
+    [Required]
+    public int YearsExperience { get; set; }
+    [Required]
+    public string Description { get; set; } = null!;
     
     public List<CategoryDTO> Categories { get; set; } = null!;
 }

@@ -7,7 +7,7 @@ namespace ExpertEase.Application.Services;
 
 public interface ISpecialistProfileService
 {
-    Task<ServiceResponse> AddSpecialistProfile(SpecialistProfileAddDTO specialistProfile, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<BecomeSpecialistResponseDTO>> AddSpecialistProfile(BecomeSpecialistDTO becomeSpecialistProfile, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse<SpecialistProfileDTO>> GetSpecialistProfile(Guid userId, CancellationToken cancellationToken = default); 
     Task<ServiceResponse> UpdateSpecialistProfile(SpecialistProfileUpdateDTO specialistProfile, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteSpecialistProfile(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

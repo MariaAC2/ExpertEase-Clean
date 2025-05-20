@@ -57,8 +57,7 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
             Query.Where(r =>
                     EF.Functions.ILike(r.Description, searchExpr) ||
                     EF.Functions.ILike(r.Status.ToString(), searchExpr) ||
-                    EF.Functions.ILike(r.SenderUser.FirstName, searchExpr) ||
-                    EF.Functions.ILike(r.SenderUser.LastName, searchExpr) ||
+                    EF.Functions.ILike(r.SenderUser.FullName, searchExpr) ||
                     EF.Functions.ILike(r.SenderUser.Email, searchExpr) ||
                     EF.Functions.ILike(r.PhoneNumber, searchExpr) ||
                     EF.Functions.ILike(r.Address, searchExpr)

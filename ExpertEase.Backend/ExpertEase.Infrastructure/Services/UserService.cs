@@ -32,18 +32,18 @@ public class UserService(
             ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
     }
     
-    public async Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, Guid adminId, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(new AdminUserProjectionSpec(id), cancellationToken);
+        var result = await repository.GetAsync(new AdminUserProjectionSpec(id, adminId), cancellationToken);
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
             ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
     }
     
-    public async Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(Guid adminId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
     {
-        var result = await repository.PageAsync(pagination, new UserProjectionSpec(pagination.Search), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
+        var result = await repository.PageAsync(pagination, new AdminUserProjectionSpec(pagination.Search, adminId), cancellationToken); // Use the specification and pagination API to get only some entities from the database.
 
         return ServiceResponse.CreateSuccessResponse(result);
     }
@@ -69,8 +69,7 @@ public class UserService(
         {
             Id = result.Id,
             Email = result.Email,
-            FirstName = result.FirstName,
-            LastName = result.LastName,
+            FullName = result.FullName,
             Role = result.Role,
             ContactInfo = result.ContactInfo != null
                 ? new ContactInfoDTO
@@ -115,8 +114,7 @@ public class UserService(
         var newUser = new User
         {
             Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
+            FullName = user.FullName,
             Role = user.Role,
             RoleString = user.Role.ToString(),
             Password = user.Password
@@ -155,9 +153,39 @@ public class UserService(
                 new(HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
         }
         
-        entity.FirstName = user.FirstName ?? entity.FirstName;
-        entity.LastName = user.LastName ?? entity.LastName;
+        if (!string.IsNullOrWhiteSpace(entity.FullName))
+        {
+            var nameParts = entity.FullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            var firstName = nameParts.Length > 0 ? nameParts[0] : user.FirstName;
+            var lastName = nameParts.Length > 1 ? nameParts[1] : user.LastName;
+            entity.FullName = $"{firstName} {lastName}";
+        }
+
         entity.Password = user.Password ?? entity.Password;
+
+        await repository.UpdateAsync(entity, cancellationToken); // Update the entity and persist the changes.
+
+        return ServiceResponse.CreateSuccessResponse();
+    }
+    
+    public async Task<ServiceResponse> AdminUpdateUser(AdminUserUpdateDTO user, UserDTO? requestingUser, CancellationToken cancellationToken = default)
+    {
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != user.Id) // Verify who can add the user, you can change this however you se fit.
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin or the own user can update the user!", ErrorCodes.CannotUpdate));
+        }
+
+        var entity = await repository.GetAsync(new UserSpec(user.Id), cancellationToken); 
+
+        if (entity == null)
+        {
+            return ServiceResponse.CreateErrorResponse(
+                new(HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
+        }
+        
+        entity.FullName = user.FullName ?? entity.FullName;
+        entity.Role = user.Role ?? entity.Role;
+        entity.RoleString = user.Role?.ToString() ?? entity.RoleString;
 
         await repository.UpdateAsync(entity, cancellationToken); // Update the entity and persist the changes.
 

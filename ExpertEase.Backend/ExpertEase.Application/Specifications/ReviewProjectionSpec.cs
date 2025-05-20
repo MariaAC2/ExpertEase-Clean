@@ -16,7 +16,7 @@ public class ReviewProjectionSpec : Specification<Review, ReviewDTO>
         Query.Select(x => new ReviewDTO
         {
             ReceiverUserId = x.ReceiverUserId,
-            SenderUserFullName = x.SenderUser.FirstName + " " + x.SenderUser.LastName,
+            SenderUserFullName = x.SenderUser.FullName,
             Rating = x.Rating,
             Content = x.Content
         });
@@ -55,15 +55,13 @@ public class ReviewAdminProjectionSpec : Specification<Review, ReviewAdminDTO>
             SenderUser = new UserDTO
             {
                 Id = x.SenderUser.Id,
-                FirstName = x.SenderUser.FirstName,
-                LastName = x.SenderUser.LastName,
+                FullName = x.SenderUser.FullName,
                 Email = x.SenderUser.Email
             },
             ReceiverUser = new UserDTO
             {
                 Id = x.ReceiverUser.Id,
-                FirstName = x.ReceiverUser.FirstName,
-                LastName = x.ReceiverUser.LastName,
+                FullName = x.ReceiverUser.FullName,
                 Email = x.ReceiverUser.Email
             },
             Content = x.Content,

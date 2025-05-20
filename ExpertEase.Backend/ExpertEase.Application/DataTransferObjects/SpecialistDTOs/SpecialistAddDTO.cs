@@ -5,9 +5,7 @@ namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 public class SpecialistAddDTO
 {
     [Required]
-    public string FirstName { get; set; } = null!;
-    [Required]
-    public string LastName { get; set; } = null!;
+    public string FullName { get; set; } = null!;
     [Required]
     public string Email { get; set; } = null!;
     [Required]

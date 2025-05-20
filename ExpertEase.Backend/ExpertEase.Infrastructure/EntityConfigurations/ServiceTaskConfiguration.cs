@@ -28,9 +28,5 @@ public class ServiceTaskConfiguration: IEntityTypeConfiguration<ServiceTask>
         builder.Property(st => st.Price)
             .IsRequired()
             .HasColumnType("decimal(18,2)");
-        builder.HasOne(st=> st.Reply)
-            .WithOne(r => r.ServiceTask)
-            .HasForeignKey<Reply>(r => r.RequestId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

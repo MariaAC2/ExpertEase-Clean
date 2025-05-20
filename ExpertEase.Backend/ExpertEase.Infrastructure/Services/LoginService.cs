@@ -24,8 +24,8 @@ public class LoginService(IOptions<JwtConfiguration> jwtConfiguration) : ILoginS
 
         var claims = new Dictionary<string, object>();
         
-        if (!string.IsNullOrWhiteSpace(user.LastName))
-            claims.Add(ClaimTypes.Name, user.LastName);
+        if (!string.IsNullOrWhiteSpace(user.FullName))
+            claims.Add(ClaimTypes.Name, user.FullName);
 
         if (!string.IsNullOrWhiteSpace(user.Email))
             claims.Add(ClaimTypes.Email, user.Email);

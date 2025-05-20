@@ -16,7 +16,7 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransactionService transactionService) : IReplyService
+public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServiceTaskService serviceTaskService) : IReplyService
 {
     public async Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
@@ -172,7 +172,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, ITransa
                 request.Status = StatusEnum.Confirmed;
                 await repository.UpdateAsync(request, cancellationToken);
                 // create transfer transaction
-                var transferResult = await transactionService.AddTransfer(request, entity, requestingUser, cancellationToken);
+                var transferResult = await serviceTaskService.AddServiceTask(entity, cancellationToken);
 
                 if (!transferResult.IsOk)
                 {

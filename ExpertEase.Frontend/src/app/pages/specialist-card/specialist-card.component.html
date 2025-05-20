@@ -1,0 +1,30 @@
+<div class="card">
+  <div class="avatar">
+    <img src="/assets/avatar.svg" alt="User avatar" />
+  </div>
+  <div class="info">
+    <h2 class="full-name" (click)="goToDetails()">
+      {{ specialist.fullName }}
+    </h2>
+  <div class="details-block">
+    <div class="row">
+      <div class="categories">
+        <span class="label">Categorii:</span>
+        <span class="tag" *ngFor="let cat of specialist.categories">{{ cat }}</span>
+      </div>
+
+      <div class="experience">
+        <span class="label">Ani experiență:</span>
+        {{ specialist.yearsExperience }}
+      </div>
+    </div>
+
+    <div class="description">
+      <span class="label">Descriere:</span>
+      {{ specialist.description }}
+    </div>
+  </div>
+  </div>
+
+  <button class="request-btn" (click)="goToSendRequest()">Fă o solicitare</button>
+</div>

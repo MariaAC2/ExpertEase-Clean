@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+using ExpertEase.Domain.Enums;
 
 namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
 
@@ -15,4 +16,12 @@ public record UserUpdateDTO
     public string? Password { get; init; }
     
     public SpecialistProfileUpdateDTO? Specialist { get; init; } = null;
+}
+
+public record AdminUserUpdateDTO
+{
+    [Required]
+    public Guid Id { get; init; }
+    public string? FullName { get; init; }
+    public UserRoleEnum? Role { get; init; }
 }

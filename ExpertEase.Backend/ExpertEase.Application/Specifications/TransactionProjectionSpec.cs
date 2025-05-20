@@ -18,8 +18,7 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
             InitiatorUser = new UserTransactionDTO
             {
                 Id = e.InitiatorUser.Id,
-                FirstName = e.InitiatorUser.FirstName,
-                LastName = e.InitiatorUser.LastName,
+                FirstName = e.InitiatorUser.FullName,
                 Email = e.InitiatorUser.Email,
                 Role = e.InitiatorUser.Role,
             },
@@ -27,8 +26,7 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
             SenderUser = e.SenderUser != null ? new UserTransactionDTO
             {
                 Id = e.SenderUser.Id,
-                FirstName = e.SenderUser.FirstName,
-                LastName = e.SenderUser.LastName,
+                FirstName = e.SenderUser.FullName,
                 Email = e.SenderUser.Email,
                 Role = e.SenderUser.Role,
             } : null,
@@ -36,8 +34,7 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
             ReceiverUser = e.ReceiverUser != null ? new UserTransactionDTO
             {
                 Id = e.ReceiverUser.Id,
-                FirstName = e.ReceiverUser.FirstName,
-                LastName = e.ReceiverUser.LastName,
+                FirstName = e.ReceiverUser.FullName,
                 Email = e.ReceiverUser.Email,
                 Role = e.ReceiverUser.Role,
             } : null,
@@ -77,18 +74,15 @@ public class TransactionProjectionSpec : Specification<Transaction, TransactionD
                 EF.Functions.ILike(t.RejectionCode.ToString() ?? "", searchExpr) ||
 
                 // Initiator
-                EF.Functions.ILike(t.InitiatorUser.FirstName, searchExpr) ||
-                EF.Functions.ILike(t.InitiatorUser.LastName, searchExpr) ||
+                EF.Functions.ILike(t.InitiatorUser.FullName, searchExpr) ||
                 EF.Functions.ILike(t.InitiatorUser.Email, searchExpr) ||
 
                 // Sender
-                (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.FirstName, searchExpr)) ||
-                (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.LastName, searchExpr)) ||
+                (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.FullName, searchExpr)) ||
                 (t.SenderUser != null && EF.Functions.ILike(t.SenderUser.Email, searchExpr)) ||
 
                 // Receiver
-                (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.FirstName, searchExpr)) ||
-                (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.LastName, searchExpr)) ||
+                (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.FullName, searchExpr)) ||
                 (t.ReceiverUser != null && EF.Functions.ILike(t.ReceiverUser.Email, searchExpr))
             );
         }

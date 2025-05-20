@@ -18,10 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Id)
             .IsRequired(); // Here it is specified if the property is required, meaning it cannot be null in the database.
         builder.HasKey(x => x.Id); // Here it is specified that the property Id is the primary key.
-        builder.Property(e => e.FirstName)
-            .HasMaxLength(255) // This specifies the maximum length for varchar type in the database.
-            .IsRequired();
-        builder.Property(e => e.LastName)
+        builder.Property(e => e.FullName)
             .HasMaxLength(255) // This specifies the maximum length for varchar type in the database.
             .IsRequired();
         builder.Property(e => e.Email)
@@ -42,6 +39,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
         builder.Property(u => u.Rating)
             .HasDefaultValue(0);
+        builder.HasOne(u => u.ContactInfo)
+            .WithOne(ci => ci.User)
+            .HasForeignKey<ContactInfo>(ci => ci.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(u => u.SpecialistProfile)
             .WithOne(s => s.User)
             .HasForeignKey<SpecialistProfile>(s => s.UserId)

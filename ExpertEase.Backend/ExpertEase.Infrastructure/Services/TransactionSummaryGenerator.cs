@@ -6,20 +6,20 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class TransactionSummaryGenerator : ITransactionSummaryGenerator
 {
-    public string GenerateTransferSummary(Request request, Reply reply)
+    public string GenerateTransferSummary(ServiceTask serviceTask)
     {
-        return $"User {request.SenderUser.FirstName} {request.SenderUser.LastName} has a problem with the following description: {request.Description}." +
-               $"{Environment.NewLine}Specialist {request.ReceiverUser.FirstName} {request.ReceiverUser.LastName} accepted solving the problem." +
-               $"{Environment.NewLine}The service is at address {request.Address}, from {reply.StartDate:yyyy-MM-dd HH:mm} to {reply.EndDate:yyyy-MM-dd HH:mm} with a price of {reply.Price:C}." +
-               $"{Environment.NewLine}User contact information: {request.SenderUser.Email}, {request.SenderUser.ContactInfo.PhoneNumber}." +
-               $"{Environment.NewLine}Specialist contact information: {request.ReceiverUser.Email}" +
-               (request.ReceiverUser.SpecialistProfile != null ? $", {request.ReceiverUser.ContactInfo.PhoneNumber}" : "") + ".";
+        return $"User {serviceTask.Reply.Request.SenderUser.FullName} has a problem with the following description: {serviceTask.Description}." +
+               $"{Environment.NewLine}Specialist {serviceTask.Reply.Request.ReceiverUser.FullName} accepted solving the problem." +
+               $"{Environment.NewLine}The service is at address {serviceTask.Address}, from {serviceTask.StartDate:yyyy-MM-dd HH:mm} to {serviceTask.EndDate:yyyy-MM-dd HH:mm} with a price of {serviceTask.Price:C}." +
+               $"{Environment.NewLine}User contact information: {serviceTask.Reply.Request.SenderUser.Email}, {serviceTask.Reply.Request.SenderUser.ContactInfo.PhoneNumber}." +
+               $"{Environment.NewLine}Specialist contact information: {serviceTask.Reply.Request.ReceiverUser.Email}" +
+               (serviceTask.Reply.Request.ReceiverUser.SpecialistProfile != null ? $", {serviceTask.Reply.Request.ReceiverUser.ContactInfo.PhoneNumber}" : "") + ".";
     }
 
     public string GenerateTransactionDetails(Transaction transaction)
     {
         return
-            $"User {transaction.InitiatorUser.FirstName} {transaction.InitiatorUser.LastName} initiated a transaction with the following details:" +
+            $"User {transaction.SenderUser.FullName} initiated a transaction with the following details:" +
             (transaction.ExternalSource != null ? $" External source {transaction.ExternalSource}," : "") +
             (transaction.Description != null ? $" Description {transaction.Description}," : "") +
             $" Amount {transaction.Amount}.";

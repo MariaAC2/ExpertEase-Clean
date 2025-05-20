@@ -38,15 +38,5 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .WithMany()
             .HasForeignKey(e => e.ReceiverUserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(e => e.SenderAccount)
-            .WithMany()
-            .HasForeignKey(e => e.SenderAccountId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(e => e.ReceiverAccount)
-            .WithMany()
-            .HasForeignKey(e => e.ReceiverAccountId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,13 +1,10 @@
 ﻿using Ardalis.Specification;
-using ExpertEase.Application.DataTransferObjects;
-using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace ExpertEase.Application.Specifications;
 
@@ -24,15 +21,14 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     public UserProjectionSpec(bool orderByCreatedAt = false)
     {
         Query.Include(e => e.Account);
-        Query.Include(e => e.SpecialistProfile);
-        // Query.Include(e=> e.Specialist.Categories);
+        Query.Include(e => e.SpecialistProfile)
+            .ThenInclude(e => e.Categories);
         
         Query.Select(e => new UserDTO
         {
             Id = e.Id,
             Email = e.Email,
-            FirstName = e.FirstName,
-            LastName = e.LastName,
+            FullName = e.FullName,
             Role = e.Role,
             RoleString = e.RoleString,
             ContactInfo = e.ContactInfo != null
@@ -67,27 +63,58 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     {
         Query.Where(e => e.Id == id);
     }
+}
 
-    // public UserProjectionSpec(string? search) : this(true)
-    // {
-    //     Query.Where(s=> s.Role != UserRoleEnum.Specialist);
-    //     search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
-    //
-    //     if (search == null)
-    //         return;
-    //
-    //     var searchExpr = $"%{search.Replace(" ", "%")}%";
-    //
-    //     Query.Where(e =>
-    //         EF.Functions.ILike(e.FirstName, searchExpr) ||
-    //         EF.Functions.ILike(e.LastName, searchExpr) ||
-    //         EF.Functions.ILike(e.RoleString, searchExpr)
-    //     );
-    // }
-    public UserProjectionSpec(string? search) : this(true)
+public class AdminUserProjectionSpec: Specification<User, UserDTO>
+{
+    public AdminUserProjectionSpec(Guid adminId, bool orderByCreatedAt = false)
     {
-        Query.Where(s => s.Role != UserRoleEnum.Specialist);
+        Query.Include(e => e.Account);
+        Query.Include(e => e.SpecialistProfile)
+            .ThenInclude(e => e.Categories);
+        
+        Query.Where(e => e.Id != adminId && e.Role != UserRoleEnum.Specialist);
+        Query.Select(e => new UserDTO
+        {
+            Id = e.Id,
+            Email = e.Email,
+            FullName = e.FullName,
+            Role = e.Role,
+            RoleString = e.RoleString,
+            ContactInfo = e.ContactInfo != null
+                ? new ContactInfoDTO
+                {
+                    PhoneNumber = e.ContactInfo.PhoneNumber,
+                    Address = e.ContactInfo.Address
+                }
+                : null,
+            Specialist = e.SpecialistProfile != null
+                ? new SpecialistProfileDTO
+                {
+                    YearsExperience = e.SpecialistProfile.YearsExperience,
+                    Description = e.SpecialistProfile.Description,
+                    Categories = e.SpecialistProfile.Categories.Select(c => new CategoryDTO
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                    }).ToList()
+                }
+                : null
+        });
 
+        if (orderByCreatedAt)
+        {
+            Query.OrderByDescending(e => e.CreatedAt);
+        }
+    }
+    public AdminUserProjectionSpec(Guid id, Guid adminId) : this(adminId)
+    {
+        Query.Where(e => e.Id == id);
+    }
+    
+    public AdminUserProjectionSpec(string? search, Guid adminId) : this(adminId, true)
+    {
         if (string.IsNullOrWhiteSpace(search))
             return;
 
@@ -99,17 +126,8 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             var searchExpr = $"%{term}%";
 
             Query.Where(e =>
-                EF.Functions.ILike(e.FirstName, searchExpr) ||
-                EF.Functions.ILike(e.LastName, searchExpr) ||
+                EF.Functions.ILike(e.FullName, searchExpr) ||
                 EF.Functions.ILike(e.RoleString, searchExpr));
         }
-    }
-}
-
-public class AdminUserProjectionSpec : UserProjectionSpec
-{
-    public AdminUserProjectionSpec(Guid id) : base(id) 
-    {
-        Query.Where(e => e.Role != UserRoleEnum.Specialist);
     }
 }

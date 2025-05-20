@@ -52,6 +52,18 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-v4compatibility-LFEHZI6Y.woff2" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\media\fa-v4compatibility-YY67RJWG.ttf" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\styles-IPL5NEBV.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-2PNJ4SXO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-3FPPXBLW.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-7DU2PFK6.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-HJUIT4HV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-QJ7MZURG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-QPJFXFBH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-QRZQXEF7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-TUBKTTH7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-OSGIBZ4Y.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-WHFG2RRW.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-AHZK76XG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-UYHJBLEZ.js" />
     </ItemGroup>
 
     <ItemGroup>

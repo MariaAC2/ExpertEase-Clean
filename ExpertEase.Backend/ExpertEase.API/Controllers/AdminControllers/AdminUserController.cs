@@ -21,7 +21,7 @@ public class AdminUserController(IUserService userService) : AuthorizedControlle
         var currentUser = await GetCurrentUser();
         
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await UserService.GetUserAdmin(id)) : 
+            CreateRequestResponseFromServiceResponse(await UserService.GetUserAdmin(id, currentUser.Result.Id)) : 
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
     }
     
@@ -32,7 +32,7 @@ public class AdminUserController(IUserService userService) : AuthorizedControlle
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await UserService.GetUsers(pagination)) :
+            CreateRequestResponseFromServiceResponse(await UserService.GetUsers(currentUser.Result.Id, pagination)) :
             CreateErrorMessageResult<PagedResponse<UserDTO>>(currentUser.Error);
     }
 
@@ -50,23 +50,11 @@ public class AdminUserController(IUserService userService) : AuthorizedControlle
     
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id:guid}")]
-    public async Task<ActionResult<RequestResponse>> Update([FromBody] UserUpdateDTO user)
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] AdminUserUpdateDTO user)
     {
         var currentUser = await GetCurrentUser();
 
-        if (currentUser.Result == null)
-        {
-            return CreateErrorMessageResult(currentUser.Error);
-        }
-
-        var updatedUserDto = user with
-        {
-            Password = !string.IsNullOrWhiteSpace(user.Password)
-                ? PasswordUtils.HashPassword(user.Password)
-                : null
-        };
-
-        var response = await UserService.UpdateUser(updatedUserDto, currentUser.Result);
+        var response = await UserService.AdminUpdateUser(user, currentUser.Result);
 
         return CreateRequestResponseFromServiceResponse(response);
     }

@@ -16,9 +16,7 @@ public class UserDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
-    public string FirstName { get; set; } = null!;
-    [Required]
-    public string LastName { get; set; } = null!;
+    public string FullName { get; set; } = null!;
     [Required]
     public string Email { get; set; } = null!;
     [Required]
@@ -59,9 +57,7 @@ public class UserExchangeDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
-    public string FirstName { get; set; } = null!;
-    [Required]
-    public string LastName { get; set; } = null!;
+    public string FullName { get; set; } = null!;
     [Required]
     public List<RequestDTO> Requests { get; set; } = new List<RequestDTO>();
 }

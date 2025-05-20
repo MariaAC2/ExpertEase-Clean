@@ -23,7 +23,7 @@ namespace ExpertEase.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "unaccent");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CategorySpecialist", b =>
+            modelBuilder.Entity("CategorySpecialistProfile", b =>
                 {
                     b.Property<Guid>("CategoriesId")
                         .HasColumnType("uuid");
@@ -95,6 +95,33 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.ToTable("Category");
                 });
 
+            modelBuilder.Entity("ExpertEase.Domain.Entities.ContactInfo", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("ContactInfo");
+                });
+
             modelBuilder.Entity("ExpertEase.Domain.Entities.Reply", b =>
                 {
                     b.Property<Guid>("Id")
@@ -109,6 +136,9 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("RequestId")
                         .HasColumnType("uuid");
@@ -213,28 +243,75 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.ToTable("Review");
                 });
 
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
+            modelBuilder.Entity("ExpertEase.Domain.Entities.ServiceTask", b =>
                 {
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ReplyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SpecialistId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReplyId")
+                        .IsUnique();
+
+                    b.ToTable("ServiceTask");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.SpecialistProfile", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -242,9 +319,13 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<int>("YearsExperience")
                         .HasColumnType("integer");
 
+                    b.Property<string>("YearsExperienceString")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("UserId");
 
-                    b.ToTable("Specialist");
+                    b.ToTable("SpecialistProfile");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Transaction", b =>
@@ -269,9 +350,6 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<Guid>("InitiatorUserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ReceiverAccountId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("ReceiverUserId")
                         .HasColumnType("uuid");
 
@@ -283,9 +361,6 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Property<string>("RejectionDetails")
                         .HasColumnType("text");
-
-                    b.Property<Guid?>("SenderAccountId")
-                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("SenderUserId")
                         .HasColumnType("uuid");
@@ -308,11 +383,7 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasIndex("InitiatorUserId");
 
-                    b.HasIndex("ReceiverAccountId");
-
                     b.HasIndex("ReceiverUserId");
-
-                    b.HasIndex("SenderAccountId");
 
                     b.HasIndex("SenderUserId");
 
@@ -333,12 +404,7 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("LastName")
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -371,7 +437,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("CategorySpecialist", b =>
+            modelBuilder.Entity("CategorySpecialistProfile", b =>
                 {
                     b.HasOne("ExpertEase.Domain.Entities.Category", null)
                         .WithMany()
@@ -379,7 +445,7 @@ namespace ExpertEase.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ExpertEase.Domain.Entities.Specialist", null)
+                    b.HasOne("ExpertEase.Domain.Entities.SpecialistProfile", null)
                         .WithMany()
                         .HasForeignKey("SpecialistsUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -391,6 +457,17 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.HasOne("ExpertEase.Domain.Entities.User", "User")
                         .WithOne("Account")
                         .HasForeignKey("ExpertEase.Domain.Entities.Account", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.ContactInfo", b =>
+                {
+                    b.HasOne("ExpertEase.Domain.Entities.User", "User")
+                        .WithOne("ContactInfo")
+                        .HasForeignKey("ExpertEase.Domain.Entities.ContactInfo", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -446,11 +523,22 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Navigation("SenderUser");
                 });
 
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Specialist", b =>
+            modelBuilder.Entity("ExpertEase.Domain.Entities.ServiceTask", b =>
+                {
+                    b.HasOne("ExpertEase.Domain.Entities.Reply", "Reply")
+                        .WithOne("ServiceTask")
+                        .HasForeignKey("ExpertEase.Domain.Entities.ServiceTask", "ReplyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reply");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.SpecialistProfile", b =>
                 {
                     b.HasOne("ExpertEase.Domain.Entities.User", "User")
-                        .WithOne("Specialist")
-                        .HasForeignKey("ExpertEase.Domain.Entities.Specialist", "UserId")
+                        .WithOne("SpecialistProfile")
+                        .HasForeignKey("ExpertEase.Domain.Entities.SpecialistProfile", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -465,19 +553,9 @@ namespace ExpertEase.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ExpertEase.Domain.Entities.Account", "ReceiverAccount")
-                        .WithMany()
-                        .HasForeignKey("ReceiverAccountId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("ExpertEase.Domain.Entities.User", "ReceiverUser")
                         .WithMany()
                         .HasForeignKey("ReceiverUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ExpertEase.Domain.Entities.Account", "SenderAccount")
-                        .WithMany()
-                        .HasForeignKey("SenderAccountId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
@@ -487,13 +565,14 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Navigation("InitiatorUser");
 
-                    b.Navigation("ReceiverAccount");
-
                     b.Navigation("ReceiverUser");
 
-                    b.Navigation("SenderAccount");
-
                     b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.Reply", b =>
+                {
+                    b.Navigation("ServiceTask");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Request", b =>
@@ -506,11 +585,13 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Navigation("Account")
                         .IsRequired();
 
+                    b.Navigation("ContactInfo");
+
                     b.Navigation("Requests");
 
                     b.Navigation("Reviews");
 
-                    b.Navigation("Specialist");
+                    b.Navigation("SpecialistProfile");
 
                     b.Navigation("Transactions");
                 });

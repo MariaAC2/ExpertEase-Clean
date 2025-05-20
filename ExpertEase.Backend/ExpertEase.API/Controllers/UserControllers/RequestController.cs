@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("/api/profile/exchanges/requests")]
+[Route("/api/user/requests")]
 [Tags("UserRequests")]
 public class RequestController(IUserService userService, IRequestService requestService) : AuthorizedController(userService)
 {

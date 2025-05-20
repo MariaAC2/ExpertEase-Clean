@@ -10,6 +10,7 @@ using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Middlewares;
 using ExpertEase.Infrastructure.Repositories;
 using ExpertEase.Infrastructure.Services;
+using ExpertEase.Infrastructure.Workers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -45,12 +46,11 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<ITransactionSummaryGenerator, TransactionSummaryGenerator>()
     .AddScoped<ICategoryService, CategoryService>()
     .AddScoped<IMailService, MailService>()
-    .AddScoped<ISpecialistService, SpecialistService>();
-//     .AddScoped<IExchangeService, ExchangeService>();
-//     .AddScoped<IReviewService, ReviewService>();
-//     .AddScoped<IServiceTaskService, ServiceTaskService>();
+    .AddScoped<ISpecialistService, SpecialistService>()
+     .AddScoped<IExchangeService, ExchangeService>()
+     .AddScoped<IServiceTaskService, ServiceTaskService>();
 
-
+builder.Services.AddHostedService<InitializerWorker>();
 
 builder.Services.Configure<JwtConfiguration>(
     builder.Configuration.GetSection("JwtConfiguration"));
@@ -90,16 +90,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication(); // If you're using JWT or cookies
 app.UseAuthorization();  // 🔑 REQUIRED if you're using [Authorize]
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-    // endpoints.MapFallbackToFile("index.html");
-    endpoints.MapFallbackToFile("browser/index.html");
-});
+app.MapControllers();
+app.MapFallbackToFile("browser/index.html");
 
 app.Run();
 

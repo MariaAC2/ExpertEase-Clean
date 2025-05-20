@@ -28,8 +28,7 @@ public class AuthController(IUserService _userService) : ResponseController
         
         var user = new UserAddDTO
         {
-            FirstName = regDto.FirstName,
-            LastName = regDto.LastName,
+            FullName = regDto.FirstName + " " + regDto.LastName,
             Email = regDto.Email,
             Password = PasswordUtils.HashPassword(regDto.Password),
             Role = role

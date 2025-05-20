@@ -27,18 +27,11 @@ public class ErrorMessage
     public static ErrorMessage FromException(ServerException exception) => new(exception.Status, exception.Message);
 }
 
-public class RejectReasonMessage
+public class RejectReasonMessage(string message, RejectionReason reason, bool isValid)
 {
-    public string Message { get; }
-    public RejectionReason Reason { get; }
-    public bool IsValid { get; }
-    
-    public RejectReasonMessage(string message, RejectionReason reason, bool isValid)
-    {
-        Message = message;
-        Reason = reason;
-        IsValid = isValid;
-    }
+    public string Message { get; } = message;
+    public RejectionReason Reason { get; } = reason;
+    public bool IsValid { get; } = isValid;
 
     public static RejectReasonMessage CreateRejectReasonMessage(Transaction transaction)
     {

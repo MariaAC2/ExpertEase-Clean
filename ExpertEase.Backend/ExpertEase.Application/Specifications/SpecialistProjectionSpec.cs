@@ -15,8 +15,7 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
         Query.Select(e => new SpecialistDTO
             {
                 Id = e.Id,
-                FirstName = e.FirstName,
-                LastName = e.LastName,
+                FullName = e.FullName,
                 Email = e.Email,
                 PhoneNumber = e.ContactInfo.PhoneNumber,
                 Address = e.ContactInfo.Address,
@@ -54,8 +53,7 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
         var searchExpr = $"%{search.Replace(" ", "%")}%";
 
         Query.Where(e =>
-            EF.Functions.ILike(e.FirstName, searchExpr) ||
-            EF.Functions.ILike(e.LastName, searchExpr) ||
+            EF.Functions.ILike(e.FullName, searchExpr) ||
             EF.Functions.ILike(e.Email, searchExpr) ||
             EF.Functions.ILike(e.ContactInfo.Address, searchExpr) ||
             EF.Functions.ILike(e.SpecialistProfile.YearsExperienceString, searchExpr)

@@ -18,8 +18,7 @@ public class ExchangeUserProjectionSpec : Specification<Request, UserExchangeDTO
         Query.Select(r => new UserExchangeDTO
         {
             Id = r.ReceiverUserId,
-            FirstName = r.ReceiverUser.FirstName,
-            LastName = r.ReceiverUser.LastName,
+            FullName = r.ReceiverUser.FullName,
             Requests = new List<RequestDTO> {
                 new RequestDTO
                 {
@@ -60,8 +59,7 @@ public class ExchangeUserProjectionSpec : Specification<Request, UserExchangeDTO
             var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
 
             Query.Where(r =>
-                EF.Functions.ILike(r.ReceiverUser.FirstName, searchExpr) ||
-                EF.Functions.ILike(r.ReceiverUser.LastName, searchExpr)
+                EF.Functions.ILike(r.ReceiverUser.FullName, searchExpr)
             );
         }
     }
@@ -77,8 +75,7 @@ public class ExchangeSpecialistProjectionSpec : Specification<Request, UserExcha
         Query.Select(r => new UserExchangeDTO
         {
             Id = r.SenderUserId,
-            FirstName = r.SenderUser.FirstName,
-            LastName = r.SenderUser.LastName,
+            FullName = r.SenderUser.FullName,
             Requests = new List<RequestDTO> {
                 new RequestDTO
                 {
@@ -120,8 +117,7 @@ public class ExchangeSpecialistProjectionSpec : Specification<Request, UserExcha
             var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
 
             Query.Where(r =>
-                EF.Functions.ILike(r.SenderUser.FirstName, searchExpr) ||
-                EF.Functions.ILike(r.SenderUser.LastName, searchExpr)
+                EF.Functions.ILike(r.SenderUser.FullName, searchExpr)
             );
         }
     }

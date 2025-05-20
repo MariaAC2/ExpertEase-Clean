@@ -5,8 +5,8 @@ namespace ExpertEase.Domain.Specifications;
 
 public class ServiceTaskSpec: Specification<ServiceTask>
 {
-    public ServiceTaskSpec(Guid userId)
+    public ServiceTaskSpec(Guid id)
     {
-        Query.Where(e => e.UserId == userId);
+        Query.Where(e => e.Id == id);
     }
 }

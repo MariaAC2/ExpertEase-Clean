@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using ExpertEase.Application.Constants;
+using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
@@ -17,50 +18,64 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class SpecialistProfileService(
     IRepository<WebAppDatabaseContext> repository,
+    ILoginService loginService,
     IMailService mailService): ISpecialistProfileService
 {
-    public async Task<ServiceResponse> AddSpecialistProfile(SpecialistProfileAddDTO specialistProfile, UserDTO? requestingUser = null,
+    public async Task<ServiceResponse<BecomeSpecialistResponseDTO>> AddSpecialistProfile(BecomeSpecialistDTO becomeSpecialistProfile, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser == null)
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User cannot become specialist because it doesn't exist!", ErrorCodes.CannotAdd));
+            return ServiceResponse.CreateErrorResponse<BecomeSpecialistResponseDTO>(new(HttpStatusCode.Forbidden, "User cannot become specialist because it doesn't exist!", ErrorCodes.CannotAdd));
         }
         var user = await repository.GetAsync(new UserSpec(requestingUser.Email), cancellationToken);
         if (user == null)
         {
-            return ServiceResponse.CreateErrorResponse(CommonErrors.UserNotFound);
+            return ServiceResponse.CreateErrorResponse<BecomeSpecialistResponseDTO>(CommonErrors.UserNotFound);
         }
         
-        var existingSpecialist = await repository.GetAsync(new SpecialistSpec(specialistProfile.UserId), cancellationToken);
+        var existingSpecialist = await repository.GetAsync(new SpecialistSpec(becomeSpecialistProfile.UserId), cancellationToken);
         if (existingSpecialist != null)
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The specialist already exists!", ErrorCodes.UserAlreadyExists));
+            return ServiceResponse.CreateErrorResponse<BecomeSpecialistResponseDTO>(new(HttpStatusCode.Conflict, "The specialist already exists!", ErrorCodes.UserAlreadyExists));
         }
         
         user.Role = UserRoleEnum.Specialist;
-        user.ContactInfo.PhoneNumber = specialistProfile.PhoneNumber;
-        user.ContactInfo.Address = specialistProfile.Address;
+        user.RoleString = UserRoleEnum.Specialist.ToString();
+        
+        if (user.ContactInfo == null)
+        {
+            user.ContactInfo = new ContactInfo
+            {
+                UserId = user.Id
+            };
+        }
+
+        user.ContactInfo.PhoneNumber = becomeSpecialistProfile.PhoneNumber;
+        user.ContactInfo.Address = becomeSpecialistProfile.Address;
+
+        user.ContactInfo.PhoneNumber = becomeSpecialistProfile.PhoneNumber;
+        user.ContactInfo.Address = becomeSpecialistProfile.Address;
 
         user.SpecialistProfile = new SpecialistProfile
         {
             UserId = requestingUser.Id,
-            YearsExperience = specialistProfile.YearsExperience,
-            YearsExperienceString = specialistProfile.YearsExperience.ToString(),
-            Description = specialistProfile.Description,
+            YearsExperience = becomeSpecialistProfile.YearsExperience,
+            YearsExperienceString = becomeSpecialistProfile.YearsExperience.ToString(),
+            Description = becomeSpecialistProfile.Description,
         };
 
-        if (specialistProfile.Categories != null)
+        if (becomeSpecialistProfile.Categories != null)
         {
             var validCategories = new List<Category>();
 
-            foreach (var categoryName in specialistProfile.Categories)
+            foreach (var categoryName in becomeSpecialistProfile.Categories)
             {
                 var category = await repository.GetAsync(new CategorySpec(categoryName), cancellationToken);
 
                 if (category == null)
                 {
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict,
+                    return ServiceResponse.CreateErrorResponse<BecomeSpecialistResponseDTO>(new(HttpStatusCode.Conflict,
                         "Cannot add a category that doesn't exist", ErrorCodes.EntityNotFound));
                 }
 
@@ -69,12 +84,43 @@ public class SpecialistProfileService(
 
             user.SpecialistProfile.Categories = validCategories;
         }
+
+        var userDTO = new UserDTO
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            ContactInfo = user.ContactInfo != null
+                ? new ContactInfoDTO
+                {
+                    PhoneNumber = user.ContactInfo.PhoneNumber,
+                    Address = user.ContactInfo.Address,
+                }
+                : null,
+            Specialist = user.SpecialistProfile != null
+                ? new SpecialistProfileDTO
+                {
+                    YearsExperience = user.SpecialistProfile.YearsExperience,
+                    Description = user.SpecialistProfile.Description,
+                    Categories = user.SpecialistProfile.Categories.Select(c => new CategoryDTO
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Description = c.Description,
+                    }).ToList()
+                }
+                : null,
+        };
         
         await repository.AddAsync(user.SpecialistProfile, cancellationToken);
-        var fullName = $"{user.LastName} {user.FirstName}";
-        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(fullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(user.FullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
-        return ServiceResponse.CreateSuccessResponse();
+        return ServiceResponse.CreateSuccessResponse(new BecomeSpecialistResponseDTO
+        {
+            Token = loginService.GetToken(userDTO, DateTime.UtcNow, new(7, 0, 0, 0)), // Get a JWT for the user issued now and that expires in 7 days.
+            User = userDTO
+        });
     }
     
     public async Task<ServiceResponse<SpecialistProfileDTO>> GetSpecialistProfile(Guid userId, CancellationToken cancellationToken = default)

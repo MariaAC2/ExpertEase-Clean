@@ -1,5 +1,6 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Application.DataTransferObjects.TransactionDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
@@ -14,7 +15,7 @@ public interface ITransactionService
     Task<ServiceResponse<PagedResponse<TransactionDTO>>> GetTransactions(Specification<Transaction, TransactionDTO> spec, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     public Task<ServiceResponse<int>> GetTransactionCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddTransaction(TransactionAddDTO transaction, UserDTO? requestingUser, CancellationToken cancellationToken = default);
-    Task<ServiceResponse> AddTransfer(Request request, Reply reply, UserDTO? requestingUser, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> AddTransfer(ServiceTask serviceTask, CancellationToken cancellationToken = default);
 
     Task<ServiceResponse> UpdateTransaction(TransactionUpdateDTO transaction, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> CancelTransaction(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

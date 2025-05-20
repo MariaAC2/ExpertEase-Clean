@@ -32,9 +32,9 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
         var newUser = new User
         {
             Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
+            FullName = user.FullName,
             Role = UserRoleEnum.Specialist,
+            RoleString = UserRoleEnum.Specialist.ToString(),
             Password = user.Password,
             ContactInfo = new ContactInfo
             {
@@ -96,9 +96,8 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user doesn't exist!", ErrorCodes.UserAlreadyExists));
         }
-
-        result.FirstName = user.FirstName ?? result.FirstName;
-        result.LastName = user.LastName ?? result.LastName;
+        
+        result.FullName = user.FullName ?? result.FullName;
         result.ContactInfo.PhoneNumber = user.PhoneNumber ?? result.ContactInfo.PhoneNumber;
         result.ContactInfo.Address = user.Address ?? result.ContactInfo.Address;
         result.SpecialistProfile.YearsExperience = user.YearsExperience ?? result.SpecialistProfile.YearsExperience;

@@ -14,5 +14,6 @@ public class ServiceTask : BaseEntity
     public DateTime? CompletedAt { get; set; }
     public DateTime? CancelledAt { get; set; }
     public decimal Price { get; set; }
+    public Guid ReplyId { get; set; }
     public Reply Reply { get; set; } = null!;
 }
