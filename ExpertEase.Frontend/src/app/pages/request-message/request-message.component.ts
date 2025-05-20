@@ -18,21 +18,10 @@ export class RequestMessageComponent {
     requestedStartDate: new Date('2025-05-22T10:30:00'),
     description: 'Solicit instalarea unei chiuvete noi în bucătărie. Este deja cumpărată, trebuie doar montată.',
     status: StatusEnum.Pending, // or StatusEnum.Pending if using enum reference
-    senderUser: {
-      firstName: 'Andrei',
-      lastName: 'Popescu',
-      email: 'andrei.popescu@example.com',
+    senderContactInfo: {
       phoneNumber: '0722123456',
       address: 'Str. Teiului nr. 14, București'
     },
-    receiverUser: {
-      firstName: 'Ioana',
-      lastName: 'Dumitrescu',
-      email: 'ioana.dumitrescu@expertease.ro',
-      phoneNumber: '0733344556',
-      address: 'Str. Independenței nr. 20, București'
-    },
-    rejectedAt: undefined
   };
   currentUserEmail: string | undefined;
 }

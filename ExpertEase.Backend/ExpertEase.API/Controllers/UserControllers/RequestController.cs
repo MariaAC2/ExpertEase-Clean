@@ -28,27 +28,26 @@ public class RequestController(IUserService userService, IRequestService request
             CreateRequestResponseFromServiceResponse(await requestService.AddRequest(request, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
-
-    [Authorize(Roles = "Client")]
+    
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<RequestDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await requestService.GetRequest(new RequestUserProjectionSpec(id, currentUser.Result.Id))) : 
+            CreateRequestResponseFromServiceResponse(await requestService.GetRequest(new RequestProjectionSpec(id))) : 
             CreateErrorMessageResult<RequestDTO>(currentUser.Error);
     }
     
     [Authorize(Roles = "Client")]
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<RequestDTO>>>> GetPage(
-        [FromQuery] PaginationSearchQueryParams pagination)
+        [FromQuery] PaginationSearchQueryParams pagination, [FromQuery] Guid userId)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await requestService.GetRequests(new RequestUserProjectionSpec(pagination.Search, currentUser.Result.Id), pagination)) :
+            CreateRequestResponseFromServiceResponse(await requestService.GetRequests(new RequestUserProjectionSpec(pagination.Search, currentUser.Result.Id, userId), pagination)) :
             CreateErrorMessageResult<PagedResponse<RequestDTO>>(currentUser.Error);
     }
 

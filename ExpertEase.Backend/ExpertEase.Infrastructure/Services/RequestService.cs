@@ -70,6 +70,16 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Requests are sent only to specialists!", ErrorCodes.CannotAdd));
         }
         
+        // Ensure RequestedStartDate is UTC
+        if (request.RequestedStartDate.Kind == DateTimeKind.Unspecified)
+        {
+            request.RequestedStartDate = DateTime.SpecifyKind(request.RequestedStartDate, DateTimeKind.Utc);
+        }
+        else
+        {
+            request.RequestedStartDate = request.RequestedStartDate.ToUniversalTime();
+        }
+        
         var requestEntity = new Request
         {
             SenderUserId = requestingUser.Id,
@@ -175,6 +185,11 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
         }
         
         entity.Status = request.Status;
+
+        if (entity.Status == StatusEnum.Rejected)
+        {
+            entity.RejectedAt = DateTime.UtcNow;
+        }
         
         await repository.UpdateAsync(entity, cancellationToken);
         

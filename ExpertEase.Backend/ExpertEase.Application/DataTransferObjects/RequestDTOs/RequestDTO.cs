@@ -10,6 +10,10 @@ public class RequestDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
+    public Guid SenderUserId { get; set; }
+    [Required]
+    public Guid ReceiverUserId { get; set; }
+    [Required]
     public DateTime RequestedStartDate { get; set; }
     [Required]
     public string Description { get; set; } = null!;

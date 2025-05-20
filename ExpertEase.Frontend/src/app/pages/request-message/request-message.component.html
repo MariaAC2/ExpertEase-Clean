@@ -1,15 +1,15 @@
-<div
-  class="request-wrapper"
-  [ngClass]="dummy_request_details.senderUser?.email === currentUserEmail ? 'align-right' : 'align-left'"
->
+<!--<div-->
+<!--  class="request-wrapper"-->
+<!--  [ngClass]="dummy_request_details.senderUser?.email === currentUserEmail ? 'align-right' : 'align-left'"-->
+<!--&gt;-->
   <div class="request-summary">
     <h3>Solicitare</h3>
     <p><strong>Data și ora:</strong> {{ dummy_request_details.requestedStartDate | date: 'short' }}</p>
     <p><strong>Descriere:</strong> {{ dummy_request_details.description }}</p>
-    <p><strong>Adresă:</strong> {{ dummy_request_details.senderUser?.address }}</p>
-    <p><strong>Telefon:</strong> {{ dummy_request_details.senderUser?.phoneNumber }}</p>
+    <p><strong>Adresă:</strong> {{ dummy_request_details.senderContactInfo?.address }}</p>
+    <p><strong>Telefon:</strong> {{ dummy_request_details.senderContactInfo?.phoneNumber }}</p>
     <div class="status-button">
       <span class="request-status status-{{ dummy_request_details.status | lowercase }}">{{ dummy_request_details.status }}</span>
     </div>
   </div>
-</div>
+<!--</div>-->

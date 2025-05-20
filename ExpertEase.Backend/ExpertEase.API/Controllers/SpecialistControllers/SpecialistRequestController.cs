@@ -29,12 +29,12 @@ public class SpecialistRequestController(IUserService userService, IRequestServi
     [Authorize(Roles = "Specialist")]
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<RequestDTO>>>> GetPage(
-        [FromQuery] PaginationSearchQueryParams pagination)
+        [FromQuery] PaginationSearchQueryParams pagination, [FromQuery] Guid userId)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await requestService.GetRequests(new RequestSpecialistProjectionSpec(pagination.Search, currentUser.Result.Id), pagination)) :
+            CreateRequestResponseFromServiceResponse(await requestService.GetRequests(new RequestSpecialistProjectionSpec(pagination.Search, userId, currentUser.Result.Id), pagination)) :
             CreateErrorMessageResult<PagedResponse<RequestDTO>>(currentUser.Error);
     }
 

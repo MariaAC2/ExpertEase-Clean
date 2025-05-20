@@ -6,6 +6,6 @@ namespace ExpertEase.Application.Services;
 
 public interface IExchangeService
 {
-    Task<ServiceResponse<UserExchangeDTO>> GetExchange(Guid id, Guid userId, CancellationToken cancellationToken = default);
-    Task<ServiceResponse<PagedResponse<UserExchangeDTO>>> GetExchanges(Guid id, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<UserExchangeDTO>> GetExchange(Guid currentUserId, Guid senderUserId, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<PagedResponse<UserExchangeDTO>>> GetExchanges(Guid currentUserId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
 }

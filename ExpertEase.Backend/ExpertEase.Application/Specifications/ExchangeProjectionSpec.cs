@@ -10,68 +10,12 @@ namespace ExpertEase.Application.Specifications;
 
 public class ExchangeUserProjectionSpec : Specification<Request, UserExchangeDTO>
 {
-    public ExchangeUserProjectionSpec(bool orderByCreatedAt = false)
-    {
-        Query.Include(r => r.ReceiverUser)
-            .Include(r => r.SenderUser)
-            .OrderBy(r => r.ReceiverUserId);
-        Query.Select(r => new UserExchangeDTO
-        {
-            Id = r.ReceiverUserId,
-            FullName = r.ReceiverUser.FullName,
-            Requests = new List<RequestDTO> {
-                new RequestDTO
-                {
-                    Id = r.Id,
-                    RequestedStartDate = r.RequestedStartDate,
-                    Description = r.Description,
-                    Status = r.Status,
-                    SenderContactInfo = 
-                        r.Status != StatusEnum.Rejected && r.Status != StatusEnum.Pending
-                            ? new ContactInfoDTO
-                            {
-                                PhoneNumber = r.PhoneNumber,
-                                Address = r.Address
-                            }
-                            : null,
-                    Replies = r.Replies.Select(reply => new ReplyDTO
-                    {
-                        StartDate = reply.StartDate,
-                        EndDate = reply.EndDate,
-                        Price = reply.Price,
-                        Status = reply.Status,
-                    }).ToList()
-                }
-            }
-        });
-        
-        if (orderByCreatedAt)
-        {
-            Query.OrderByDescending(r => r.CreatedAt);
-        }
-    }
-    
-    public ExchangeUserProjectionSpec(Guid id) : this() => Query.Where(e => e.ReceiverUserId == id);
-
-    public ExchangeUserProjectionSpec(string? search) : this(true)
-    {if (!string.IsNullOrWhiteSpace(search))
-        {
-            var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
-
-            Query.Where(r =>
-                EF.Functions.ILike(r.ReceiverUser.FullName, searchExpr)
-            );
-        }
-    }
-}
-
-public class ExchangeSpecialistProjectionSpec : Specification<Request, UserExchangeDTO>
-{
-    public ExchangeSpecialistProjectionSpec(bool orderByCreatedAt = false)
+    public ExchangeUserProjectionSpec(Guid receiverUserId, bool orderByCreatedAt = false)
     {
         Query.Include(r => r.ReceiverUser)
             .Include(r => r.SenderUser)
             .OrderBy(r => r.SenderUserId);
+        Query.Where(e => e.ReceiverUserId == receiverUserId);
         Query.Select(r => new UserExchangeDTO
         {
             Id = r.SenderUserId,
@@ -80,6 +24,8 @@ public class ExchangeSpecialistProjectionSpec : Specification<Request, UserExcha
                 new RequestDTO
                 {
                     Id = r.Id,
+                    SenderUserId = r.SenderUserId,
+                    ReceiverUserId = r.ReceiverUserId,
                     RequestedStartDate = r.RequestedStartDate,
                     Description = r.Description,
                     Status = r.Status,
@@ -108,16 +54,16 @@ public class ExchangeSpecialistProjectionSpec : Specification<Request, UserExcha
         }
     }
     
-    public ExchangeSpecialistProjectionSpec(Guid id) : this() => Query.Where(e => e.SenderUserId == id);
-    
-    public ExchangeSpecialistProjectionSpec(string? search) : this(true)
+    public ExchangeUserProjectionSpec(Guid senderUserId, Guid receiverUserId) : this(receiverUserId) => Query.Where(e => e.SenderUserId == senderUserId);
+
+    public ExchangeUserProjectionSpec(string? search, Guid userId) : this(userId, true)
     {
         if (!string.IsNullOrWhiteSpace(search))
         {
             var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
 
             Query.Where(r =>
-                EF.Functions.ILike(r.SenderUser.FullName, searchExpr)
+                EF.Functions.ILike(r.ReceiverUser.FullName, searchExpr)
             );
         }
     }

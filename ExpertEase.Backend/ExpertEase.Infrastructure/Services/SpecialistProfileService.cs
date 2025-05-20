@@ -114,6 +114,7 @@ public class SpecialistProfileService(
         };
         
         await repository.AddAsync(user.SpecialistProfile, cancellationToken);
+        await repository.UpdateAsync(user, cancellationToken);
         await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(user.FullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
         return ServiceResponse.CreateSuccessResponse(new BecomeSpecialistResponseDTO

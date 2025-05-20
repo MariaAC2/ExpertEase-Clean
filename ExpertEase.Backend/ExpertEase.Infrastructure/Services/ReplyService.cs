@@ -65,6 +65,27 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Exceeded 5 replies per request",
                 ErrorCodes.CannotAdd));
         }
+        
+        if (reply.StartDate != null)
+        {
+            if (reply.StartDate.Value.Kind == DateTimeKind.Unspecified)
+            {
+                reply.StartDate = DateTime.SpecifyKind(reply.StartDate.Value, DateTimeKind.Utc);
+            }
+            else
+            {
+                reply.StartDate = reply.StartDate.Value.ToUniversalTime();
+            }
+        }
+        
+        if (reply.EndDate.Kind == DateTimeKind.Unspecified)
+        {
+            reply.EndDate = DateTime.SpecifyKind(reply.EndDate, DateTimeKind.Utc);
+        }
+        else
+        {
+            reply.EndDate = reply.EndDate.ToUniversalTime();
+        }
 
         var newReply = new Reply
         {
@@ -96,6 +117,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             }
         }
         
+        request.Replies.Add(newReply);
         await repository.AddAsync(newReply, cancellationToken);
         return ServiceResponse.CreateSuccessResponse();
     }

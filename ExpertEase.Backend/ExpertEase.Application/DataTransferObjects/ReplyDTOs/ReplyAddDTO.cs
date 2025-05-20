@@ -5,6 +5,7 @@ namespace ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 
 public class ReplyAddDTO
 {
+    //public Guid requestId { get; set; }
     public DateTime? StartDate { get; set; }
     [Required]
     public DateTime EndDate { get; set; }

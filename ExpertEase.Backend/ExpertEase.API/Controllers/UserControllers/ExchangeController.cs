@@ -9,16 +9,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("/api/profile/exchanges/")]
+[Route("/api/messages/")]
 public class ExchangeController(IUserService userService, IExchangeService exchangeService): AuthorizedController(userService)
 {
-    [HttpGet("{userId:guid}")]
+    [HttpGet("{senderId:guid}")]
     [Authorize]
-    public async Task<ActionResult<RequestResponse<UserExchangeDTO>>> GetExchange([FromRoute] Guid userId)
+    public async Task<ActionResult<RequestResponse<UserExchangeDTO>>> GetExchange([FromRoute] Guid senderId)
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await exchangeService.GetExchange(currentUser.Result.Id, userId)) : 
+            CreateRequestResponseFromServiceResponse(await exchangeService.GetExchange(currentUser.Result.Id, senderId)) : 
             CreateErrorMessageResult<UserExchangeDTO>(currentUser.Error);
     }
 

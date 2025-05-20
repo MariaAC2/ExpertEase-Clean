@@ -17,22 +17,47 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
         CancellationToken cancellationToken = default)
     {
         var user = await repository.GetAsync(new UserSpec(currentUserId), cancellationToken);
-        
-        if (user.Role == UserRoleEnum.Client) 
-        {
-            var result = await repository.GetAsync(new ExchangeUserProjectionSpec(userId), cancellationToken);
-            return result != null ? 
-                ServiceResponse.CreateSuccessResponse(result) : 
-                ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
-        } else if (user.Role == UserRoleEnum.Specialist) 
-        {
-            var result = await repository.GetAsync(new ExchangeSpecialistProjectionSpec(userId), cancellationToken);
-            return result != null ? 
-                ServiceResponse.CreateSuccessResponse(result) : 
-                ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
-        } else 
+
+        if (user.Role == UserRoleEnum.Admin)
         {
             return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.NotAllowed);
+        } else if (user.Role == UserRoleEnum.Client)
+        {
+            var requests = await repository.ListAsync(new RequestUserProjectionSpec(currentUserId, userId), cancellationToken);
+            
+            if (requests.Count == 0)
+                return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
+            
+            var receiverUser = await repository.GetAsync(new UserSpec(userId), cancellationToken);
+            if (receiverUser == null)
+                return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
+            var userExchangeDTO = new UserExchangeDTO
+            {
+                Id = receiverUser.Id,
+                FullName = receiverUser.FullName,
+                Requests = requests,
+            };
+            
+            return ServiceResponse.CreateSuccessResponse<UserExchangeDTO>(userExchangeDTO);
+        }
+        else
+        {
+            var requests = await repository.ListAsync(new RequestUserProjectionSpec(userId, currentUserId), cancellationToken);
+            
+            if (!requests.Any())
+                return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
+            
+            var senderUser = await repository.GetAsync(new UserSpec(userId), cancellationToken);
+            if (senderUser == null)
+                return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
+            var userExchangeDTO = new UserExchangeDTO
+            {
+                Id = senderUser.Id,
+                FullName = senderUser.FullName,
+                Requests = requests,
+            };
+            
+            return ServiceResponse.CreateSuccessResponse<UserExchangeDTO>(userExchangeDTO);
         }
     }
 
@@ -41,17 +66,97 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
     {
         var user = await repository.GetAsync(new UserSpec(currentUserId), cancellationToken);
         
-        if (user.Role == UserRoleEnum.Client) 
-        {
-            var result = await repository.PageAsync(pagination, new ExchangeUserProjectionSpec(pagination.Search), cancellationToken);
-            return ServiceResponse.CreateSuccessResponse(result);
-        } else if (user.Role == UserRoleEnum.Specialist) 
-        {
-            var result = await repository.PageAsync(pagination, new ExchangeSpecialistProjectionSpec(pagination.Search), cancellationToken);
-            return ServiceResponse.CreateSuccessResponse(result);
-        } else 
+        if (user.Role == UserRoleEnum.Admin)
         {
             return ServiceResponse.CreateErrorResponse<PagedResponse<UserExchangeDTO>>(CommonErrors.NotAllowed);
+        }
+        else if (user.Role == UserRoleEnum.Client)
+        {
+            // var result = await repository.PageAsync(pagination, new ExchangeUserProjectionSpec(pagination.Search, currentUserId), cancellationToken);
+            // return ServiceResponse.CreateSuccessResponse(result);
+            var requests = await repository.ListAsync(
+                new RequestUserProjectionSpec(currentUserId, orderByCreatedAt: true),
+                cancellationToken);
+            
+            var grouped = requests
+                .GroupBy(r => r.SenderUserId)
+                .ToList();
+            var exchangeList = new List<UserExchangeDTO>();
+
+            foreach (var group in grouped)
+            {
+                var senderId = group.Key;
+                var senderUser = await repository.GetAsync(new UserSpec(senderId), cancellationToken);
+    
+                var exchange = new UserExchangeDTO
+                {
+                    Id = senderId,
+                    FullName = senderUser?.FullName ?? "N/A",
+                    Requests = group.ToList()
+                };
+
+                exchangeList.Add(exchange);
+            }
+            
+            var totalCount = grouped.Count;
+
+            var paged = exchangeList
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToList();
+
+            var result = new PagedResponse<UserExchangeDTO>(
+                page: pagination.Page,
+                pageSize: pagination.PageSize,
+                totalCount: totalCount,
+                data: paged
+            );
+            
+            return ServiceResponse.CreateSuccessResponse(result);
+        }
+        else
+        {
+            // var result = await repository.PageAsync(pagination, new ExchangeUserProjectionSpec(pagination.Search, currentUserId), cancellationToken);
+            // return ServiceResponse.CreateSuccessResponse(result);
+            var requests = await repository.ListAsync(
+                new RequestSpecialistProjectionSpec(currentUserId, orderByCreatedAt: true),
+                cancellationToken);
+            
+            var grouped = requests
+                .GroupBy(r => r.ReceiverUserId)
+                .ToList();
+            var exchangeList = new List<UserExchangeDTO>();
+
+            foreach (var group in grouped)
+            {
+                var senderId = group.Key;
+                var senderUser = await repository.GetAsync(new UserSpec(senderId), cancellationToken);
+    
+                var exchange = new UserExchangeDTO
+                {
+                    Id = senderId,
+                    FullName = senderUser?.FullName ?? "N/A",
+                    Requests = group.ToList()
+                };
+
+                exchangeList.Add(exchange);
+            }
+            
+            var totalCount = grouped.Count;
+
+            var paged = exchangeList
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToList();
+
+            var result = new PagedResponse<UserExchangeDTO>(
+                page: pagination.Page,
+                pageSize: pagination.PageSize,
+                totalCount: totalCount,
+                data: paged
+            );
+            
+            return ServiceResponse.CreateSuccessResponse(result);
         }
     }
 }

@@ -33,7 +33,6 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\polyfills-FFHMD2TL.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\styles-SXL4ZYB7.css" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\assets\avatar.svg" />
-      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\Generic avatar.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\account.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\edit.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\history.svg" />
@@ -64,6 +63,120 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\styles-WHFG2RRW.css" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-AHZK76XG.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-UYHJBLEZ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-23UQJGRZ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-ET73SBF2.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-FDWKNRYB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-GNV2ILTT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-I5S4JVRZ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-IUUUSBD5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-LG4ELEX7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-MOY4BI7P.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-T7PEBAN6.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-UCUSZD5A.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5UXOHTG2.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5YFGNR6S.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-FLDHISGV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-FUBHQHJH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-GHOYCNEP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-HYEBZ7XU.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-HZQ2323X.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-IQHAXAFL.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-LPZL4QLY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-NOG5NY2P.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-Q6W4FAAC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SI24R57N.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-VT2MEFDT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-YL7ZHPTS.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-EVFG6K2J.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-MOXO7AUV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-W4QSOZXS.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-DQMJS7MW.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-776L2CC5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-AW2IIPPC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-L6Y6QV5Z.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-SDIJMH3S.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-4JBEP26X.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-74Y6LPDG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ES6JSDCX.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-F626TJB7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-GZJLNJ3G.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-HR74GKBG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-LXQNEDQZ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-O7KNTFGA.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-PUPHWNCV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-Q5TOBLHM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-TI2PKIMC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-VL44MIEU.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-W35OL5WF.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-WICT7MJT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-2IF6NUOT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-3FEGXGUK.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-3UYUK5WV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-A4FVXXHK.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-AUEBN4CO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-B7LRY6ML.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-BNAH5R66.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-BNJX4R4Z.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-BPY7VYSF.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-BZR43I4M.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-CRAN7QLB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-CVG2O4JP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-DQBUC66J.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-E77K7TR2.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-GCNLSOPE.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-GPAMUQVG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-GXQD4YOH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-H2HCGRFV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-H43BCJB3.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-IGE7I6HX.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-ITSRNKAK.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-IZDIH5JG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-K6YBJKKE.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-KDD3RFZE.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-L3HJTXDH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-LI5UDG5N.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-MES3TOW4.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-MZNMKSRU.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-ONPZMDBM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-QVB5L25D.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-S77HMYQ4.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-SIEFDFII.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-THMM5HJP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-U2AFHBEC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-XKIOD2FB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-Y7EXSE2W.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YFF2YB72.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YJ4E4PCG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-Z4GVK7DV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-ZFSXOSKY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-2NAWS3EK.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-44MYFHDY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5ELZKXHC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5MX4KSTY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-6SJTFRJ5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-7VEHA62H.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ACSDLSEM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ASFDRN4T.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-CT5DMPKG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-CVMGJA2T.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-EHSLCKTP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-GH3M6GIU.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-KCMFYQDH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-LG2CHHXQ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-MP3DFSRG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-NQQX3ORL.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-OAYCAGMQ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-PQUFWVVT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-PQYBT36J.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-PWQZHF3E.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SBD642HA.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SOXAP4J7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-TOZV7BHY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-UE4IKUDJ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-V3XD3FFG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-XBNUET34.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-YZGOU2UW.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ZB6EPSJR.js" />
     </ItemGroup>
 
     <ItemGroup>
@@ -71,7 +184,8 @@
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">
-        <Exec Command="ng build --configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />
-        <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />
+      <Exec Command="npm install" WorkingDirectory="..\..\ExpertEase.Frontend" />
+      <Exec Command="ng build --configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />
+      <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />
     </Target>
 </Project>
