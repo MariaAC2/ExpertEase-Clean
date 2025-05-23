@@ -38,7 +38,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.BadRequest, "Cannot reply to an unaccepted request", ErrorCodes.CannotAdd));
         }
         
-        if (request.Status == StatusEnum.Failed || request.Status == StatusEnum.Confirmed)
+        if (request.Status == StatusEnum.Failed || request.Status == StatusEnum.Completed)
         {
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot reply to a completed or failed request", ErrorCodes.CannotAdd));
         }
@@ -160,11 +160,11 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
                 "Reply not found", ErrorCodes.EntityNotFound));
         }
 
-        // if (entity.Status is not StatusEnum.Pending)
-        // {
-        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-        //         "Only pending replies can be updated", ErrorCodes.CannotUpdate));
-        // }
+        if (entity.Status is not StatusEnum.Pending)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Only pending replies can be updated", ErrorCodes.CannotUpdate));
+        }
         
         if (reply.Status is StatusEnum.Rejected)
         {
@@ -191,7 +191,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             
             if (request.Replies.Any())
             {
-                request.Status = StatusEnum.Confirmed;
+                request.Status = StatusEnum.Completed;
                 await repository.UpdateAsync(request, cancellationToken);
                 // create transfer transaction
                 var transferResult = await serviceTaskService.AddServiceTask(entity, cancellationToken);

@@ -28,3 +28,18 @@
 
   <button class="request-btn" (click)="goToSendRequest()">Fă o solicitare</button>
 </div>
+
+<div class="overlay" *ngIf="isUserDetailsVisible">
+  <div class="modal" (click)="closeDetails()">
+    <app-specialist-details [specialist]="specialist"></app-specialist-details>
+  </div>
+</div>
+
+<!-- Request modal -->
+<div class="overlay" *ngIf="isRequestFormVisible">
+  <app-request-form
+    [requestForm]="requestForm"
+    (formSubmit)="submitRequest($event)"
+    (close)="closeRequestForm()">
+  </app-request-form>
+</div>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Domain.Enums;
 
 namespace ExpertEase.Application.DataTransferObjects.ReplyDTOs;
@@ -15,4 +16,5 @@ public class ReplyDTO
     public decimal Price { get; set; }
     [Required]
     public StatusEnum Status { get; set; }
+    public ServiceTaskDTO? ServiceTask { get; set; }
 }

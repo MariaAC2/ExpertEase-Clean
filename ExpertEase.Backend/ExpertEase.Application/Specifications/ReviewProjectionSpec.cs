@@ -27,7 +27,7 @@ public class ReviewProjectionSpec : Specification<Review, ReviewDTO>
         }
     }
     
-    public ReviewProjectionSpec(Guid id, Guid userId) : this(userId) => Query.Where(e => e.Id == id && e.ReceiverUserId == userId);
+    public ReviewProjectionSpec(Guid id, Guid userId) : this(userId) => Query.Where(e => e.Id == id);
     
     public ReviewProjectionSpec(string? search, Guid userId) : this(userId, true) 
     {

@@ -48,7 +48,8 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IMailService, MailService>()
     .AddScoped<ISpecialistService, SpecialistService>()
      .AddScoped<IExchangeService, ExchangeService>()
-     .AddScoped<IServiceTaskService, ServiceTaskService>();
+     .AddScoped<IServiceTaskService, ServiceTaskService>()
+    .AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddHostedService<InitializerWorker>();
 

@@ -25,15 +25,15 @@ public class SpecialistServiceTaskController(IUserService userService, IServiceT
     }
     
     [Authorize(Roles = "Specialist")]
-    [HttpPatch("{id:guid}/confirm")]
-    public async Task<ActionResult<RequestResponse>> Confirm([FromRoute] Guid id)
+    [HttpPatch("{id:guid}/complete")]
+    public async Task<ActionResult<RequestResponse>> Complete([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
         var jobStatus = new JobStatusUpdateDTO
         {
             Id = id,
-            Status = JobStatusEnum.Confirmed
+            Status = JobStatusEnum.Completed
         };
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await specialistService.UpdateServiceTaskStatus(jobStatus, currentUser.Result)) :

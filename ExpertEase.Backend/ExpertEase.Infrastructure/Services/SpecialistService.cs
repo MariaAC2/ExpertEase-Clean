@@ -85,26 +85,35 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
     public async Task<ServiceResponse> UpdateSpecialist(SpecialistUpdateDTO user, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin) // Verify who can add the user, you can change this however you se fit.
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin)
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can add users!", ErrorCodes.CannotAdd));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can update users!", ErrorCodes.CannotAdd));
         }
 
-        var result = await repository.GetAsync(new UserSpec(user.Id), cancellationToken);
+        var result = await repository.GetAsync(new UserSpec(user.UserId), cancellationToken);
 
         if (result == null)
         {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "The user doesn't exist!", ErrorCodes.UserAlreadyExists));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "The user doesn't exist!", ErrorCodes.EntityNotFound));
         }
-        
+
+        // Safely update fields with null-checks
         result.FullName = user.FullName ?? result.FullName;
-        result.ContactInfo.PhoneNumber = user.PhoneNumber ?? result.ContactInfo.PhoneNumber;
-        result.ContactInfo.Address = user.Address ?? result.ContactInfo.Address;
-        result.SpecialistProfile.YearsExperience = user.YearsExperience ?? result.SpecialistProfile.YearsExperience;
-        result.SpecialistProfile.Description = user.Description ?? result.SpecialistProfile.Description;
+
+        if (result.ContactInfo != null)
+        {
+            result.ContactInfo.PhoneNumber = user.PhoneNumber ?? result.ContactInfo.PhoneNumber;
+            result.ContactInfo.Address = user.Address ?? result.ContactInfo.Address;
+        }
+
+        if (result.SpecialistProfile != null)
+        {
+            result.SpecialistProfile.YearsExperience = user.YearsExperience ?? result.SpecialistProfile.YearsExperience;
+            result.SpecialistProfile.Description = user.Description ?? result.SpecialistProfile.Description;
+        }
 
         await repository.UpdateAsync(result, cancellationToken);
-        
+
         return ServiceResponse.CreateSuccessResponse();
     }
 }

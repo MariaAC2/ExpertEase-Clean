@@ -33,16 +33,16 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
             var userExchangeDTO = new UserExchangeDTO
             {
-                Id = receiverUser.Id,
-                FullName = receiverUser.FullName,
+                Id = user.Id,
+                FullName = user.FullName,
                 Requests = requests,
             };
             
-            return ServiceResponse.CreateSuccessResponse<UserExchangeDTO>(userExchangeDTO);
+            return ServiceResponse.CreateSuccessResponse(userExchangeDTO);
         }
         else
         {
-            var requests = await repository.ListAsync(new RequestUserProjectionSpec(userId, currentUserId), cancellationToken);
+            var requests = await repository.ListAsync(new RequestSpecialistProjectionSpec(userId, currentUserId), cancellationToken);
             
             if (!requests.Any())
                 return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
@@ -52,8 +52,8 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
             var userExchangeDTO = new UserExchangeDTO
             {
-                Id = senderUser.Id,
-                FullName = senderUser.FullName,
+                Id = user.Id,
+                FullName = user.FullName,
                 Requests = requests,
             };
             
@@ -79,7 +79,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 cancellationToken);
             
             var grouped = requests
-                .GroupBy(r => r.SenderUserId)
+                .GroupBy(r => r.ReceiverUserId)
                 .ToList();
             var exchangeList = new List<UserExchangeDTO>();
 
@@ -123,7 +123,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 cancellationToken);
             
             var grouped = requests
-                .GroupBy(r => r.ReceiverUserId)
+                .GroupBy(r => r.SenderUserId)
                 .ToList();
             var exchangeList = new List<UserExchangeDTO>();
 

@@ -55,6 +55,7 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
         Query.Where(e =>
             EF.Functions.ILike(e.FullName, searchExpr) ||
             EF.Functions.ILike(e.Email, searchExpr) ||
+            EF.Functions.ILike(e.ContactInfo.PhoneNumber, searchExpr) ||
             EF.Functions.ILike(e.ContactInfo.Address, searchExpr) ||
             EF.Functions.ILike(e.SpecialistProfile.YearsExperienceString, searchExpr)
             // EF.Functions.ILike(

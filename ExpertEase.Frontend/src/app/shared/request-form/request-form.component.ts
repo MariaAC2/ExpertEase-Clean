@@ -2,7 +2,7 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
-import {RequestAddDTO} from '../../models/api.models';
+import {RequestAddDTO, SpecialistDTO} from '../../models/api.models';
 
 @Component({
   selector: 'app-request-form',
@@ -21,7 +21,7 @@ export class RequestFormComponent {
   //   address: 'Str. Teiului nr. 14, București',
   //   description: 'Solicit instalarea unei chiuvete noi în bucătărie. Este deja cumpărată, trebuie doar montată.'
   // };
-  @Input() request: RequestAddDTO = {
+  @Input() requestForm = {
     receiverUserId: '',
     requestedStartDate: new Date(),
     phoneNumber: '',
@@ -29,12 +29,16 @@ export class RequestFormComponent {
     description: ''
   };
 
-  @Output() formSubmit = new EventEmitter<RequestAddDTO>();
+  @Output() formSubmit = new EventEmitter<{ [key: string]: any }>();
+  @Output() close = new EventEmitter<void>();
 
   constructor(private router: Router) { }
 
   submitRequest() {
-    this.formSubmit.emit(this.request);
-    this.router.navigate(['/messages']);
+    this.formSubmit.emit(this.requestForm);
+  }
+
+  closeForm() {
+    this.close.emit();
   }
 }

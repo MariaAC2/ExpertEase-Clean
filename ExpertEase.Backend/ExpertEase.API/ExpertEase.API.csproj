@@ -177,6 +177,35 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-XBNUET34.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-YZGOU2UW.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-ZB6EPSJR.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-KZXYB3SO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-UNYWLBAU.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-CGFZAETA.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-HUYJD7M6.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-OF26W3ED.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SC7XWH72.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-TSWXRONJ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-3IUYZMPO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-HGI4TVEV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-35ARCFQJ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-6SBT5S5R.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-AF3HYRZB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-AVPYYE5E.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-LOCSJZSN.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-QUYCQ3LR.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-U7GP2LTV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-M25PA2W3.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-SH7GFCKO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-X3GGC2MR.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-XWI2AQNA.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-C6UPA57W.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-4A46TWXC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-EV54L7SF.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-WJJAV346.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-E7HML6PB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-636UPFWA.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-6D2DGYNZ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-7R6C62RM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-I7WE2CT7.js" />
     </ItemGroup>
 
     <ItemGroup>

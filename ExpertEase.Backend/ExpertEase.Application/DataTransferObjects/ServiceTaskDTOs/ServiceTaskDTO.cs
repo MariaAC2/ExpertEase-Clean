@@ -8,6 +8,8 @@ public class ServiceTaskDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
+    public Guid ReplyId { get; set; }
+    [Required]
     public Guid UserId { get; set; }
     [Required]
     public Guid SpecialistId { get; set; }

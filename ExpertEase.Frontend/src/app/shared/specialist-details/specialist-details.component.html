@@ -1,0 +1,22 @@
+<div class="overlay">
+  <div class="specialist-card">
+    <button class="close-btn" (click)="onCloseDetails()">×</button>
+    <div class="top-row">
+      <div class="avatar">
+        <img src="/assets/avatar.svg" alt="User avatar" />
+      </div>
+      <h3>{{ specialist?.fullName }}</h3>
+    </div>
+
+    <div class="info">
+      <div class="top-row">
+        <p><strong>Email:</strong> {{ specialist?.email }}</p>
+        <p><strong>Telefon:</strong> {{ specialist?.phoneNumber }}</p>
+      </div>
+      <p><strong>Adresă:</strong> {{ specialist?.address }}</p>
+      <p><strong>Categorii:</strong> {{ specialist?.categories?.join(', ') }}</p>
+      <p><strong>Ani experiență:</strong> {{ specialist?.yearsExperience }}</p>
+      <p><strong>Descriere:</strong> {{ specialist?.description }}</p>
+    </div>
+  </div>
+</div>

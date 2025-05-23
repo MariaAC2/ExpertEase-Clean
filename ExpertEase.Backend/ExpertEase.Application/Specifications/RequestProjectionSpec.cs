@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
+using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
@@ -76,7 +77,8 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
     {
         Query.Include(r => r.SenderUser);
         Query.Include(r => r.ReceiverUser);
-        Query.Include(r => r.Replies);
+        Query.Include(r => r.Replies)
+            .ThenInclude(r => r.ServiceTask);
         Query.Where(e => e.SenderUserId == senderUserId);
         Query.Select(e => new RequestDTO
         {
@@ -96,11 +98,24 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
                     : null,
             Replies = e.Replies.Select(r => new ReplyDTO
             {
+                Id = r.Id,
                 StartDate = r.StartDate,
                 EndDate = r.EndDate,
                 Price = r.Price,
                 Status = r.Status,
-            }).ToList()
+                ServiceTask = r.ServiceTask != null ? new ServiceTaskDTO
+                {
+                    Id = r.ServiceTask.Id,
+                    UserId = r.ServiceTask.UserId,
+                    SpecialistId = r.ServiceTask.SpecialistId,
+                    StartDate = r.ServiceTask.StartDate,
+                    EndDate = r.ServiceTask.EndDate,
+                    Description = r.ServiceTask.Description,
+                    Address = r.ServiceTask.Address,
+                    Price = r.ServiceTask.Price,
+                    Status = r.ServiceTask.Status
+                } : null
+            }).ToList(),
         });
 
         if (orderByCreatedAt)
@@ -139,8 +154,11 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
     {
         Query.Include(r => r.SenderUser);
         Query.Include(r => r.ReceiverUser);
-        Query.Include(r => r.Replies);
+        Query.Include(r => r.Replies)
+            .ThenInclude(r => r.ServiceTask);
+
         Query.Where(e => e.ReceiverUserId == receiverUserId);
+
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
@@ -149,7 +167,7 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
-            SenderContactInfo = 
+            SenderContactInfo =
                 e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
                     ? new ContactInfoDTO
                     {
@@ -157,13 +175,27 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
                         Address = e.Address
                     }
                     : null,
+
             Replies = e.Replies.Select(r => new ReplyDTO
             {
+                Id = r.Id,
                 StartDate = r.StartDate,
                 EndDate = r.EndDate,
                 Price = r.Price,
                 Status = r.Status,
-            }).ToList()
+                ServiceTask = r.ServiceTask != null ? new ServiceTaskDTO
+                {
+                    Id = r.ServiceTask.Id,
+                    UserId = r.ServiceTask.UserId,
+                    SpecialistId = r.ServiceTask.SpecialistId,
+                    StartDate = r.ServiceTask.StartDate,
+                    EndDate = r.ServiceTask.EndDate,
+                    Description = r.ServiceTask.Description,
+                    Address = r.ServiceTask.Address,
+                    Price = r.ServiceTask.Price,
+                    Status = r.ServiceTask.Status
+                } : null
+            }).ToList(),
         });
 
         if (orderByCreatedAt)
@@ -171,6 +203,7 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
             Query.OrderByDescending(e => e.CreatedAt);
         }
     }
+
     
     public RequestSpecialistProjectionSpec(Guid senderUserId, Guid receiverUserId) : this(receiverUserId)
     {

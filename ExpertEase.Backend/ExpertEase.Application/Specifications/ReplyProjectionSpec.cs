@@ -1,5 +1,6 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
+using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,17 @@ public class ReplyProjectionSpec : Specification<Reply, ReplyDTO>
             StartDate = x.StartDate,
             EndDate = x.EndDate,
             Price = x.Price,
-            Status = x.Status
+            Status = x.Status,
+            ServiceTask = x.ServiceTask != null ? 
+                new ServiceTaskDTO
+            {
+                StartDate = x.ServiceTask.StartDate,
+                EndDate = x.ServiceTask.EndDate,
+                Description = x.ServiceTask.Description,
+                Address = x.ServiceTask.Address,
+                Price = x.ServiceTask.Price,
+                Status = x.ServiceTask.Status,
+            } : null
         });
         
         if (orderByCreatedAt)

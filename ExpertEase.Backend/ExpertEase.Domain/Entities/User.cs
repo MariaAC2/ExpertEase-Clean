@@ -19,4 +19,15 @@ public class User : BaseEntity
     public ICollection<Request> Requests { get; set; } = new List<Request>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public int Rating = 0;
+    
+    public override string ToString()
+    {
+        return $"User: {FullName} ({Email})\n" +
+               $"- Role: {Role} ({RoleString})\n" +
+               $"- Contact Info: {(ContactInfo != null ? $"{ContactInfo.PhoneNumber}, {ContactInfo.Address}" : "N/A")}\n" +
+               $"- Is Specialist: {(SpecialistProfile != null ? "Yes" : "No")}\n" +
+               $"- Account: {(Account != null ? $"Balance: {Account.Balance} {Account.Currency}" : "N/A")}\n" +
+               $"- Rating: {Rating}\n" +
+               $"- Requests: {Requests.Count}, Reviews: {Reviews.Count}, Transactions: {Transactions.Count}";
+    }
 }

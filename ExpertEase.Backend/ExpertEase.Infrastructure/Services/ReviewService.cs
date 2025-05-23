@@ -65,7 +65,7 @@ public class ReviewService(IRepository<WebAppDatabaseContext> repository): IRevi
         }
         
         await repository.AddAsync(reviewEntity, cancellationToken);
-        
+        receiver.Reviews.Add(reviewEntity);
         return ServiceResponse.CreateSuccessResponse();
     }
 

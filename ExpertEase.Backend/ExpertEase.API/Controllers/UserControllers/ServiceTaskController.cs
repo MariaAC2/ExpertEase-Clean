@@ -11,7 +11,6 @@ namespace ExpertEase.API.Controllers.UserControllers;
 [Route("/api/user/replies/{replyId}/task")]
 public class ServiceTaskController(IUserService userService, IServiceTaskService specialistService): AuthorizedController(userService)
 {
-    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ServiceTaskDTO>>> GetById([FromRoute] Guid id)
     {

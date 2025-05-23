@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
+using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Enums;
 

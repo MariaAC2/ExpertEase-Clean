@@ -15,7 +15,9 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, ITransactionService transactionService): IServiceTaskService
+public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, 
+    ITransactionService transactionService,
+    IReviewService reviewService): IServiceTaskService
 {
     public async Task<ServiceResponse> AddServiceTask(Reply lastReply, CancellationToken cancellationToken = default)
     {
@@ -34,7 +36,11 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, I
             UserId = sender.Id,
             SpecialistId = receiver.Id,
             ReplyId = lastReply.Id,
+            StartDate = lastReply.StartDate,
+            EndDate = lastReply.EndDate,
+            Address = lastReply.Request.Address,
             Description = lastReply.Request.Description,
+            Price = lastReply.Price,
             Status = JobStatusEnum.Confirmed,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -88,12 +94,12 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, I
             // create and send review
             // create transfer
             task.CompletedAt = DateTime.UtcNow;
-            var addTransferResult = await transactionService.AddTransfer(task, cancellationToken);
-
-            if (!addTransferResult.IsOk)
-            {
-                return addTransferResult;
-            }
+            // var addTransferResult = await transactionService.AddTransfer(task, cancellationToken);
+            //
+            // if (!addTransferResult.IsOk)
+            // {
+            //     return addTransferResult;
+            // }
         }
         else if (serviceTask.Status == JobStatusEnum.Cancelled)
         {

@@ -52,7 +52,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, lastReply.ToString()));
             // }
 
-            if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Confirmed)
+            if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Completed)
             {
                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
             }
