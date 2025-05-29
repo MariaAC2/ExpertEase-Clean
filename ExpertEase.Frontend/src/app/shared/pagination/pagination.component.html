@@ -1,0 +1,14 @@
+<div class="pagination-wrapper">
+  <div class="page-size-selector">
+    <label for="pageSize">Afișează pe pagină:</label>
+    <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)">
+      <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+    </select>
+  </div>
+
+  <div class="pagination-controls">
+    <button (click)="goToPreviousPage()" [disabled]="currentPage === 1">←</button>
+    <span>Pagina {{ currentPage }} din {{ getTotalPages() }}</span>
+    <button (click)="goToNextPage()" [disabled]="currentPage === getTotalPages()">→</button>
+  </div>
+</div>

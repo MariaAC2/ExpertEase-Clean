@@ -1,0 +1,35 @@
+<div class="request-wrapper">
+  <div class="request-summary"
+       [ngClass]="{
+       'rejected-bg': reply.status === 'Rejected',
+       'accepted-bg': reply.status === 'Accepted'
+     }">
+    <h3>Ofertă</h3>
+
+    <p><strong>Data:</strong> {{ reply.startDate | date: 'dd MMMM yyyy' }}</p>
+
+    <p>
+      <strong>De la ora:</strong> {{ reply.startDate | date: 'HH:mm' }} &nbsp;—&nbsp;
+      <strong>Până la ora:</strong> {{ reply.endDate | date: 'HH:mm' }}
+    </p>
+
+    <div class="big-price">
+      {{ reply.price | currency:'RON':'symbol':'1.2-2' }}
+    </div>
+
+    <!-- Status-specific actions -->
+    <!-- Pending -->
+    <div *ngIf="reply.status === 'Pending'">
+      <p *ngIf="userRole === 'Specialist'">În așteptare...</p>
+
+      <div *ngIf="userRole === 'Client'" class="action-buttons">
+        <button class="accept-btn" (click)="acceptReply()">
+          <i class="fas fa-thumbs-up"></i> Acceptă
+        </button>
+        <button class="reject-btn" (click)="rejectReply()">
+          <i class="fas fa-thumbs-down"></i> Respinge
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

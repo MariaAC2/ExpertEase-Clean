@@ -90,7 +90,7 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin can update users!", ErrorCodes.CannotAdd));
         }
 
-        var result = await repository.GetAsync(new UserSpec(user.UserId), cancellationToken);
+        var result = await repository.GetAsync(new UserSpec(user.Id), cancellationToken);
 
         if (result == null)
         {

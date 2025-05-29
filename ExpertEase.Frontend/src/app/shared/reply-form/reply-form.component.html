@@ -1,0 +1,30 @@
+<!--<div class="overlay">-->
+  <div class="request-form-wrapper">
+    <button class="close-button" (click)="closeForm()">×</button>
+    <h2>Trimite o ofertă</h2>
+
+    <form class="request-form">
+      <div class="form-row">
+        <label>
+          De la data de:
+          <input type="datetime-local" name="startDate" [(ngModel)]="replyForm.startDate" required />
+        </label>
+
+        <label>
+          Până la data de:
+          <input type="datetime-local" name="endDate" [(ngModel)]="replyForm.endDate" required />
+        </label>
+      </div>
+
+      <label>
+        Preț:
+        <input type="number" name="price" [(ngModel)]="replyForm.price" step="0.01" required />
+      </label>
+
+      <div class="center-button">
+        <button type="submit" (click)="submitReply()">Trimite oferta</button>
+      </div>
+    </form>
+  </div>
+<!--</div>-->
+

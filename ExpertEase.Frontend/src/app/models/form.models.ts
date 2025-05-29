@@ -10,6 +10,7 @@
 export const DefaultLabelMap: Record<string, string> = {
   firstName: 'Prenume',
   lastName: 'Nume',
+  fullName: 'Nume complet',
   email: 'Adresă e-mail',
   password: 'Parolă',
   role: 'Rol',
@@ -90,7 +91,7 @@ export function dtoToDictionary(dto: Record<string, any>): Record<string, any> {
     let formattedValue: any = rawValue;
 
     if (typeof rawValue === 'string' && isISODate(rawValue)) {
-      console.log('ISO date detected:', rawValue);
+      // console.log('ISO date detected:', rawValue);
       formattedValue = formatDate(rawValue);
     } else if (rawValue instanceof Date) {
       formattedValue = formatDate(rawValue);

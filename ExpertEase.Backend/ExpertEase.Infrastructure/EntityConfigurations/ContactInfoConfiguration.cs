@@ -13,9 +13,10 @@ public class ContactInfoConfiguration: IEntityTypeConfiguration<ContactInfo>
         builder.HasKey(e => e.UserId);
         builder.Property(ci => ci.PhoneNumber).IsRequired();
         builder.Property(ci => ci.Address).IsRequired();
-        // builder.HasOne(ci => ci.User)
-        //     .WithOne(u => u.ContactInfo)
-        //     .HasForeignKey<ContactInfo>(ci => ci.userId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(ci => ci.User)
+            .WithOne(u => u.ContactInfo)
+            .HasForeignKey<ContactInfo>(ci => ci.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Ignore(ci => ci.Id);
     }
 }

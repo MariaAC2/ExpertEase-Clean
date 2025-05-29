@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {AdminUsersService} from '../../../services/admin.users.service';
-import {UserAddDTO, UserDTO, UserRoleEnum, UserUpdateDTO} from '../../../models/api.models';
+import {AdminUserUpdateDTO, UserAddDTO, UserDTO, UserRoleEnum, UserUpdateDTO} from '../../../models/api.models';
 import {FormsModule} from '@angular/forms';
 import {DynamicFormComponent} from '../../../shared/dynamic-form/dynamic-form.component';
 import {dtoToDictionary, dtoToFormFields} from '../../../models/form.models';
@@ -9,11 +9,12 @@ import {TableColumn} from '../../../models/table.models';
 import {DynamicTableComponent} from '../../../shared/dynamic-table/dynamic-table.component';
 import {AdminDetailsComponent} from '../../../shared/admin-details/admin-details.component';
 import {SearchInputComponent} from '../../../shared/search-input/search-input.component';
+import {PaginationComponent} from '../../../shared/pagination/pagination.component';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, DynamicFormComponent, DynamicTableComponent, AdminDetailsComponent, SearchInputComponent],
+  imports: [CommonModule, FormsModule, DynamicFormComponent, DynamicTableComponent, AdminDetailsComponent, SearchInputComponent, PaginationComponent],
   templateUrl: './admin.users.component.html',
   styleUrls: ['../../../shared/dynamic-table/dynamic-table.component.scss', '../../../shared/admin-details/admin-details.component.scss'],
 })
@@ -22,20 +23,16 @@ export class AdminUsersComponent implements OnInit {
   dummy_users: UserDTO[] = [
     {
       id: 'm3n4o5p6',
-      firstName: 'Ana',
-      lastName: 'Georgescu',
+      fullName: 'Ana Georgescu',
       email: 'ana.georgescu@example.com',
-      password: 'password123',
       role: UserRoleEnum.Admin,
       createdAt: new Date('2024-09-01T11:30:00Z'),
       updatedAt: new Date('2025-01-12T13:00:00Z')
     },
     {
       id: 'q7r8s9t0',
-      firstName: 'Radu',
-      lastName: 'Enache',
+      fullName: 'Radu Enache',
       email: 'radu.enache@example.com',
-      password: 'securepassword',
       role: UserRoleEnum.Client,
       createdAt: new Date('2024-08-20T15:45:00Z'),
       updatedAt: new Date('2025-01-08T11:15:00Z')
@@ -63,7 +60,6 @@ export class AdminUsersComponent implements OnInit {
     {
       key: 'fullName',
       header: 'Nume',
-      compute: (row: UserDTO) => `${row.lastName} ${row.firstName}`
     },
 
     { key: 'email', header: 'Email' },
@@ -94,8 +90,7 @@ export class AdminUsersComponent implements OnInit {
   ];
 
   defaultUser: UserAddDTO = {
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     role: UserRoleEnum.Client
@@ -115,12 +110,14 @@ export class AdminUsersComponent implements OnInit {
 
   updateEntityFormFields = dtoToFormFields(
     {
-      firstName: this.selectedUser?.firstName || '',
-      lastName: this.selectedUser?.lastName || '',
+      fullName: this.selectedUser?.fullName || '',
       role: this.selectedUser?.role || '',
     },
     {
-      role: { type: 'select' }
+      role: {
+        type: 'select',
+        options: Object.values(UserRoleEnum)
+      }
     }
   );
 
@@ -128,8 +125,7 @@ export class AdminUsersComponent implements OnInit {
 
   ngOnInit(): void {
     const defaultFormValues: UserAddDTO = {
-      firstName: '',
-      lastName: '',
+      fullName: '',
       email: '',
       password: '',
       role: UserRoleEnum.Client
@@ -146,9 +142,10 @@ export class AdminUsersComponent implements OnInit {
   }
 
   getEntity(userId: string): void {
+    console.log(userId);
     this.adminService.getUser(userId).subscribe({
       next: (res) => {
-        console.log(res.response);
+        // console.log(res.response);
         this.entityDetailsId = res.response?.id;
         this.entityDetails = dtoToDictionary(res.response ?? {});
         this.isUserDetailsVisible = true;
@@ -188,11 +185,12 @@ export class AdminUsersComponent implements OnInit {
 
   editUser(user: UserDTO): void {
     this.selectedUserId = user.id;
+
     this.formData = {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      // password: user.password,
+      fullName: user.fullName,
+      role: user.role
     };
+
     this.isUpdateUserFormVisible = true;
   }
 
@@ -203,11 +201,17 @@ export class AdminUsersComponent implements OnInit {
       return;
     }
 
-    const updatePayload: UserUpdateDTO = {
+    const fullName =
+      data['fullName'] ??
+      [data['firstName'], data['lastName']]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+
+    const updatePayload: AdminUserUpdateDTO = {
       id: this.selectedUserId,
-      firstName: data['firstName'],
-      lastName: data['lastName'],
-      password: data['password']
+      fullName: fullName,
+      role: data['role'],
     };
 
     this.adminService.updateUser(this.selectedUserId, updatePayload).subscribe({
@@ -247,7 +251,7 @@ export class AdminUsersComponent implements OnInit {
     this.isUserDetailsVisible = true;
   }
   deleteEntity(user: UserDTO): void {
-    if (confirm(`Sigur doriți să ștergeți utilizatorul ${user.firstName} ${user.lastName}?`)) {
+    if (confirm(`Sigur doriți să ștergeți utilizatorul ${user.fullName}?`)) {
       this.adminService.deleteUser(user.id).subscribe({
         next: () => {
           this.getPage();
@@ -273,28 +277,14 @@ export class AdminUsersComponent implements OnInit {
     };
   }
 
-  goToPreviousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.getPage();
-    }
-  }
-
-  goToNextPage(): void {
-    const totalPages = this.getTotalPages();
-    if (this.currentPage < totalPages) {
-      this.currentPage++;
-      this.getPage();
-    }
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.totalItems / this.pageSize);
+  onPageChange(newPage: number): void {
+    this.currentPage = newPage;
+    this.getPage();
   }
 
   onPageSizeChange(newSize: number): void {
     this.pageSize = newSize;
-    this.currentPage = 1; // Reset to first page
+    this.currentPage = 1;
     this.getPage();
   }
 }

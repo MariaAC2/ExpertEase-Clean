@@ -11,8 +11,10 @@ import {UnauthorizedComponent} from './pages/unauthorized/unauthorized.component
 import {AuthGuard} from './pages/auth/auth.guard';
 import {ProfileComponent} from './pages/profile/profile.component';
 import {MessagesComponent} from './pages/messages/messages.component';
+import {BecomeSpecialistComponent} from './pages/become-specialist/become-specialist.component';
 import {SpecialistDetailsComponent} from './shared/specialist-details/specialist-details.component';
 import {RequestFormComponent} from './shared/request-form/request-form.component';
+import {BankAccountComponent} from './pages/bank-account/bank-account.component';
 
 export const routes: Routes = [
   {
@@ -24,12 +26,30 @@ export const routes: Routes = [
     component: AboutComponent
   },
   {
-    path: 'messages',
-    component: MessagesComponent
+    path: 'profile/account',
+    component: BankAccountComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile',
-    component: ProfileComponent
+    component: ProfileComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'home/:id',
+    loadComponent: () =>
+      import('./shared/specialist-details/specialist-details.component')
+        .then(m => m.SpecialistDetailsComponent)
+  },
+  {
+    path: 'messages',
+    component: MessagesComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'profile/user/become-specialist',
+    component: BecomeSpecialistComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'request-form',
@@ -49,21 +69,21 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: 'admin/users',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminUsersComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: 'admin/specialists',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminSpecialistsComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: '',

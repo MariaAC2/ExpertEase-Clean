@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {NgForOf, NgIf} from '@angular/common';
+import {NgIf} from '@angular/common';
 import {
-  UserAddDTO,
+  SpecialistAddDTO,
+  SpecialistDTO, SpecialistUpdateDTO,
   UserDTO,
   UserRoleEnum,
-  UserSpecialistAddDTO,
-  UserSpecialistDTO, UserSpecialistUpdateDTO,
-  UserUpdateDTO
 } from '../../../models/api.models';
 import {TableColumn} from '../../../models/table.models';
 import {dtoToDictionary, dtoToFormFields} from '../../../models/form.models';
@@ -17,6 +15,7 @@ import {AdminDetailsComponent} from '../../../shared/admin-details/admin-details
 import {DynamicFormComponent} from '../../../shared/dynamic-form/dynamic-form.component';
 import {DynamicTableComponent} from '../../../shared/dynamic-table/dynamic-table.component';
 import {SearchInputComponent} from '../../../shared/search-input/search-input.component';
+import {PaginationComponent} from '../../../shared/pagination/pagination.component';
 
 @Component({
   selector: 'app-admin.users',
@@ -25,92 +24,91 @@ import {SearchInputComponent} from '../../../shared/search-input/search-input.co
     AdminDetailsComponent,
     DynamicFormComponent,
     DynamicTableComponent,
-    NgForOf,
     NgIf,
-    SearchInputComponent
+    SearchInputComponent,
+    PaginationComponent
   ],
   templateUrl: './admin.specialists.component.html',
   styleUrls: ['../../../shared/dynamic-table/dynamic-table.component.scss', '../../../shared/admin-details/admin-details.component.scss'],
 })
 export class AdminSpecialistsComponent {
-  dummySpecialists: UserSpecialistDTO[] = [
-    {
-      id: '1a2b3c4d',
-      firstName: 'Elena',
-      lastName: 'Popa',
-      email: 'elena.popa@example.com',
-      password: 'dummyPass123!',
-      phoneNumber: '+40741111222',
-      address: 'Str. Mihai Eminescu, nr. 10, București',
-      yearsExperience: 5,
-      description: 'Specialist în educație timpurie cu experiență în dezvoltarea copilului.',
-      categories: []
-    },
-    {
-      id: '2b3c4d5e',
-      firstName: 'Alexandru',
-      lastName: 'Ionescu',
-      email: 'alex.ionescu@example.com',
-      password: 'dummyPass123!',
-      phoneNumber: '+40741222333',
-      address: 'Bd. Unirii, nr. 45, Cluj-Napoca',
-      yearsExperience: 8,
-      description: 'Consilier vocațional pasionat de ghidarea carierei adolescenților.',
-      categories: []
-    },
-    {
-      id: '3c4d5e6f',
-      firstName: 'Mara',
-      lastName: 'Dumitrescu',
-      email: 'mara.dumitrescu@example.com',
-      password: 'dummyPass123!',
-      phoneNumber: '+40741333444',
-      address: 'Str. Libertății, nr. 12, Timișoara',
-      yearsExperience: 3,
-      description: 'Psiholog specializat în coaching parental.',
-      categories: []
-    },
-    {
-      id: '4d5e6f7g',
-      firstName: 'Radu',
-      lastName: 'Georgescu',
-      email: 'radu.georgescu@example.com',
-      password: 'dummyPass123!',
-      phoneNumber: '+40741444555',
-      address: 'Calea Victoriei, nr. 77, Brașov',
-      yearsExperience: 10,
-      description: 'Mentor în educația non-formală cu experiență în proiecte Erasmus+.',
-      categories: []
-    },
-    {
-      id: '5e6f7g8h',
-      firstName: 'Ioana',
-      lastName: 'Stan',
-      email: 'ioana.stan@example.com',
-      password: 'dummyPass123!',
-      phoneNumber: '+40741555666',
-      address: 'Str. Lalelelor, nr. 23, Iași',
-      yearsExperience: 2,
-      description: 'Trainer junior dedicat activităților creative pentru copii.',
-      categories: []
-    }
-  ];
-
-dummy_user = {
-  id: '1a2b3c4d',
-  firstName: 'Elena',
-  lastName: 'Popa',
-  email: 'elena.popa@example.com',
-  password: 'dummyPass123!',
-  phoneNumber: '+40741111222',
-  address: 'Str. Mihai Eminescu, nr. 10, București',
-  yearsExperience: 5,
-  description: 'Specialist în educație timpurie cu experiență în dezvoltarea copilului.',
-  categories: []
-}
+//   dummySpecialists: SpecialistDTO[] = [
+//     {
+//       id: '1a2b3c4d',
+//       fullName: 'Elena Popa',
+//       email: 'elena.popa@example.com',
+//       phoneNumber: '+40741111222',
+//       address: 'Str. Mihai Eminescu, nr. 10, București',
+//       yearsExperience: 5,
+//       description: 'Specialist în educație timpurie cu experiență în dezvoltarea copilului.',
+//       categories: [],
+//       createdAt: new Date(),
+//       updatedAt: new Date()
+//     },
+//     {
+//       id: '2b3c4d5e',
+//       firstName: 'Alexandru Ionescu',
+//       email: 'alex.ionescu@example.com',
+//       password: 'dummyPass123!',
+//       phoneNumber: '+40741222333',
+//       address: 'Bd. Unirii, nr. 45, Cluj-Napoca',
+//       yearsExperience: 8,
+//       description: 'Consilier vocațional pasionat de ghidarea carierei adolescenților.',
+//       categories: []
+//     },
+//     {
+//       id: '3c4d5e6f',
+//       fullName: 'Mara',
+//       lastName: 'Dumitrescu',
+//       email: 'mara.dumitrescu@example.com',
+//       password: 'dummyPass123!',
+//       phoneNumber: '+40741333444',
+//       address: 'Str. Libertății, nr. 12, Timișoara',
+//       yearsExperience: 3,
+//       description: 'Psiholog specializat în coaching parental.',
+//       categories: []
+//     },
+//     {
+//       id: '4d5e6f7g',
+//       fullName: 'Radu',
+//       lastName: 'Georgescu',
+//       email: 'radu.georgescu@example.com',
+//       password: 'dummyPass123!',
+//       phoneNumber: '+40741444555',
+//       address: 'Calea Victoriei, nr. 77, Brașov',
+//       yearsExperience: 10,
+//       description: 'Mentor în educația non-formală cu experiență în proiecte Erasmus+.',
+//       categories: []
+//     },
+//     {
+//       id: '5e6f7g8h',
+//       fullName: 'Ioana',
+//       lastName: 'Stan',
+//       email: 'ioana.stan@example.com',
+//       password: 'dummyPass123!',
+//       phoneNumber: '+40741555666',
+//       address: 'Str. Lalelelor, nr. 23, Iași',
+//       yearsExperience: 2,
+//       description: 'Trainer junior dedicat activităților creative pentru copii.',
+//       categories: []
+//     }
+//   ];
+//
+// dummy_user = {
+//   id: '1a2b3c4d',
+//   fullName: 'Elena',
+//   lastName: 'Popa',
+//   email: 'elena.popa@example.com',
+//   password: 'dummyPass123!',
+//   phoneNumber: '+40741111222',
+//   address: 'Str. Mihai Eminescu, nr. 10, București',
+//   yearsExperience: 5,
+//   description: 'Specialist în educație timpurie cu experiență în dezvoltarea copilului.',
+//   categories: []
+// }
   searchTerm: string = '';
-  users: UserSpecialistDTO[] = [];
-  selectedUser: UserSpecialistDTO | null = null;
+  users: SpecialistDTO[] = [];
+  selectedUser: SpecialistDTO | null = null;
   entityDetails: Record<string, any> = {};
   entityDetailsId: string | undefined;
   pageSizeOptions: number[] = [5, 10, 20, 50];
@@ -129,7 +127,6 @@ dummy_user = {
     {
       key: 'fullName',
       header: 'Nume',
-      compute: (row: UserDTO) => `${row.lastName} ${row.firstName}`
     },
 
     { key: 'email', header: 'Email' },
@@ -144,12 +141,12 @@ dummy_user = {
         {
           label: 'Detalii',
           class: 'view',
-          callback: (row: UserSpecialistDTO) => this.getEntity(row.id)
+          callback: (row: SpecialistDTO) => this.getEntity(row.id)
         },
         {
           label: 'Modifică',
           class: 'edit',
-          callback: (row: UserSpecialistDTO) => this.editUser(row)
+          callback: (row: SpecialistDTO) => this.editUser(row)
         },
         {
           label: 'Șterge',
@@ -160,9 +157,8 @@ dummy_user = {
     }
   ];
 
-  defaultUser: UserSpecialistAddDTO = {
-    firstName: '',
-    lastName: '',
+  defaultUser: SpecialistAddDTO = {
+    fullName: '',
     email: '',
     password: '',
     phoneNumber: '',
@@ -183,8 +179,7 @@ dummy_user = {
 
   updateEntityFormFields = dtoToFormFields(
     {
-      firstName: this.selectedUser?.firstName || '',
-      lastName: this.selectedUser?.lastName || '',
+      fullName: this.selectedUser?.fullName || '',
       phoneNumber: this.selectedUser?.phoneNumber || '',
       address: this.selectedUser?.address || '',
       yearsExperience: this.selectedUser?.yearsExperience || '',
@@ -195,9 +190,8 @@ dummy_user = {
   constructor(private adminService: AdminSpecialistsService) {}
 
   ngOnInit(): void {
-    const defaultFormValues: UserSpecialistAddDTO = {
-      firstName: '',
-      lastName: '',
+    const defaultFormValues: SpecialistAddDTO = {
+      fullName: '',
       email: '',
       password: '',
       phoneNumber: '',
@@ -220,6 +214,7 @@ dummy_user = {
     this.adminService.getSpecialist(userId).subscribe({
       next: (res) => {
         this.entityDetailsId = res.response?.id;
+        console.log(res.response);
         this.entityDetails = dtoToDictionary(res.response ?? {});
         this.isUserDetailsVisible = true;
       },
@@ -243,7 +238,7 @@ dummy_user = {
   }
 
   addEntity(data: { [key: string]: any }) {
-    const userToSubmit: UserSpecialistAddDTO = data as UserSpecialistAddDTO;
+    const userToSubmit: SpecialistAddDTO = data as SpecialistAddDTO;
     this.adminService.addSpecialist(userToSubmit).subscribe({
       next: () => {
         this.closeAddUserForm();
@@ -255,16 +250,17 @@ dummy_user = {
     });
   }
 
-  editUser(user: UserSpecialistDTO): void {
+  editUser(user: SpecialistDTO): void {
     this.selectedUserId = user.id;
+
     this.formData = {
-      firstName: user.firstName,
-      lastName: user.lastName,
+      fullName: user.fullName,
       phoneNumber: user.phoneNumber,
       address: user.address,
       yearsExperience: user.yearsExperience,
       description: user.description,
     };
+
     this.isUpdateUserFormVisible = true;
   }
 
@@ -276,11 +272,9 @@ dummy_user = {
       return;
     }
 
-    const updatePayload: UserSpecialistUpdateDTO = {
+    const updatePayload: SpecialistUpdateDTO = {
       id: this.selectedUserId,
-      firstName: data['firstName'],
-      lastName: data['lastName'],
-      password: data['password'],
+      fullName: data['fullName'],
       phoneNumber: data['phoneNumber'],
       address: data['address'],
       yearsExperience: data['yearsExperience'],
@@ -322,7 +316,7 @@ dummy_user = {
     this.isUserDetailsVisible = true;
   }
   deleteUser(user: UserDTO): void {
-    if (confirm(`Sigur doriți să ștergeți utilizatorul ${user.firstName} ${user.lastName}?`)) {
+    if (confirm(`Sigur doriți să ștergeți utilizatorul ${user.fullName}?`)) {
       this.adminService.deleteSpecialist(user.id).subscribe({
         next: () => {
           this.getPage();
@@ -348,20 +342,20 @@ dummy_user = {
     };
   }
 
-  goToPreviousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.getPage();
-    }
-  }
-
-  goToNextPage(): void {
-    const totalPages = this.getTotalPages();
-    if (this.currentPage < totalPages) {
-      this.currentPage++;
-      this.getPage();
-    }
-  }
+  // goToPreviousPage(): void {
+  //   if (this.currentPage > 1) {
+  //     this.currentPage--;
+  //     this.getPage();
+  //   }
+  // }
+  //
+  // goToNextPage(): void {
+  //   const totalPages = this.getTotalPages();
+  //   if (this.currentPage < totalPages) {
+  //     this.currentPage++;
+  //     this.getPage();
+  //   }
+  // }
 
   getTotalPages(): number {
     return Math.ceil(this.totalItems / this.pageSize);
@@ -373,4 +367,8 @@ dummy_user = {
     this.getPage();
   }
 
+  onPageChange(newPage: number): void {
+    this.currentPage = newPage;
+    this.getPage();
+  }
 }

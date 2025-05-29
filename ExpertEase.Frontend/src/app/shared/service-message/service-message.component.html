@@ -1,0 +1,29 @@
+<div class="request-wrapper">
+  <div class="request-summary"
+       [ngClass]="{
+       'rejected-bg': serviceTask.status === 'Cancelled',
+       'accepted-bg': serviceTask.status === 'Completed',
+     }">
+    <h3>Serviciu</h3>
+
+    <p><strong>Descriere:</strong> {{ serviceTask.description }}</p>
+    <p><strong>Data:</strong> {{ serviceTask.startDate | date: 'dd MMMM yyyy' }}</p>
+
+    <p>
+      <strong>De la ora:</strong> {{ serviceTask.startDate | date: 'HH:mm' }} &nbsp;—&nbsp;
+      <strong>Până la ora:</strong> {{ serviceTask.endDate | date: 'HH:mm' }}
+    </p>
+
+    <p><strong>Adresă:</strong> {{ serviceTask.description }}</p>
+
+    <div class="big-price">
+      {{ serviceTask.price | currency:'RON':'symbol':'1.2-2' }}
+    </div>
+    <button class="accept-btn" (click)="completeTask()">
+      <i class="fas fa-thumbs-up"></i> Confirmă
+    </button>
+    <button class="reject-btn" (click)="cancelTask()">
+      <i class="fas fa-thumbs-down"></i> Anulează
+    </button>
+  </div>
+</div>

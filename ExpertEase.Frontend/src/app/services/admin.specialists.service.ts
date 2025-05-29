@@ -4,8 +4,8 @@ import {
   PagedResponse,
   RequestResponse,
   UserAddDTO,
-  UserDTO, UserSpecialistAddDTO,
-  UserSpecialistDTO, UserSpecialistUpdateDTO,
+  UserDTO, SpecialistAddDTO,
+  SpecialistDTO, SpecialistUpdateDTO,
   UserUpdateDTO
 } from '../models/api.models';
 import { jwtDecode } from 'jwt-decode';
@@ -23,7 +23,7 @@ export class AdminSpecialistsService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<UserSpecialistDTO>>(`${this.baseUrl}/${userId}`, {headers});
+    return this.http.get<RequestResponse<SpecialistDTO>>(`${this.baseUrl}/${userId}`, {headers});
   }
 
   getSpecialists(search: string | undefined, page: number, pageSize: number) {
@@ -37,13 +37,13 @@ export class AdminSpecialistsService {
       .set('page', page)
       .set('pageSize', pageSize);
 
-    return this.http.get<RequestResponse<PagedResponse<UserSpecialistDTO>>>(
+    return this.http.get<RequestResponse<PagedResponse<SpecialistDTO>>>(
       `${this.baseUrl}`,
       { headers, params }
     );
   }
 
-  addSpecialist(user: UserSpecialistAddDTO) {
+  addSpecialist(user: SpecialistAddDTO) {
     const token = this.authService.getToken();
 
     const headers = new HttpHeaders({
@@ -53,7 +53,7 @@ export class AdminSpecialistsService {
     return this.http.post(`${this.baseUrl}`, user, { headers });
   }
 
-  updateSpecialist(userId: string, user: UserSpecialistUpdateDTO) {
+  updateSpecialist(userId: string, user: SpecialistUpdateDTO) {
     const token = this.authService.getToken();
 
     const headers = new HttpHeaders({

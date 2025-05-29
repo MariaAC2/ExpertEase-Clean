@@ -10,6 +10,16 @@ export interface PagedResponse<T> {
   data?: T[];
 }
 
+export interface StatusUpdateDTO {
+  id: string;
+  status: StatusEnum;
+}
+
+export interface JobStatusUpdateDTO {
+  id: string;
+  status: JobStatusEnum;
+}
+
 export interface AccountDTO {
     id: string;
     currency: string;
@@ -182,6 +192,7 @@ export interface ReplyDTO {
     endDate: Date;
     price: number;
     status: StatusEnum;
+    serviceTask?: ServiceTaskDTO;
 }
 
 export interface ReplyUpdateDTO {
@@ -201,6 +212,8 @@ export interface RequestAddDTO {
 
 export interface RequestDTO {
     id: string;
+    senderUserId: string;
+    receiverUserId: string;
     requestedStartDate: Date;
     description: string;
     senderContactInfo?: ContactInfoDTO;
@@ -218,6 +231,7 @@ export interface RequestUpdateDTO {
 
 export interface ServiceTaskDTO {
     id: string;
+    replyId: string;
     userId: string;
     specialistId: string;
     startDate: Date;
@@ -261,13 +275,18 @@ export interface SpecialistDTO {
     categories?: CategoryDTO[];
 }
 
-export interface SpecialistProfileAddDTO {
+export interface BecomeSpecialistDTO {
     userId: string;
     phoneNumber: string;
     address: string;
     yearsExperience: number;
     description: string;
     categories?: string[] | undefined;
+}
+
+export interface BecomeSpecialistResponseDTO {
+  token: string;
+  user: UserDTO;
 }
 
 export interface SpecialistProfileDTO {
@@ -286,8 +305,7 @@ export interface SpecialistProfileUpdateDTO {
 
 export interface SpecialistUpdateDTO {
     id: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
+    fullName?: string | undefined;
     phoneNumber?: string | undefined;
     address?: string | undefined;
     yearsExperience?: number | undefined;
@@ -394,4 +412,26 @@ export interface UserUpdateDTO {
     lastName?: string | undefined;
     password?: string | undefined;
     specialist?: SpecialistProfileUpdateDTO;
+}
+
+export interface AdminUserUpdateDTO {
+  id: string;
+  fullName?: string | undefined;
+  role?: UserRoleEnum | undefined;
+}
+
+export interface ReviewAddDTO {
+  receiverUserId: string;
+  rating: number;
+  content: string;
+}
+
+export interface ReviewDTO {
+  id: string;
+  receiverUserId: string;
+  senderUserFullName: string,
+  rating: number;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

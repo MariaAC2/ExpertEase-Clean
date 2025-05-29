@@ -5,10 +5,10 @@
     </div>
 
     <div class="account-info">
-      <p><strong>Nume:</strong> {{ user.firstName }} {{ user.lastName }}</p>
-      <p><strong>Adresa mail:</strong> {{ user.email }}</p>
+      <p><strong>Nume:</strong> {{ user?.fullName }} </p>
+      <p><strong>Adresa mail:</strong> {{ user?.email }}</p>
       <p><strong>Parolă:</strong> ********</p>
-      <p><strong>Creat la data de:</strong> {{ user.createdAt | date:'dd.MM.yyyy' }}</p>
+      <p><strong>Creat la data de:</strong> {{ user?.createdAt | date:'dd.MM.yyyy' }}</p>
     </div>
     <app-icon-button
       [label]="'Editează profilul'"

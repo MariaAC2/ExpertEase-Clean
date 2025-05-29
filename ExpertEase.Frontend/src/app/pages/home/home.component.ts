@@ -1,86 +1,71 @@
-import { Component } from '@angular/core';
-import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-card.component';
-import {UserSpecialistDTO} from '../../models/api.models';
+import {Component, OnInit} from '@angular/core';
+import {RequestAddDTO, SpecialistDTO} from '../../models/api.models';
 import {CommonModule} from '@angular/common';
 import {dtoToDictionary} from '../../models/form.models';
 import {HomeService} from '../../services/home.service';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {SearchInputComponent} from '../../shared/search-input/search-input.component';
+import {PaginationComponent} from '../../shared/pagination/pagination.component';
+import {UserRequestService} from '../../services/user.request.service';
+import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-card.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [SpecialistCardComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchInputComponent],
+  imports: [SpecialistCardComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchInputComponent, PaginationComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss', '../../shared/search-input/search-input.component.scss']
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit{
   searchTerm: string = '';
-  dummyUsers: UserSpecialistDTO[] = [
-    {
-      id: '1',
-      firstName: 'Ana',
-      lastName: 'Popescu',
-      email: 'ana.popescu@example.com',
-      password: 'pass123',
-      phoneNumber: '0712345678',
-      address: 'Strada Florilor 12, București',
-      yearsExperience: 5,
-      description: 'Specialist în design interior cu experiență în proiecte rezidențiale.',
-      categories: [
-        { id: 'cat1', name: 'Design interior' },
-        { id: 'cat2', name: 'Renovări' }
-      ]
-    },
-    {
-      id: '2',
-      firstName: 'Mihai',
-      lastName: 'Ionescu',
-      email: 'mihai.ionescu@example.com',
-      password: 'secret456',
-      phoneNumber: '0722333444',
-      address: 'Aleea Lalelelor 8, Cluj-Napoca',
-      yearsExperience: 8,
-      description: 'Electrician autorizat ANRE, specializat în instalații electrice industriale.',
-      categories: [
-        { id: 'cat3', name: 'Electricitate' },
-        { id: 'cat4', name: 'Instalații industriale' }
-      ]
-    },
-    {
-      id: '3',
-      firstName: 'Elena',
-      lastName: 'Georgescu',
-      email: 'elena.geo@example.com',
-      password: 'elenaPass!',
-      phoneNumber: '0733445566',
-      address: 'Bd. Unirii 45, Iași',
-      yearsExperience: 10,
-      description: 'Consultant în resurse umane, coaching și formare profesională.',
-      categories: [
-        { id: 'cat5', name: 'Resurse umane' },
-        { id: 'cat6', name: 'Coaching' }
-      ]
-    }
-  ];
   currentPage: number = 1;
   pageSize: number = 10;
   totalItems: number = 0;
-  pageSizeOptions: number[] = [5, 10, 20, 50];
-  entityDetailsId: string | undefined;
   entityDetails: Record<string, any> = {};
   isUserDetailsVisible = false;
-  users: UserSpecialistDTO[] = [];
+  users: SpecialistDTO[] = [];
   error: string | null = null;
+  selectedSpecialist: SpecialistDTO | null = null;
 
-  constructor(private homeService: HomeService) { }
+  isRequestFormVisible = false;
+
+  requestForm: {
+    receiverUserId: string;
+    requestedStartDate: Date;
+    phoneNumber: string;
+    address: string;
+    description: string;
+  } = {
+    receiverUserId: '',
+    requestedStartDate: new Date(),
+    phoneNumber: '',
+    address: '',
+    description: ''
+  }
+
+  receiverUserId: string | undefined = '';
+
+  constructor(private homeService: HomeService, private userRequestService: UserRequestService) { }
+
+  closeDetails() {
+    this.isUserDetailsVisible = false;
+  }
+
+  openRequestForm(specialist: SpecialistDTO) {
+    this.isRequestFormVisible = true;
+    this.selectedSpecialist = specialist;
+    this.requestForm.receiverUserId = specialist.id;
+  }
+
+  ngOnInit() {
+    this.getPage();
+  }
 
   getEntity(userId: string): void {
     this.homeService.getSpecialist(userId).subscribe({
       next: (res) => {
-        this.entityDetailsId = res.response?.id;
-        this.entityDetails = dtoToDictionary(res.response ?? {});
-        this.isUserDetailsVisible = true;
+        this.selectedSpecialist = res.response ?? null;
+        this.receiverUserId = this.selectedSpecialist?.id
       },
       error: (err) => {
         console.error('Eroare la preluarea utilizatorului:', err);
@@ -101,29 +86,30 @@ export class HomeComponent {
     });
   }
 
+  addRequest(data: { [key: string]: any }) {
+    const requestToSubmit : RequestAddDTO = data as RequestAddDTO;
+
+    this.userRequestService.addRequest(requestToSubmit).subscribe({
+      next: (res) => {
+        alert('Cererea a fost trimisă cu succes!');
+        this.closeRequestForm();
+      },
+      error: (err) => {
+        console.error('Eroare la trimiterea cererii:', err);
+        alert('Nu s-a putut trimite cererea.');
+      }
+    });
+  }
+
   onSearch(term: string): void {
     this.searchTerm = term;
     this.currentPage = 1;
     this.getPage();
   }
 
-  goToPreviousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.getPage();
-    }
-  }
-
-  goToNextPage(): void {
-    const totalPages = this.getTotalPages();
-    if (this.currentPage < totalPages) {
-      this.currentPage++;
-      this.getPage();
-    }
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.totalItems / this.pageSize);
+  onPageChange(newPage: number): void {
+    this.currentPage = newPage;
+    this.getPage();
   }
 
   onPageSizeChange(newSize: number): void {
@@ -140,4 +126,17 @@ export class HomeComponent {
     this.isUserDetailsVisible = false;
     this.entityDetails = {};
   }
+
+  closeRequestForm() {
+    this.requestForm = {
+      receiverUserId: '',
+      requestedStartDate: new Date(),
+      phoneNumber: '',
+      address: '',
+      description: ''
+    }
+    this.isRequestFormVisible = false;
+  }
+
+  protected readonly SpecialistCardComponent = SpecialistCardComponent;
 }

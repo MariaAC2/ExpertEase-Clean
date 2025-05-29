@@ -8,7 +8,6 @@ import {SpecialistRequestService} from '../../services/specialist.request.servic
   selector: 'app-request-message',
   imports: [
     DatePipe,
-    LowerCasePipe,
     NgIf,
     NgClass
   ],

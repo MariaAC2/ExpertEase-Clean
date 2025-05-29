@@ -1,11 +1,11 @@
-﻿import { HttpClient } from '@angular/common/http';
+﻿import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {tap} from 'rxjs';
 import {LoginDTO, LoginResponseDTO, RequestResponse, UserRegisterDTO} from '../models/api.models';
 import {jwtDecode} from 'jwt-decode';
 
 export interface DecodedToken {
-  userId?: string;
+  nameid?: string;
   email?: string;
   role?: string;
   [key: string]: any;
@@ -18,18 +18,15 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   registerUser(data: UserRegisterDTO) {
-    console.log(data);
     return this.http.post(`${this.baseUrl}/register`, data);
   }
 
   loginUser(data: LoginDTO) {
-    console.log(data);
     return this.http.post<RequestResponse<LoginResponseDTO>>(`${this.baseUrl}/login`, data).pipe(
       tap((result) => {
         const token = result.response?.token;
 
         console.log("Token:", token);
-
         if (token) {
           localStorage.setItem('access_token', token);
         }
@@ -56,5 +53,17 @@ export class AuthService {
   getUserRole(): string | null {
     const decoded = this.decodeToken();
     return decoded?.role ?? null;
+  }
+
+  getUserId(): string | null {
+    const decoded = this.decodeToken();
+    return decoded?.nameid ?? null;
+  }
+
+  getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
   }
 }

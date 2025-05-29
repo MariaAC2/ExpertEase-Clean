@@ -13,8 +13,8 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class UserRequestService {
-  private baseUrl = 'http://localhost:5241/api/user/requests';
+export class SpecialistRequestService {
+  private baseUrl = 'http://localhost:5241/api/specialist/requests';
   constructor(private http: HttpClient, private authService: AuthService) { }
 
   // getRequest(userId: string) {
@@ -26,42 +26,24 @@ export class UserRequestService {
   //   return this.http.get<RequestResponse<RequestDTO>>(`${this.baseUrl}/${userId}`, {headers});
   // }
   //
-  // getRequests(search: string | undefined, page: number, pageSize: number) {
-  //   const token = this.authService.getToken();
-  //   const headers = new HttpHeaders({
-  //     Authorization: `Bearer ${token}`
-  //   });
-  //
-  //   const params = new HttpParams()
-  //     .set('search', search || '')
-  //     .set('page', page)
-  //     .set('pageSize', pageSize);
-  //
-  //   return this.http.get<RequestResponse<PagedResponse<RequestDTO>>>(
-  //     `${this.baseUrl}`,
-  //     { headers, params }
-  //   );
-  // }
-
-  addRequest(user: RequestAddDTO) {
+  acceptRequest(requestId: string) {
     const token = this.authService.getToken();
-
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.post(`${this.baseUrl}`, user, { headers });
+    return this.http.patch(`${this.baseUrl}/${requestId}/accept`, {}, { headers });
   }
-  //
-  // updateRequest(userId: string, user: RequestUpdateDTO) {
-  //   const token = this.authService.getToken();
-  //
-  //   const headers = new HttpHeaders({
-  //     Authorization: `Bearer ${token}`
-  //   });
-  //
-  //   return this.http.patch(`${this.baseUrl}${userId}`, user, { headers });
-  // }
+
+  rejectRequest(requestId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.patch(`${this.baseUrl}/${requestId}/reject`, {}, { headers });
+  }
+
   //
   // deleteRequest(userId: string) {
   //   const token = this.authService.getToken();

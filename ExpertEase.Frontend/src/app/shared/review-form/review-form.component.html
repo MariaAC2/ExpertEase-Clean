@@ -1,0 +1,28 @@
+<!--<div class="overlay">-->
+  <div class="request-form-wrapper">
+    <button class="close-button" (click)="closeForm()">×</button>
+    <h2>Trimite o recenzie</h2>
+
+    <form class="request-form" (ngSubmit)="submitReview()" #form="ngForm">
+      <label>
+        Rating:
+        <select name="rating" [(ngModel)]="reviewForm.rating" required>
+          <option [value]="5">★★★★★ - Excelent</option>
+          <option [value]="4">★★★★ - Foarte bine</option>
+          <option [value]="3">★★★ - Bine</option>
+          <option [value]="2">★★ - Slab</option>
+          <option [value]="1">★ - Foarte slab</option>
+        </select>
+      </label>
+
+      <label>
+        Comentariu:
+        <textarea name="comment" [(ngModel)]="reviewForm.content" rows="4" required></textarea>
+      </label>
+
+      <div class="center-button">
+        <button type="submit">Trimite recenzia</button>
+      </div>
+    </form>
+  </div>
+<!--</div>-->

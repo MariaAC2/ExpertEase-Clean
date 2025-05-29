@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {AuthService} from './auth.service';
 import {
   AdminUserUpdateDTO,
-  PagedResponse, RequestAddDTO,
+  PagedResponse, ReplyAddDTO, ReplyDTO, ReplyUpdateDTO, RequestAddDTO,
   RequestDTO,
   RequestResponse,
   UserAddDTO,
@@ -13,45 +13,62 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class SpecialistRequestService {
+export class SpecialistReplyService {
   private baseUrl = 'http://localhost:5241/api/specialist/requests';
-  constructor(private http: HttpClient, private authService: AuthService) { }
 
-  // getRequest(userId: string) {
-  //   const token = this.authService.getToken();
-  //   const headers = new HttpHeaders({
-  //     Authorization: `Bearer ${token}`
-  //   });
-  //
-  //   return this.http.get<RequestResponse<RequestDTO>>(`${this.baseUrl}/${userId}`, {headers});
-  // }
-  //
-  acceptRequest(requestId: string) {
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    const headers = new HttpHeaders({
+    return new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
-
-    return this.http.put(`/api/requests/${requestId}/accept`, null, { headers });
   }
 
-  rejectRequest(requestId: string) {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    return this.http.put(`/api/requests/${requestId}/reject`, null, { headers });
+  addReply(requestId: string, reply: ReplyAddDTO){
+    const headers = this.getAuthHeaders();
+    return this.http.post(
+      `${this.baseUrl}/${requestId}/replies`,
+      reply,
+      { headers }
+    );
   }
 
-  //
-  // deleteRequest(userId: string) {
-  //   const token = this.authService.getToken();
-  //
-  //   const headers = new HttpHeaders({
-  //     Authorization: `Bearer ${token}`
-  //   });
-  //
-  //   return this.http.delete(`${this.baseUrl}${userId}`, {headers});
-  // }
+  getReplyById(requestId: string, replyId: string){
+    const headers = this.getAuthHeaders();
+    return this.http.get<RequestResponse<ReplyDTO>>(
+      `${this.baseUrl}/${requestId}/replies/${replyId}`,
+      { headers }
+    );
+  }
+
+  getReplies(requestId: string, search: string, page: number, pageSize: number) {
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams()
+      .set('search', search)
+      .set('page', page)
+      .set('pageSize', pageSize);
+
+    return this.http.get<RequestResponse<PagedResponse<ReplyDTO>>>(
+      `${this.baseUrl}/${requestId}/replies`,
+      { headers, params }
+    );
+  }
+
+  updateReply(requestId: string, reply: ReplyUpdateDTO){
+    const headers = this.getAuthHeaders();
+    return this.http.patch(
+      `${this.baseUrl}/${requestId}/replies/${reply.id}`,
+      reply,
+      { headers }
+    );
+  }
+
+  cancelReply(requestId: string, replyId: string){
+    const headers = this.getAuthHeaders();
+    return this.http.patch(
+      `${this.baseUrl}/${requestId}/replies/${replyId}/cancel`,
+      { headers }
+    );
+  }
 }

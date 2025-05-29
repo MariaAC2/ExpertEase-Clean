@@ -1,12 +1,19 @@
 ﻿import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import {PagedResponse, RequestResponse, UserAddDTO, UserDTO, UserUpdateDTO} from '../models/api.models';
+import {
+  AdminUserUpdateDTO,
+  PagedResponse,
+  RequestResponse,
+  UserAddDTO,
+  UserDTO,
+  UserUpdateDTO
+} from '../models/api.models';
 import { jwtDecode } from 'jwt-decode';
 import {AuthService, DecodedToken} from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdminUsersService {
-  private baseUrl = 'http://localhost:5241/api/admin/users/';
+  private baseUrl = 'http://localhost:5241/api/admin/users';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -46,7 +53,7 @@ export class AdminUsersService {
     return this.http.post(`${this.baseUrl}`, user, { headers });
   }
 
-  updateUser(userId: string, user: UserUpdateDTO) {
+  updateUser(userId: string, user: AdminUserUpdateDTO) {
     const token = this.authService.getToken();
 
     const headers = new HttpHeaders({

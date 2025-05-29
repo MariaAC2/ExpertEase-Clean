@@ -1,0 +1,9 @@
+<div class="account-balance">
+  <h3>Cont ExpertEase</h3>
+  <p><strong>Sold curent:</strong> {{ account.balance | currency:'RON':'symbol':'1.2-2'}}</p>
+
+  <div class="account-balance-actions">
+    <button (click)="onDeposit()">Depune bani</button>
+    <button (click)="onWithdraw()">Retrage bani</button>
+  </div>
+</div>

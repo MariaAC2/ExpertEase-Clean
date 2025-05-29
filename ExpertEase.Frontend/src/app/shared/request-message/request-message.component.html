@@ -36,7 +36,7 @@
   <div class="request-summary"
        [ngClass]="{
        'rejected-bg': request.status === 'Rejected',
-       'accepted-bg': request.status === 'Accepted'
+       'accepted-bg': request.status === 'Accepted' || request.status === 'Confirmed',
      }">
     <h3>Solicitare</h3>
 

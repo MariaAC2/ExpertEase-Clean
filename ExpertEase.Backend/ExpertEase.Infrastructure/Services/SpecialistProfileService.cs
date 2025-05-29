@@ -47,21 +47,20 @@ public class SpecialistProfileService(
         {
             user.ContactInfo = new ContactInfo
             {
-                UserId = user.Id
+                UserId = user.Id,
+                PhoneNumber = becomeSpecialistProfile.PhoneNumber,
+                Address = becomeSpecialistProfile.Address
             };
+        } else 
+        {
+            user.ContactInfo.PhoneNumber = becomeSpecialistProfile.PhoneNumber;
+            user.ContactInfo.Address = becomeSpecialistProfile.Address;
         }
-
-        user.ContactInfo.PhoneNumber = becomeSpecialistProfile.PhoneNumber;
-        user.ContactInfo.Address = becomeSpecialistProfile.Address;
-
-        user.ContactInfo.PhoneNumber = becomeSpecialistProfile.PhoneNumber;
-        user.ContactInfo.Address = becomeSpecialistProfile.Address;
 
         user.SpecialistProfile = new SpecialistProfile
         {
             UserId = requestingUser.Id,
             YearsExperience = becomeSpecialistProfile.YearsExperience,
-            YearsExperienceString = becomeSpecialistProfile.YearsExperience.ToString(),
             Description = becomeSpecialistProfile.Description,
         };
 
