@@ -86,10 +86,20 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
             ServiceResponse.CreateErrorResponse<CategoryAdminDTO>(CommonErrors.EntityNotFound);
     }
     
-    public async Task<ServiceResponse<PagedResponse<CategoryAdminDTO>>> GetCategories(PaginationSearchQueryParams pagination,
+    public async Task<ServiceResponse<PagedResponse<CategoryAdminDTO>>> GetCategoriesAdmin(
+        PaginationSearchQueryParams pagination,
         CancellationToken cancellationToken = default)
     {
         var result = await repository.PageAsync(pagination, new CategoryAdminProjectionSpec(pagination.Search), cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+    
+    public async Task<ServiceResponse<List<CategoryDTO>>> GetCategories(string? search = null,
+        CancellationToken cancellationToken = default)
+    {
+        var spec = new CategoryProjectionSpec(search);
+        var result = await repository.ListAsync(spec, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse(result);
     }

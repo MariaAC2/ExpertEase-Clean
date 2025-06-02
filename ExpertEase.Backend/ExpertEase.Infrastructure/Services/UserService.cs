@@ -116,7 +116,6 @@ public class UserService(
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
-            RoleString = user.Role.ToString(),
             Password = user.Password
         };
         
@@ -185,7 +184,6 @@ public class UserService(
         
         entity.FullName = user.FullName ?? entity.FullName;
         entity.Role = user.Role ?? entity.Role;
-        entity.RoleString = user.Role?.ToString() ?? entity.RoleString;
 
         await repository.UpdateAsync(entity, cancellationToken); // Update the entity and persist the changes.
 
@@ -203,5 +201,4 @@ public class UserService(
 
         return ServiceResponse.CreateSuccessResponse();
     }
-    
 }

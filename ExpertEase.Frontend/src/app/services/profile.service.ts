@@ -1,20 +1,22 @@
 import { Injectable } from '@angular/core';
 import {AuthService} from "./auth.service";
-import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {
-  BecomeSpecialistDTO, BecomeSpecialistResponseDTO,
+  BecomeSpecialistDTO, BecomeSpecialistResponseDTO, CategoryDTO,
   PagedResponse,
   RequestResponse,
   UserDTO,
   UserUpdateDTO
 } from "../models/api.models";
 import {tap} from 'rxjs';
+import {types} from 'sass';
+import List = types.List;
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
-  private baseUrl = 'http://localhost:5241/api/profile/user';
+  private baseUrl = 'http://localhost:5241/api/profile/user/';
   constructor(private authService: AuthService, private http: HttpClient) { }
   getUserProfile() {
     const token = this.authService.getToken();
@@ -33,7 +35,7 @@ export class ProfileService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.put(`${this.baseUrl}`, user, {headers});
+    return this.http.patch(`${this.baseUrl}`, user, {headers});
   }
 
   becomeSpecialist(specialistProfile: BecomeSpecialistDTO) {
@@ -54,6 +56,24 @@ export class ProfileService {
           localStorage.setItem('access_token', res.response.token);
         }
       })
+    );
+  }
+
+  getCategories(search?: string) {
+    const token = this.authService.getToken();
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    let httpParams = new HttpParams();
+    if (search) {
+      httpParams = httpParams.set('search', search);
+    }
+
+    return this.http.get<RequestResponse<CategoryDTO[]>>(
+      `${this.baseUrl}/categories`,
+      { headers, params: httpParams }
     );
   }
 

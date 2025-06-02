@@ -11,7 +11,6 @@ public class User : BaseEntity
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
-    public string RoleString { get; set; } = null!;
     public ContactInfo? ContactInfo { get; set; }
     public SpecialistProfile? SpecialistProfile { get; set; }
     public Account Account { get; set; } = null!;
@@ -23,7 +22,7 @@ public class User : BaseEntity
     public override string ToString()
     {
         return $"User: {FullName} ({Email})\n" +
-               $"- Role: {Role} ({RoleString})\n" +
+               $"- Role: {Role}\n" +
                $"- Contact Info: {(ContactInfo != null ? $"{ContactInfo.PhoneNumber}, {ContactInfo.Address}" : "N/A")}\n" +
                $"- Is Specialist: {(SpecialistProfile != null ? "Yes" : "No")}\n" +
                $"- Account: {(Account != null ? $"Balance: {Account.Balance} {Account.Currency}" : "N/A")}\n" +

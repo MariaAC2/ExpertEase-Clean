@@ -9,7 +9,6 @@ public class CategorySpec : Specification<Category>
     public CategorySpec(Guid id)
     {
         Query.Where(e => e.Id == id);
-        Query.Include(e => e.Specialists);
     }
 
     public CategorySpec(string name)

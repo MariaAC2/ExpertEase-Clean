@@ -93,8 +93,8 @@ app.UseRouting();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseAuthentication(); // If you're using JWT or cookies
-app.UseAuthorization();  // 🔑 REQUIRED if you're using [Authorize]
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.MapFallbackToFile("browser/index.html");

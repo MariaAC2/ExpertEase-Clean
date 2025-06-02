@@ -23,7 +23,8 @@ public class SpecialistDTO
     public DateTime CreatedAt { get; set; }
     [Required]
     public DateTime UpdatedAt { get; set; }
-    
+    [Required]
+    public int Rating { get; set; } = 0;
     public List<CategoryDTO> Categories { get; set; } = null!;
 }
 

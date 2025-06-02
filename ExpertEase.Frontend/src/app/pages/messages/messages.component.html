@@ -1,4 +1,4 @@
-<div class="chat-wrapper" *ngIf="selectedExchange">
+<div class="chat-wrapper">
   <div class="chat-container">
     <div class="sidebar">
       <div class="sidebar-header">Convorbiri</div>
@@ -12,10 +12,14 @@
       </div>
     </div>
 
-    <div class="chat-area">
+    <div class="chat-area" *ngIf="selectedExchange; else noSelection">
       <div class="chat-header">
         <div>{{ selectedExchange.fullName }}</div>
-        <div><strong>ℹ️</strong></div>
+        <div>
+          <button>
+            <img src="assets/icons/info.svg" alt="specialist_info" [routerLink]="['/specialist', selectedExchange.id]">
+          </button>
+        </div>
       </div>
 
       <div class="chat-messages">
@@ -47,14 +51,6 @@
               </app-reply-message>
             </div>
 
-<!--            <div class="conversation-overlay" *ngIf="hasActiveServiceTask(request)">-->
-<!--              <app-service-message-->
-<!--                [serviceTask]="getLastReplyWithServiceTask(request)?.serviceTask!"-->
-<!--                [replyId]="getLastReplyWithServiceTask(request)?.id!"-->
-<!--                (taskCompleted)="completeTask($event.replyId, $event.taskId)"-->
-<!--                (taskCancelled)="cancelTask($event.replyId, $event.taskId)">-->
-<!--              </app-service-message>-->
-<!--            </div>-->
             <ng-container *ngIf="hasActiveServiceTask(request)">
               <div class="conversation-overlay">
                 <ng-container *ngIf="isReviewFormVisible; else showTaskOverlay">
@@ -80,11 +76,18 @@
       </div>
 
       <div class="chat-input">
-        <button><strong>📷</strong></button>
+        <button>
+          <img src="assets/icons/photo_media.svg" alt="photo_media">
+        </button>
         <input type="text" placeholder="Scrie un mesaj aici" />
         <button class="send-btn">→</button>
       </div>
     </div>
+    <ng-template #noSelection>
+      <div class="chat-area empty">
+        <p>Nu există conversații disponibile.</p>
+      </div>
+    </ng-template>
   </div>
 </div>
 

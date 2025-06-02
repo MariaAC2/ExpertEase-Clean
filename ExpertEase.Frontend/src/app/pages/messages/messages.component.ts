@@ -1,8 +1,11 @@
 import {Component, OnInit} from '@angular/core';
 import {
-  ReplyAddDTO, ReplyDTO,
-  RequestAddDTO,
-  RequestDTO, ReviewAddDTO, ServiceTaskDTO,
+  JobStatusEnum,
+  ReplyAddDTO,
+  ReplyDTO,
+  RequestDTO,
+  ReviewAddDTO,
+  ServiceTaskDTO,
   StatusEnum,
   UserExchangeDTO,
   UserRoleEnum
@@ -11,7 +14,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {AuthService} from '../../services/auth.service';
 import {MessagesService} from '../../services/messages.service';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import {SpecialistRequestService} from '../../services/specialist.request.service';
 import {SpecialistReplyService} from '../../services/specialist.reply.service';
 import {UserReplyService} from '../../services/user.reply.service';
@@ -25,7 +28,7 @@ import {ReviewFormComponent} from '../../shared/review-form/review-form.componen
 
 @Component({
   selector: 'app-messages',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ServiceMessageComponent, ReviewFormComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ServiceMessageComponent, ReviewFormComponent, RouterLink],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss'
 })
@@ -64,25 +67,47 @@ export class MessagesComponent implements OnInit {
   selectedTask: ServiceTaskDTO | undefined;
   selectedTaskId: string | undefined;
 
-  // ngOnInit() {
-  //   this.userRole = this.authService.getUserRole();
-  //   const userId = this.authService.getUserId();
-  //
-  //   this.messagesService.getExchanges('', 1, 100).subscribe({
-  //     next: (res) => {
-  //       this.exchanges = res.response?.data ?? [];
-  //
-  //       if (this.exchanges.length > 0) {
-  //         // Select the last conversation
-  //         this.selectedExchange = this.exchanges[this.exchanges.length - 1];
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Eroare la încărcarea convorbirilor:', err);
-  //     }
-  //   });
-  // }
-  //
+  dummyExchange: UserExchangeDTO = {
+    id: 'user-1234',
+    fullName: 'Maria Testescu',
+    requests: [
+      {
+        id: 'request-5678',
+        senderUserId: 'user-1234',
+        receiverUserId: 'user-9999',
+        requestedStartDate: new Date(),
+        description: 'Aș dori ajutor pentru o traducere medicală.',
+        status: StatusEnum.Accepted,
+        senderContactInfo: {
+          phoneNumber: '0740123456',
+          address: 'Strada Exemplu 10, București'
+        },
+        replies: [
+          {
+            id: 'reply-7890',
+            price: 150,
+            startDate: new Date(),
+            endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
+            status: StatusEnum.Pending,
+            serviceTask: {
+              id: 'task-001',
+              replyId: 'reply-7890',
+              specialistId: 'specialist-111',
+              userId: 'user-1234',
+              startDate: new Date(),
+              endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
+              description: 'Traducere documente medicale',
+              address: 'Strada Exemplu 10, București',
+              price: 150,
+              status: JobStatusEnum.Confirmed,
+              completedAt: new Date(),
+              cancelledAt: new Date(),
+            }
+          }
+        ]
+      }
+    ]
+  };
 
   constructor(private authService: AuthService,
               private specialistRequestService: SpecialistRequestService,
@@ -93,42 +118,25 @@ export class MessagesComponent implements OnInit {
               private reviewService: ReviewService,
               private route: ActivatedRoute) {}
 
-  // ngOnInit() {
-  //   const receiverUserId = this.route.snapshot.paramMap.get('id');
-  //   this.userRole = this.authService.getUserRole();
-  //   console.log(this.userRole);
-  //   if (receiverUserId) {
-  //     this.messageService.getExchange(receiverUserId).subscribe({
-  //       next: (res) => {
-  //         this.exchange = res.response;
-  //       },
-  //       error: (err) => {
-  //         console.error(err.message);
-  //         console.error('Eroare la încărcarea conversației:', err);
-  //       }
-  //     });
-  //   } else {
-  //     console.error('Nu s-a putut obține ID-ul utilizatorului din token.');
-  //   }
-  // }
-
   ngOnInit() {
     this.userRole = this.authService.getUserRole();
+    this.exchanges = [this.dummyExchange];
+    this.selectedExchange = this.dummyExchange;
 
-    this.messageService.getExchanges('', 1, 100).subscribe({
-      next: (res) => {
-        this.exchanges = res.response?.data ?? [];
-        console.log(this.exchanges);
-
-        if (this.exchanges.length > 0) {
-          // Select the last conversation
-          this.selectedExchange = this.exchanges[this.exchanges.length - 1];
-        }
-      },
-      error: (err) => {
-        console.error('Eroare la încărcarea convorbirilor:', err);
-      }
-    });
+    // this.messageService.getExchanges('', 1, 100).subscribe({
+    //   next: (res) => {
+    //     this.exchanges = res.response?.data ?? [];
+    //     console.log(this.exchanges);
+    //
+    //     if (this.exchanges.length > 0) {
+    //       // Select the last conversation
+    //       this.selectedExchange = this.exchanges[this.exchanges.length - 1];
+    //     }
+    //   },
+    //   error: (err) => {
+    //     console.error('Eroare la încărcarea convorbirilor:', err);
+    //   }
+    // });
   }
 
   loadExchange(senderUserId: string): void {

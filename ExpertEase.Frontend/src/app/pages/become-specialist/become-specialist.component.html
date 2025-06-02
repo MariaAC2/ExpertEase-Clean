@@ -1,11 +1,31 @@
-<!--<div class="modal-overlay" *ngIf="isAddUserFormVisible">-->
-<!--  <div class="modal">-->
-<!--    <button class="close-button" (click)="closeAddUserForm()">×</button>-->
 <h2>Devino specialist!</h2>
-<app-dynamic-form
-  [fields]="addEntityFormFields"
-  [submitText]="'Trimite'"
-  (formSubmit)="addEntity($event)">
-</app-dynamic-form>
-<!--  </div>-->
-<!--</div>-->
+<div class="form-wrapper">
+  <div class="form-box">
+    <ng-container [ngSwitch]="step">
+      <app-dynamic-form *ngSwitchCase="1"
+        [fields]="step1FormFields"
+        [submitText]="'Treci la pasul următor'"
+        (formSubmit)="handleStep1($event)">
+      </app-dynamic-form>
+
+      <!-- Step 2: Category Selection -->
+      <div *ngSwitchCase="2" class="form-layout">
+        <app-category-selector
+          [selectedCategoryIds]="specialistData.categories || []"
+          (categoryChange)="updateCategories($event)">
+        </app-category-selector>
+
+        <div class="form-group full-width">
+          <div class="button-wrapper">
+            <button (click)="addEntity()" class="send-button">Finalizează</button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+<!--    <app-dynamic-form-->
+<!--      [fields]="addEntityFormFields"-->
+<!--      [submitText]="'Treci la pasul următor'"-->
+<!--      (formSubmit)="addEntity($event)">-->
+<!--    </app-dynamic-form>-->
+  </div>
+</div>

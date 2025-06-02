@@ -31,8 +31,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.Role)
             .HasConversion(new EnumToStringConverter<UserRoleEnum>())
             .IsRequired();
-        builder.Property(e=>e.RoleString)
-            .IsRequired();
         builder.Property(e => e.CreatedAt)
             .IsRequired();
         builder.Property(e => e.UpdatedAt)

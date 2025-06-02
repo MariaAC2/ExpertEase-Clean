@@ -1,13 +1,12 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {SpecialistDTO} from '../../models/api.models';
-import {SpecialistDetailsComponent} from '../specialist-details/specialist-details.component';
 import {RequestFormComponent} from '../request-form/request-form.component';
 
 @Component({
   selector: 'app-specialist-card',
-  imports: [CommonModule, SpecialistDetailsComponent, RequestFormComponent],
+  imports: [CommonModule, RequestFormComponent, RouterLink],
   templateUrl: './specialist-card.component.html',
   styleUrls: ['./specialist-card.component.scss']
 })
@@ -23,9 +22,8 @@ export class SpecialistCardComponent {
     description: '',
     createdAt: new Date(),
     updatedAt: new Date(),
+    rating: 0
   }
-
-  isUserDetailsVisible = false;
   isRequestFormVisible = false;
 
   requestForm = {
@@ -36,19 +34,10 @@ export class SpecialistCardComponent {
     description: ''
   };
 
-  @Output() viewDetails = new EventEmitter<SpecialistDTO>();
+  @Output() specialistId = new EventEmitter<string>();
   @Output() requestFormSubmit = new EventEmitter<{ [key: string]: any }>();
 
   constructor(private router: Router) { }
-
-  goToDetails() {
-    this.viewDetails.emit(this.specialist);
-    this.isUserDetailsVisible = true;
-  }
-
-  closeDetails() {
-    this.isUserDetailsVisible = false;
-  }
 
   goToSendRequest() {
     this.requestForm.receiverUserId = this.specialist.id;

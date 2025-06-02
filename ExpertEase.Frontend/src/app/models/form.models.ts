@@ -5,6 +5,7 @@
   placeholder?: string;
   options?: string[];     // for select, radio, etc.
   required?: boolean;
+  class?: string;
 }
 
 export const DefaultLabelMap: Record<string, string> = {
@@ -23,6 +24,10 @@ export const DefaultLabelMap: Record<string, string> = {
   transaction: 'Tranzacție',
   createdAt: 'Creat la',
   updatedAt: 'Actualizat la',
+  categories: 'Categorii',
+  name: 'Denumire',
+  specialistsCount: 'Număr specialiști',
+  specialistIds: 'Specialiștii cu această categorie',
 };
 
 export function dtoToFormFields<T extends Record<string, any>>(
@@ -41,6 +46,7 @@ export function dtoToFormFields<T extends Record<string, any>>(
       type,
       placeholder: override.placeholder || `Introdu ${label.toLowerCase()}`,
       required: override.required ?? true,
+      class: override.class || 'half-width',
       ...override
     };
   });
@@ -57,21 +63,10 @@ export function dtoToDictionary(dto: Record<string, any>): Record<string, any> {
   const labeledDict: Record<string, any> = {};
   const keys = Object.keys(dto);
 
-  const hasFirstName = 'firstName' in dto;
-  const hasLastName = 'lastName' in dto;
-
   // 1. Add ID first (always)
   if ('id' in dto) {
     const idLabel = DefaultLabelMap['id'] || 'id';
     labeledDict[idLabel] = dto['id'];
-  }
-
-  // 2. Add full name if both are present
-  if (hasFirstName && hasLastName) {
-    const fullName = `${dto['lastName']} ${dto['firstName']}`.trim();
-    if (fullName) {
-      labeledDict['Nume'] = fullName;
-    }
   }
 
   // 3. Loop through rest
@@ -118,4 +113,3 @@ function formatDate(input: string | Date): string {
   const year = date.getFullYear();
   return `${day}.${month}.${year}`;
 }
-

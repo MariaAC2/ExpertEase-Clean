@@ -1,0 +1,59 @@
+<app-pagination
+  [currentPage]="currentPage"
+  [pageSize]="pageSize"
+  [pageSizeOptions]="[5, 10, 20]"
+  [totalItems]="totalItems"
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)">
+</app-pagination>
+
+<div class="admin-wrapper">
+  <div class="admin-table-container">
+    <h2>Administrează toate categoriile</h2>
+    <div class="search-box-wrapper">
+      <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+    </div>
+    <button class="add-btn" (click)="openAddEntityForm()">Adaugă categorie</button>
+    <app-dynamic-table
+      [columns]="columns"
+      [data]="entities">
+    </app-dynamic-table>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isAddEntityFormVisible">
+  <div class="modal">
+    <div class="close-button-wrapper">
+      <button class="close-button" (click)="closeAddEntityForm()">×</button>
+    </div>
+    <app-dynamic-form
+      [fields]="addEntityFormFields"
+      [submitText]="'Trimite'"
+      (formSubmit)="addEntity($event)">
+    </app-dynamic-form>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isUpdateEntityFormVisible">
+  <div class="modal">
+    <button class="close-button" (click)="closeUpdateEntityForm()">×</button>
+    <app-dynamic-form
+      [fields]="updateEntityFormFields"
+      [initialData]="formData"
+      [submitText]="'Actualizează'"
+      (formSubmit)="updateEntity($event)">
+    </app-dynamic-form>
+  </div>
+</div>
+
+<div class="admin-overlay" *ngIf="isEntityDetailsVisible">
+  <div class="admin-modal">
+    <button class="close-button" (click)="closeEntityDetails()">×</button>
+    <app-admin-details
+      *ngIf="isEntityDetailsVisible"
+      [entity]="entityDetails"
+      [title]="'Detalii categorie'"
+      (close)="closeEntityDetails()">
+    </app-admin-details>
+  </div>
+</div>

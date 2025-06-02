@@ -1,57 +1,41 @@
-<form class="grid-form" (ngSubmit)="onSubmit()">
-  <div class="form-group" *ngFor="let field of fields">
+<form (ngSubmit)="onSubmit()" class="form-layout">
+  <div class="form-group" [ngClass]="field.class" *ngFor="let field of fields">
     <label [for]="field.key">{{ field.label }}</label>
 
-<!--    <div class="input-box">-->
-  <div [ngClass]="field.type === 'select' ? 'select-box' : 'input-box'">
-    <ng-container [ngSwitch]="field.type">
+    <div [ngClass]="field.type === 'select' ? 'select-box' : 'input-box'">
+      <ng-container [ngSwitch]="field.type">
 
-        <!-- Text, Email, Password -->
-        <input *ngSwitchCase="'text'"
-               type="text"
-               [id]="field.key"
-               [name]="field.key"
-               [placeholder]="field.placeholder"
-               [(ngModel)]="formData[field.key]" />
+        <!-- Text, Email, Password, Number -->
+        <input *ngSwitchCase="'text'" type="text" [id]="field.key" [name]="field.key"
+               [placeholder]="field.placeholder" [(ngModel)]="formData[field.key]" />
 
-        <input *ngSwitchCase="'email'"
-               type="email"
-               [id]="field.key"
-               [name]="field.key"
-               [placeholder]="field.placeholder"
-               [(ngModel)]="formData[field.key]" />
+        <input *ngSwitchCase="'email'" type="email" [id]="field.key" [name]="field.key"
+               [placeholder]="field.placeholder" [(ngModel)]="formData[field.key]" />
 
-        <input *ngSwitchCase="'password'"
-               type="password"
-               [id]="field.key"
-               [name]="field.key"
-               [placeholder]="field.placeholder"
-               [(ngModel)]="formData[field.key]" />
+        <input *ngSwitchCase="'password'" type="password" [id]="field.key" [name]="field.key"
+               [placeholder]="field.placeholder" [(ngModel)]="formData[field.key]" />
 
-        <!-- Select (optional if you support dropdowns) -->
-        <select *ngSwitchCase="'select'"
-                [id]="field.key"
-                [name]="field.key"
+        <input *ngSwitchCase="'number'" type="number" [id]="field.key" [name]="field.key"
+               [placeholder]="field.placeholder" [(ngModel)]="formData[field.key]" />
+
+        <!-- Select -->
+        <select *ngSwitchCase="'select'" [id]="field.key" [name]="field.key"
                 [(ngModel)]="formData[field.key]"
                 [ngClass]="{ 'placeholder-selected': formData[field.key] === '' }">
           <option value="" disabled hidden>{{ field.placeholder || 'Selectează o opțiune' }}</option>
           <option *ngFor="let option of field.options" [value]="option">{{ option }}</option>
         </select>
 
-        <!-- Fallback for unsupported types -->
-        <input *ngSwitchDefault
-               [type]="field.type"
-               [id]="field.key"
-               [name]="field.key"
-               [placeholder]="field.placeholder"
-               [(ngModel)]="formData[field.key]" />
+        <!-- Textarea -->
+        <textarea *ngSwitchCase="'textarea'" [id]="field.key" [name]="field.key"
+                  [placeholder]="field.placeholder" [(ngModel)]="formData[field.key]" rows="4">
+        </textarea>
+
+        <!-- Fallback -->
+        <input *ngSwitchDefault [type]="field.type" [id]="field.key" [name]="field.key"
+               [placeholder]="field.placeholder" [(ngModel)]="formData[field.key]" />
       </ng-container>
     </div>
-
-    <!-- Validation message (optional) -->
-    <!-- <div class="error" *ngIf="isFieldInvalid(field)">
-      {{ field.label }} este obligatoriu.
-    </div> -->
   </div>
 
   <div class="form-group full-width">

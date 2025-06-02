@@ -174,7 +174,7 @@ export class AdminSpecialistsComponent {
     email: { type: 'email' },
     password: { type: 'password' },
     yearsExperience: { type: 'number', placeholder: 'Ex: 5' },
-    description: { type: 'textarea', placeholder: 'Descrie serviciile oferite' }
+    description: { type: 'textarea', placeholder: 'Descrie serviciile oferite', class: 'full-width' }
   });
 
   updateEntityFormFields = dtoToFormFields(

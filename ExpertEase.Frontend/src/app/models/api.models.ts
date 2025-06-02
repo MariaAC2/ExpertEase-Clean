@@ -272,6 +272,7 @@ export interface SpecialistDTO {
     description: string;
     createdAt: Date;
     updatedAt: Date;
+    rating: number;
     categories?: CategoryDTO[];
 }
 
@@ -375,6 +376,7 @@ export interface UserDTO {
     roleString?: string;
     createdAt: Date;
     updatedAt: Date;
+    rating: number;
     contactInfo?: ContactInfoDTO;
     specialist?: SpecialistProfileDTO;
 }

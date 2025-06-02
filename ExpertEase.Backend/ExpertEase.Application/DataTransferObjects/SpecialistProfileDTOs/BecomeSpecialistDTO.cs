@@ -14,5 +14,5 @@ public class BecomeSpecialistDTO
     public int YearsExperience { get; set; }
     [Required]
     public string Description { get; set; } = null!;
-    public List<string>? Categories { get; set; }
+    public List<Guid>? Categories { get; set; }
 }

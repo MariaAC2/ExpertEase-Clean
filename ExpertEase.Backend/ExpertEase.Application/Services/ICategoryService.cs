@@ -9,7 +9,10 @@ namespace ExpertEase.Application.Services;
 public interface ICategoryService
 {
     Task<ServiceResponse<CategoryAdminDTO>> GetCategory(Guid id, CancellationToken cancellationToken = default); 
-    Task<ServiceResponse<PagedResponse<CategoryAdminDTO>>> GetCategories(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<PagedResponse<CategoryAdminDTO>>> GetCategoriesAdmin(PaginationSearchQueryParams pagination,
+        CancellationToken cancellationToken = default);
+    Task<ServiceResponse<List<CategoryDTO>>> GetCategories(string? search = null,
+        CancellationToken cancellationToken = default);
     Task<ServiceResponse<CategoryDTO>> GetCategoryForSpecialist(Guid categoryId, Guid id, CancellationToken cancellationToken = default);
     Task<ServiceResponse<PagedResponse<CategoryDTO>>> GetCategoriesForSpecialist(Guid specialistId, PaginationQueryParams pagination, CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddCategory(CategoryAddDTO category, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

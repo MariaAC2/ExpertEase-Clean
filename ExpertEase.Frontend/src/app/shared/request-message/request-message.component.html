@@ -63,8 +63,9 @@
         </button>
       </div>
     </div>
-    <div *ngIf="showOfferButton()" class="offer-button">
-      <button (click)="triggerOffer()">Fă o ofertă</button>
+    <!-- Accepted (urmeaza sa bag logica pentru a avea butonul de oferta doar daca e specialist) -->
+    <div *ngIf="showOfferButton()" class="action-buttons">
+      <button class="offer-btn" (click)="triggerOffer()">Fă o ofertă</button>
     </div>
   </div>
 </div>

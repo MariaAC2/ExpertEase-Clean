@@ -84,8 +84,8 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -316,10 +316,6 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<int>("YearsExperience")
                         .HasColumnType("integer");
 
-                    b.Property<string>("YearsExperienceString")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("UserId");
 
                     b.ToTable("SpecialistProfile");
@@ -420,10 +416,6 @@ namespace ExpertEase.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("RoleString")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -487,7 +479,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.HasOne("ExpertEase.Domain.Entities.User", "ReceiverUser")
                         .WithMany()
                         .HasForeignKey("ReceiverUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")
@@ -506,7 +498,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.HasOne("ExpertEase.Domain.Entities.User", "ReceiverUser")
                         .WithMany()
                         .HasForeignKey("ReceiverUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ExpertEase.Domain.Entities.User", "SenderUser")

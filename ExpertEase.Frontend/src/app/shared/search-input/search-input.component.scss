@@ -1,10 +1,6 @@
 .search-box {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  margin: auto;
-  background-color: #f6efff;
-  border-radius: 5px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -35,4 +31,3 @@
 .search-icon-button:hover {
   color: #000;
 }
-

@@ -206,6 +206,24 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-6D2DGYNZ.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-7R6C62RM.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-I7WE2CT7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-BEX66UIT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ELHSBZJ7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-JUXVBAIH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-KJZZORIN.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-L2OXESEO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-LISX3W3O.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-P3KCQPKQ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-RW4IYISM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-XMD43QWV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-AUB7NYJS.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-33KZWHGV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5OEAJI3Q.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5PTTNDGB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-KPYPKLLU.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-W2ZBQNBW.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5ZVAHMIR.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-CXOXKOPJ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-QYW66XDP.js" />
     </ItemGroup>
 
     <ItemGroup>

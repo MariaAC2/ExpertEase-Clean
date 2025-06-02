@@ -1,0 +1,29 @@
+<div class="tag-selector">
+  <h3 class="section-title">Listă categorii:</h3>
+  <div class="category-box">
+    <div class="search-category-wrapper">
+      <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+    </div>
+    <div class="category-options">
+      <span
+        *ngFor="let category of allCategories"
+        class="tag option"
+        [class.disabled]="selectedCategoryIds.includes(category.id)"
+        (click)="toggle(category.id)">
+        {{ category.name }}
+      </span>
+    </div>
+  </div>
+
+  <h3 class="section-title">Categoriile selectate:</h3>
+  <ng-container *ngIf="selectedCategoryIds.length > 0">
+    <div class="category-box category-options">
+    <span
+      class="tag selected"
+      *ngFor="let id of selectedCategoryIds">
+      {{ getCategoryName(id) }}
+      <button type="button" (click)="remove(id)">×</button>
+    </span>
+    </div>
+  </ng-container>
+</div>

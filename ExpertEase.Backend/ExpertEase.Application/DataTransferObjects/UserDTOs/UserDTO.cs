@@ -21,11 +21,12 @@ public class UserDTO
     public string Email { get; set; } = null!;
     [Required]
     public UserRoleEnum Role { get; set; }
-    public string RoleString { get; set; } = null!;
     [Required]
     public DateTime CreatedAt { get; set; }
     [Required]
     public DateTime UpdatedAt { get; set; }
+    [Required]
+    public int Rating { get; set; } = 0;
     public ContactInfoDTO? ContactInfo { get; set; }
     public SpecialistProfileDTO? Specialist { get; set; }
 }

@@ -65,6 +65,15 @@
   align-items: center;
 }
 
+.chat-header button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
 .chat-messages {
   flex-grow: 1;
   padding: 1rem;
@@ -89,9 +98,11 @@
 }
 
 .chat-input button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
 }
 
@@ -174,4 +185,18 @@
   padding: 1rem;
   //border: 2px solid #6c63ff; // optional highlight
   box-shadow: 0 0 12px rgba(0,0,0,0.2);
+}
+
+.no-conversations {
+  padding: 1rem;
+  color: #888;
+  font-style: italic;
+}
+
+.chat-area.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-style: italic;
 }

@@ -16,8 +16,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request>
             .HasForeignKey(r => r.SenderUserId);
         builder.HasOne(r => r.ReceiverUser)
             .WithMany()
-            .HasForeignKey(r => r.ReceiverUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(r => r.ReceiverUserId);
         builder.Property(r=> r.RequestedStartDate)
             .IsRequired();
         builder.Property(r => r.Description)

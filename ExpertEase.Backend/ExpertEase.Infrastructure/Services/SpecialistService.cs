@@ -34,7 +34,6 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
             Email = user.Email,
             FullName = user.FullName,
             Role = UserRoleEnum.Specialist,
-            RoleString = UserRoleEnum.Specialist.ToString(),
             Password = user.Password,
             ContactInfo = new ContactInfo
             {
@@ -44,7 +43,6 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
             SpecialistProfile = new SpecialistProfile
             {
                 YearsExperience = user.YearsExperience,
-                YearsExperienceString = user.YearsExperience.ToString(),
                 Description = user.Description,
                 Categories = new List<Category>()
             }
@@ -113,6 +111,18 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
         }
 
         await repository.UpdateAsync(result, cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse();
+    }
+    
+    public async Task<ServiceResponse> DeleteSpecialist(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
+    {
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != id) // Verify who can add the user, you can change this however you se fit.
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin or the own user can delete the user!", ErrorCodes.CannotDelete));
+        }
+
+        await repository.DeleteAsync<User>(id, cancellationToken); // Delete the entity.
 
         return ServiceResponse.CreateSuccessResponse();
     }

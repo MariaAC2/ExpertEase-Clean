@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.AdminControllers;
 
 [ApiController]
-[Route("api/admin/categories/")]
+[Route("api/admin/categories")]
 [Tags("AdminCategories")]
 public class AdminCategoryController(IUserService userService, ICategoryService categoryService) : AuthorizedController(userService)
 {
@@ -44,7 +44,7 @@ public class AdminCategoryController(IUserService userService, ICategoryService 
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await categoryService.GetCategories(pagination)) :
+            CreateRequestResponseFromServiceResponse(await categoryService.GetCategoriesAdmin(pagination)) :
             CreateErrorMessageResult<PagedResponse<CategoryAdminDTO>>(currentUser.Error);
     }
     

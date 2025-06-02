@@ -16,7 +16,7 @@ import {PaginationComponent} from '../../../shared/pagination/pagination.compone
   standalone: true,
   imports: [CommonModule, FormsModule, DynamicFormComponent, DynamicTableComponent, AdminDetailsComponent, SearchInputComponent, PaginationComponent],
   templateUrl: './admin.users.component.html',
-  styleUrls: ['../../../shared/dynamic-table/dynamic-table.component.scss', '../../../shared/admin-details/admin-details.component.scss'],
+  styleUrls: ['../../../shared/dynamic-table/dynamic-table.component.scss', '../../../shared/dynamic-form/dynamic-form.component.scss', '../../../shared/admin-details/admin-details.component.scss'],
 })
 export class AdminUsersComponent implements OnInit {
 
@@ -27,7 +27,8 @@ export class AdminUsersComponent implements OnInit {
       email: 'ana.georgescu@example.com',
       role: UserRoleEnum.Admin,
       createdAt: new Date('2024-09-01T11:30:00Z'),
-      updatedAt: new Date('2025-01-12T13:00:00Z')
+      updatedAt: new Date('2025-01-12T13:00:00Z'),
+      rating: 4.5,
     },
     {
       id: 'q7r8s9t0',
@@ -35,7 +36,8 @@ export class AdminUsersComponent implements OnInit {
       email: 'radu.enache@example.com',
       role: UserRoleEnum.Client,
       createdAt: new Date('2024-08-20T15:45:00Z'),
-      updatedAt: new Date('2025-01-08T11:15:00Z')
+      updatedAt: new Date('2025-01-08T11:15:00Z'),
+      rating: 4,
     }
   ];
 
@@ -44,7 +46,6 @@ export class AdminUsersComponent implements OnInit {
   selectedUser: UserDTO | null = null;
   entityDetails: Record<string, any> = {};
   entityDetailsId: string | undefined;
-  pageSizeOptions: number[] = [5, 10, 20, 50];
   pageSize: number = 10;
   currentPage: number = 1;
   totalItems: number = 0;

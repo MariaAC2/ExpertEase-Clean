@@ -22,7 +22,6 @@ export class RegisterComponent {
   formFields: FormField[] = [];
   formData: { [key: string]: any } = {};
   errorMessage: string | null = null;
-
   constructor(private authService: AuthService, private router: Router) {
     const dto: UserRegisterDTO = {
       firstName: '',
@@ -35,6 +34,8 @@ export class RegisterComponent {
       email: { type: 'email' },
       password: { type: 'password' }
     });
+
+    console.log(this.formFields);
   }
 
   registerUser(data: { [key: string]: any }) {

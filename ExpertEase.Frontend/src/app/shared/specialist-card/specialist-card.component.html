@@ -1,39 +1,45 @@
 <div class="card">
-  <div class="avatar">
-    <img src="/assets/avatar.svg" alt="User avatar" />
+  <div class="avatar-wrapper">
+    <div class="avatar">
+      <img src="assets/avatar.svg" alt="User avatar" />
+    </div>
+    <div class="rating-badge">
+      <img src="assets/star-rating.svg" alt="User star" />
+      <span class="rating-value">{{ specialist.rating }}</span>
+    </div>
   </div>
   <div class="info">
-    <h2 class="full-name" (click)="goToDetails()">
+    <h2 class="full-name" [routerLink]="['/specialist', specialist.id]">
       {{ specialist.fullName }}
     </h2>
-  <div class="details-block">
-    <div class="row">
-      <div class="categories">
-        <span class="label">Categorii:</span>
-        <span class="tag" *ngFor="let cat of specialist.categories">{{ cat }}</span>
+    <div class="details-block">
+      <div class="row">
+        <div class="categories">
+          <span class="label">Categorii:</span>
+          <span class="tag" *ngFor="let cat of specialist.categories">{{ cat }}</span>
+        </div>
+
+        <div class="experience">
+          <span class="label">Ani experiență:</span>
+          {{ specialist.yearsExperience }}
+        </div>
       </div>
 
-      <div class="experience">
-        <span class="label">Ani experiență:</span>
-        {{ specialist.yearsExperience }}
+      <div class="description">
+        <span class="label">Descriere:</span>
+        {{ specialist.description }}
       </div>
     </div>
-
-    <div class="description">
-      <span class="label">Descriere:</span>
-      {{ specialist.description }}
-    </div>
-  </div>
   </div>
 
   <button class="request-btn" (click)="goToSendRequest()">Fă o solicitare</button>
 </div>
 
-<div class="overlay" *ngIf="isUserDetailsVisible">
-  <div class="modal" (click)="closeDetails()">
-    <app-specialist-details [specialist]="specialist"></app-specialist-details>
-  </div>
-</div>
+<!--<div class="overlay" *ngIf="isUserDetailsVisible">-->
+<!--  <div class="modal" (click)="closeDetails()">-->
+<!--    <app-specialist-details [specialist]="specialist"></app-specialist-details>-->
+<!--  </div>-->
+<!--</div>-->
 
 <!-- Request modal -->
 <div class="overlay" *ngIf="isRequestFormVisible">

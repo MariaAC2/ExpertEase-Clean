@@ -15,9 +15,11 @@ public sealed class UserSpec : Specification<User>
         Query.Where(e => e.Id == id);
 
         Query.Include(e => e.Account);
+        Query.Include(e => e.ContactInfo);
         Query.Include(e => e.SpecialistProfile);
         Query.Include(e=> e.Requests)
             .ThenInclude(r => r.ReceiverUser);
+        Query.Include(e => e.Reviews);
     }
 
     public UserSpec(string email)
@@ -26,6 +28,8 @@ public sealed class UserSpec : Specification<User>
         Query.Include(e => e.Account);
         Query.Include(e => e.ContactInfo);
         Query.Include(e => e.SpecialistProfile);
-        Query.Include(e => e.Requests);
+        Query.Include(e => e.Requests)
+            .ThenInclude(r => r.ReceiverUser);
+        Query.Include(e => e.Reviews);
     }
 }

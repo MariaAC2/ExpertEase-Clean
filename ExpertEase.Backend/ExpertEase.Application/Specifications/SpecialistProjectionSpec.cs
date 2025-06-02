@@ -23,6 +23,7 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
                 Description = e.SpecialistProfile.Description,
                 CreatedAt = e.CreatedAt,
                 UpdatedAt = e.UpdatedAt,
+                Rating = e.Rating,
                 Categories = e.SpecialistProfile.Categories.Select(c => new CategoryDTO
                 {
                     Id = c.Id,
@@ -56,8 +57,7 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
             EF.Functions.ILike(e.FullName, searchExpr) ||
             EF.Functions.ILike(e.Email, searchExpr) ||
             EF.Functions.ILike(e.ContactInfo.PhoneNumber, searchExpr) ||
-            EF.Functions.ILike(e.ContactInfo.Address, searchExpr) ||
-            EF.Functions.ILike(e.SpecialistProfile.YearsExperienceString, searchExpr)
+            EF.Functions.ILike(e.ContactInfo.Address, searchExpr)
             // EF.Functions.ILike(
             //     string.Join(",", e.Specialist.Categories.Select(c => c.Name)), 
             //     searchExpr

@@ -41,7 +41,7 @@ public class SpecialistProfileService(
         }
         
         user.Role = UserRoleEnum.Specialist;
-        user.RoleString = UserRoleEnum.Specialist.ToString();
+        UserRoleEnum.Specialist.ToString();
         
         if (user.ContactInfo == null)
         {
@@ -51,10 +51,13 @@ public class SpecialistProfileService(
                 PhoneNumber = becomeSpecialistProfile.PhoneNumber,
                 Address = becomeSpecialistProfile.Address
             };
+            
+            await repository.AddAsync(user.ContactInfo, cancellationToken);
         } else 
         {
             user.ContactInfo.PhoneNumber = becomeSpecialistProfile.PhoneNumber;
             user.ContactInfo.Address = becomeSpecialistProfile.Address;
+            await repository.UpdateAsync(user.ContactInfo, cancellationToken);
         }
 
         user.SpecialistProfile = new SpecialistProfile
@@ -68,9 +71,9 @@ public class SpecialistProfileService(
         {
             var validCategories = new List<Category>();
 
-            foreach (var categoryName in becomeSpecialistProfile.Categories)
+            foreach (var categoryId in becomeSpecialistProfile.Categories)
             {
-                var category = await repository.GetAsync(new CategorySpec(categoryName), cancellationToken);
+                var category = await repository.GetAsync(new CategorySpec(categoryId), cancellationToken);
 
                 if (category == null)
                 {
@@ -114,7 +117,7 @@ public class SpecialistProfileService(
         
         await repository.AddAsync(user.SpecialistProfile, cancellationToken);
         await repository.UpdateAsync(user, cancellationToken);
-        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(user.FullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.SpecialistAddTemplate(user.FullName), true, "ExpertEase", cancellationToken); // You can send a notification on the user email. Change the email if you want.
         
         return ServiceResponse.CreateSuccessResponse(new BecomeSpecialistResponseDTO
         {

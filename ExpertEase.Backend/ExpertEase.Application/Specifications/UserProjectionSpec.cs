@@ -30,7 +30,9 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             Email = e.Email,
             FullName = e.FullName,
             Role = e.Role,
-            RoleString = e.RoleString,
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt,
+            Rating = e.Rating,
             ContactInfo = e.ContactInfo != null
                 ? new ContactInfoDTO
                 {
@@ -80,7 +82,9 @@ public class AdminUserProjectionSpec: Specification<User, UserDTO>
             Email = e.Email,
             FullName = e.FullName,
             Role = e.Role,
-            RoleString = e.RoleString,
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt,
+            Rating = e.Rating,
             ContactInfo = e.ContactInfo != null
                 ? new ContactInfoDTO
                 {
@@ -115,26 +119,11 @@ public class AdminUserProjectionSpec: Specification<User, UserDTO>
     
     public AdminUserProjectionSpec(string? search, Guid adminId) : this(adminId, true)
     {
-        // if (string.IsNullOrWhiteSpace(search))
-        //     return;
-        //
-        // var terms = search.Trim()
-        //     .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        //
-        // foreach (var term in terms)
-        // {
-        //     var searchExpr = $"%{term}%";
-        //
-        //     Query.Where(e =>
-        //         EF.Functions.ILike(e.FullName, searchExpr) ||
-        //         EF.Functions.ILike(e.RoleString, searchExpr));
-        // }
         if (!string.IsNullOrWhiteSpace(search))
         {
             var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
             Query.Where(e =>
-                EF.Functions.ILike(e.FullName, searchExpr) ||
-                EF.Functions.ILike(e.RoleString, searchExpr));
+                EF.Functions.ILike(e.FullName, searchExpr));
         }
     }
 }

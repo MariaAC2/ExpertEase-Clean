@@ -22,9 +22,13 @@ export class AdminDetailsComponent {
   objectKeys = Object.keys;
 
   formatKey(key: string): string {
+    if (key.includes(' ') || key.includes('-')) {
+      return key;
+    }
+
     return key
-      .replace(/([A-Z])/g, ' $1')       // camelCase to spaced
-      .replace(/^./, str => str.toUpperCase()); // capitalize
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
   }
 
   formatValue(value: any): string {

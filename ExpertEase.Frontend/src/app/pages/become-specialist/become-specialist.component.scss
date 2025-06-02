@@ -3,3 +3,50 @@ h2 {
   font-family: 'Roboto Mono', monospace;
   font-size: 30px;
 }
+
+.button-wrapper {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.send-button {
+  background-color: #d9c8ff; /* light purple */
+  color: black;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 0; /* remove padding so fixed size applies exactly */
+  width: 300px;
+  height: 44px;   /* fixed height */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  align-self: center; /* centers the button in flex container */
+}
+
+.send-button:hover {
+  background-color: #cbb6ff; /* slightly darker on hover */
+}
+
+.form-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 20px;
+  padding: 24px 32px;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.form-group {
+  font-family: 'Roboto Mono', monospace;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  flex: 1 1 100%;
+}

@@ -45,6 +45,57 @@ export class HomeComponent implements OnInit{
 
   receiverUserId: string | undefined = '';
 
+  dummySpecialists: SpecialistDTO[] = [
+    {
+      id: 'spec-001',
+      fullName: 'Andrei Popescu',
+      email: 'andrei.popescu@example.com',
+      phoneNumber: '0721123456',
+      address: 'Strada Mihai Eminescu 45, București',
+      yearsExperience: 5,
+      description: 'Traducător medical cu experiență în terminologie clinică și farmaceutică.',
+      createdAt: new Date('2022-03-10T10:00:00Z'),
+      updatedAt: new Date(),
+      rating: 5,
+      categories: [
+        { id: 'cat-001', name: 'Traduceri medicale' },
+        { id: 'cat-002', name: 'Farmacie' }
+      ]
+    },
+    {
+      id: 'spec-002',
+      fullName: 'Ioana Marinescu',
+      email: 'ioana.marinescu@example.com',
+      phoneNumber: '0733456789',
+      address: 'Bd. Revoluției 17, Cluj-Napoca',
+      yearsExperience: 8,
+      description: 'Specialist în psihologie cu experiență în redactarea și corectarea articolelor științifice.',
+      createdAt: new Date('2020-11-20T08:30:00Z'),
+      updatedAt: new Date(),
+      rating: 4,
+      // categories: [
+      //   { id: 'cat-003', name: 'Psihologie' },
+      //   { id: 'cat-004', name: 'Redactare academică' }
+      // ]
+    },
+    {
+      id: 'spec-003',
+      fullName: 'Victor Ionescu',
+      email: 'victor.ionescu@example.com',
+      phoneNumber: '0744123123',
+      address: 'Str. Libertății 88, Iași',
+      yearsExperience: 3,
+      description: 'Tânăr specialist în tehnologia informației, ofer servicii de consultanță și mentenanță software.',
+      createdAt: new Date('2023-01-15T14:45:00Z'),
+      updatedAt: new Date(),
+      rating: 4.5,
+      // categories: [
+      //   { id: 'cat-005', name: 'IT & Software' },
+      //   { id: 'cat-006', name: 'Consultanță tehnică' }
+      // ]
+    }
+  ];
+
   constructor(private homeService: HomeService, private userRequestService: UserRequestService) { }
 
   closeDetails() {
@@ -61,29 +112,17 @@ export class HomeComponent implements OnInit{
     this.getPage();
   }
 
-  getEntity(userId: string): void {
-    this.homeService.getSpecialist(userId).subscribe({
-      next: (res) => {
-        this.selectedSpecialist = res.response ?? null;
-        this.receiverUserId = this.selectedSpecialist?.id
-      },
-      error: (err) => {
-        console.error('Eroare la preluarea utilizatorului:', err);
-        alert('Nu s-au putut încărca detaliile utilizatorului.');
-      }
-    });
-  }
-
   getPage(): void {
-    this.homeService.getSpecialists(this.searchTerm, this.currentPage, this.pageSize).subscribe({
-      next: (res) => {
-        this.users = res.response?.data ?? [];
-        this.totalItems = res.response?.totalCount ?? 0;
-      },
-      error: (err) => {
-        this.error = err.error?.errorMessage?.message || 'A apărut o eroare.';
-      }
-    });
+    this.users = this.dummySpecialists; // For testing purposes, using dummy data
+    // this.homeService.getSpecialists(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+    //   next: (res) => {
+    //     this.users = res.response?.data ?? [];
+    //     this.totalItems = res.response?.totalCount ?? 0;
+    //   },
+    //   error: (err) => {
+    //     this.error = err.error?.errorMessage?.message || 'A apărut o eroare.';
+    //   }
+    // });
   }
 
   addRequest(data: { [key: string]: any }) {

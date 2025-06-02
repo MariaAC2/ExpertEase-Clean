@@ -1,11 +1,13 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FormsModule} from "@angular/forms";
+import {NgForOf} from '@angular/common';
 
 @Component({
   selector: 'app-review-form',
-    imports: [
-        FormsModule
-    ],
+  imports: [
+    FormsModule,
+    NgForOf
+  ],
   templateUrl: './review-form.component.html',
   styleUrl: './review-form.component.scss'
 })

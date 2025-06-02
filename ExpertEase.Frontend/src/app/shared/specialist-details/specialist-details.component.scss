@@ -1,24 +1,25 @@
 .overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  //position: fixed;
+  //top: 0;
+  //left: 0;
+  //width: 100vw;
+  //height: 100vh;
+  // background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  //display: flex;
+  //justify-content: center;
+  //align-items: center;
+  //z-index: 1000;
 }
 
 .specialist-card {
   border: 2px solid black;
   background-color: #cfbdfe;
-  padding: 30px 90px;
-  margin: 10px auto;
+  padding: 32px;
+  margin: 32px auto;
   font-family: 'Roboto Mono', monospace;
   border-radius: 6px;
-  max-width: 600px;
+  max-width: 1000px;
+  position: relative;
 }
 
 .top-row {
@@ -31,4 +32,48 @@
 .specialist-card .info {
   font-size: 16px;
   line-height: 1.4;
+  padding: 20px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: #444;
+  transition: color 0.2s ease;
+}
+
+.avatar-wrapper {
+  width: 160px;
+  aspect-ratio: 1 / 1;
+  position: relative;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #e6dfff;
+  display: block;
+}
+
+.rating-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  background: white;
+  padding: 0.2em 0.5em;
+  border-radius: 0.6em;
+  font-size: 1.2em;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.rating-badge img {
+  width: 1em;
+  height: 1em;
 }

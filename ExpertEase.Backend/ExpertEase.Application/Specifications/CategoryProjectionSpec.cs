@@ -9,6 +9,7 @@ public class CategoryProjectionSpec : Specification<Category, CategoryDTO>
 {
     public CategoryProjectionSpec(bool orderByCreatedAt = false)
     {
+        Query.OrderBy(c => c.Name);
         Query.Select(e => new CategoryDTO
         {
             Id = e.Id,
@@ -25,16 +26,10 @@ public class CategoryProjectionSpec : Specification<Category, CategoryDTO>
 
     public CategoryProjectionSpec(string? search) : this(true)
     {
-        search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
-
-        if (search == null)
-            return;
-
-        var searchExpr = $"%{search.Replace(" ", "%")}%";
-
-        Query.Where(e =>
-            EF.Functions.ILike(e.Name, searchExpr)
-        );
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            Query.Where(c => c.Name.Contains(search)); // or use .ToLower().Contains(search.ToLower())
+        }
     }
 }
 

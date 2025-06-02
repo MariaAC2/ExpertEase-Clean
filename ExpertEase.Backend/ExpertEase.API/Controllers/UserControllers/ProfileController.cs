@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
+﻿using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
+using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -9,9 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace ExpertEase.API.Controllers.UserControllers;
 
 [ApiController]
-[Route("api/profile/user")]
+[Route("api/profile/user/")]
 [Tags("UserProfile")]
-public class ProfileController(IUserService userService, ISpecialistProfileService specialistService) : AuthorizedController(userService)
+public class ProfileController(IUserService userService, ISpecialistProfileService specialistService, ICategoryService categoryService) : AuthorizedController(userService)
 {
     [Authorize]
     [HttpGet]
@@ -48,4 +49,24 @@ public class ProfileController(IUserService userService, ISpecialistProfileServi
             CreateRequestResponseFromServiceResponse(await specialistService.AddSpecialistProfile(becomeSpecialistProfile, currentUser.Result)) :
             CreateErrorMessageResult<BecomeSpecialistResponseDTO>(currentUser.Error);
     }
+    
+    [HttpGet("categories")]
+    public async Task<ActionResult<RequestResponse<List<CategoryDTO>>>> GetCategories([FromQuery] string? search = null)
+    {
+        var currentUser = await GetCurrentUser();
+
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await categoryService.GetCategories(search)) :
+            CreateErrorMessageResult<List<CategoryDTO>>(currentUser.Error);
+    }
+    
+    // [HttpPost("categories")]
+    // public async Task<ActionResult<RequestResponse>> AddCategory([FromBody] CategorySpecialistDTO category)
+    // {
+    //     var currentUser = await GetCurrentUser();
+    //
+    //     return currentUser.Result != null ?
+    //         CreateRequestResponseFromServiceResponse(await categoryService.AddCategoryToSpecialist(category, currentUser.Result)) :
+    //         CreateErrorMessageResult(currentUser.Error);
+    // }
 }

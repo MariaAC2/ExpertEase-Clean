@@ -11,7 +11,7 @@ html, body {
   display: flex;
   align-items: center;
   width: fit-content;
-  position: relative; /* ✅ Anchor for tooltip positioning */
+  position: relative;
 }
 
 /* Logo scaling */
@@ -26,7 +26,6 @@ html, body {
 /* Tooltip styling */
 .toggle-btn::after {
   content: attr(data-btn);
-  position: absolute;
   position: absolute;
   top: calc(100% + 6px);
   left: 50%;
@@ -47,118 +46,6 @@ html, body {
   opacity: 1;
 }
 
-/* Form table */
-.grid-form {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px 20px;
-  padding: 24px 32px;
-  max-width: 650px;
-  margin: 0 auto;
-  font-family: 'Roboto Mono', monospace;
-
-  border: 2px solid #c9b7ff;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.form-group {
-  flex: 1; /* Makes both fields equally wide */
-  display: flex;
-  flex-direction: column;
-}
-
-label {
-  margin-bottom: 8px;
-}
-
-.input-box {
-  background-color: #e6dfff;
-  border: 2px solid #c9b7ff;
-  border-radius: 5px;
-  padding: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: border-color 0.3s;
-}
-
-.input-box:focus-within {
-  border-color: #9a79ff;
-}
-
-.input-box input {
-  background: transparent;
-  border: none;
-  padding: 0;
-  width: 100%;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 16px;
-  outline: none;
-}
-
-/* NEW: Wrapper for select only */
-.select-box select {
-  background-color: #e6dfff;
-  border: 2px solid #c9b7ff;
-  border-radius: 5px;
-  padding: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  font-size: 16px;
-  outline: none;
-  appearance: auto;
-  font-family: inherit;
-  width: 100%;
-}
-
-.select-box select:focus {
-  border-color: #a388ff;
-  box-shadow: 0 0 3px #a388ff;
-}
-
-.placeholder-selected {
-  color: #7d7d7f !important; /* light gray like a placeholder */
-}
-
-.send-button {
-  background-color: #d9c8ff; /* light purple */
-  color: black;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 16px;
-  font-weight: bold;
-  border: 2px solid black;
-  border-radius: 5px;
-  padding: 0; /* remove padding so fixed size applies exactly */
-  width: 300px;
-  height: 44px;   /* fixed height */
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  align-self: center; /* centers the button in flex container */
-}
-
-.send-button:hover {
-  background-color: #cbb6ff; /* slightly darker on hover */
-}
-
-.button-wrapper {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-}
-
-.full-width {
-  grid-column: span 2;
-}
-
-.error {
-  color: #a00028;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 14px;
-}
-
-.local-center {
-  text-align: center;
-}
-
 /* Form overlay */
 .modal-overlay {
   position: fixed;
@@ -171,19 +58,32 @@ label {
 }
 
 .modal {
-  position: relative;
   background: #fff;
   padding: 24px;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  width: 500px;
+}
+
+.form-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-box {
+  background: #fff;
+  border: 2px solid #c9b7ff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.close-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Close button */
 .close-button {
-  position: absolute;
-  top: 40px;
-  right: 40px;
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -212,5 +112,9 @@ label {
   z-index: 1000;
 }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.search-box-wrapper {
+  background-color: #f6efff;
+  border-radius: 5px;
+  max-width: 400px;
+  margin: auto;
+}

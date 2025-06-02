@@ -1,8 +1,6 @@
 .account-card {
   background: #e0caff;
-  border-radius: 12px;
-  padding: 32px;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 32px auto;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   font-family: 'Roboto Mono', monospace;
@@ -13,16 +11,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 32px;
   gap: 32px;
-  margin-bottom: 32px;
-}
-
-.avatar img {
-  width: 160px;
-  height: 160px;
-  /* border-radius: 50%;
-  background: #fff;
-  padding: 8px; */ /* Optional avatar tweaks */
 }
 
 .account-info {
@@ -34,28 +24,99 @@
 .account-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px 60px;
+  gap: 16px 78px;
+  padding: 32px;
 }
 
-
-.account-actions button {
-  padding: 12px 16px; /* 0.75rem 1rem */
-  border: 2px solid #222;
-  background: #f4ebff;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
+.card {
+  display: flex;
+  align-items: center;
+  background-color: #a08ad2;
+  padding: 20px 32px;
+  width: 100%;             /* Use full viewport width */
+  gap: 20px;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border-top: 3px solid black;
+  border-bottom: 3px solid black;
+  font-family: 'Roboto Mono', monospace;
 }
 
-.account-actions button:hover {
-  background: #ddd0ff;
+.info {
+  flex: 1;
 }
 
-.logout-btn {
-  background: #ffe8e8;
+.full-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.full-name:hover {
+  text-decoration: underline;
 }
 
-.logout-btn:hover {
-  background: #ffcaca;
+.details-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.categories, .experience, .description {
+  font-size: 0.95rem;
+}
+
+.label {
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+.tag {
+  background-color: #333;
+  color: white;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-right: 4px;
+  font-size: 0.85rem;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 160px;
+  aspect-ratio: 1 / 1;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #e6dfff;
+  display: block;
+}
+
+.rating-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  background: white;
+  padding: 0.2em 0.5em;
+  border-radius: 0.6em;
+  font-size: 1.2em;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.rating-badge img {
+  width: 1em;
+  height: 1em;
 }

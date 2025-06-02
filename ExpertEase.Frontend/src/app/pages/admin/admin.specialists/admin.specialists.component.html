@@ -10,7 +10,9 @@
 <div class="admin-wrapper">
   <div class="admin-table-container">
     <h2>Administrează toți specialiștii</h2>
-    <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+    <div class="search-box-wrapper">
+      <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+    </div>
     <button class="add-btn" (click)="openAddUserForm()">Adaugă specialist</button>
     <app-dynamic-table
       [columns]="columns"
@@ -21,7 +23,9 @@
 
 <div class="modal-overlay" *ngIf="isAddUserFormVisible">
   <div class="modal">
-    <button class="close-button" (click)="closeAddUserForm()">×</button>
+    <div class="close-button-wrapper">
+      <button class="close-button" (click)="closeAddUserForm()">×</button>
+    </div>
     <app-dynamic-form
       [fields]="addEntityFormFields"
       [submitText]="'Adaugă'"

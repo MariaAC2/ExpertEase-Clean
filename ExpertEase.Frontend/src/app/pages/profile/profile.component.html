@@ -1,7 +1,13 @@
 <div class="account-card">
   <div class="account-header">
-    <div class="avatar">
-      <img src="/assets/avatar.svg" alt="User avatar" />
+    <div class="avatar-wrapper">
+      <div class="avatar">
+        <img src="assets/avatar.svg" alt="User avatar" />
+      </div>
+      <div class="rating-badge">
+        <img src="assets/star-rating.svg" alt="User star" />
+        <span class="rating-value">{{ user?.rating }}</span>
+      </div>
     </div>
 
     <div class="account-info">
@@ -12,6 +18,35 @@
     </div>
     <app-icon-button
       [label]="'Editează profilul'"
+      [icon]="'assets/icons/edit.svg'"
+      (onClick)="onEdit()">
+    </app-icon-button>
+  </div>
+
+  <div *ngIf="user?.role === UserRoleEnum.Specialist" class="card">
+    <div class="info">
+      <h2 class="full-name">Anunțul tău</h2>
+      <div class="details-block">
+        <div class="row">
+          <div class="categories">
+            <span class="label">Categorii:</span>
+            <span class="tag" *ngFor="let cat of user?.specialist?.categories">{{ cat }}</span>
+          </div>
+
+          <div class="experience">
+            <span class="label">Ani experiență:</span>
+            {{ user?.specialist?.yearsExperience }}
+          </div>
+        </div>
+
+        <div class="description">
+          <span class="label">Descriere:</span>
+          {{ user?.specialist?.description }}
+        </div>
+      </div>
+    </div>
+    <app-icon-button
+      [label]="'Editează anunțul'"
       [icon]="'assets/icons/edit.svg'"
       (onClick)="onEdit()">
     </app-icon-button>

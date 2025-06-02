@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {CurrencyPipe, DatePipe, NgClass} from "@angular/common";
+import {CurrencyPipe, DatePipe, NgClass, NgIf} from "@angular/common";
 import {JobStatusEnum, ReplyDTO, ServiceTaskDTO, StatusEnum} from '../../models/api.models';
 
 @Component({
@@ -7,7 +7,8 @@ import {JobStatusEnum, ReplyDTO, ServiceTaskDTO, StatusEnum} from '../../models/
   imports: [
     CurrencyPipe,
     DatePipe,
-    NgClass
+    NgClass,
+    NgIf
   ],
   templateUrl: './service-message.component.html',
   styleUrl: './service-message.component.scss'

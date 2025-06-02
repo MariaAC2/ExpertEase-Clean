@@ -23,10 +23,10 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.HasOne(r => r.SenderUser)
             .WithMany()
             .HasForeignKey(r => r.SenderUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(r => r.ReceiverUser)
             .WithMany()
             .HasForeignKey(r => r.ReceiverUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
