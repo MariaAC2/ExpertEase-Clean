@@ -120,23 +120,23 @@ export class MessagesComponent implements OnInit {
 
   ngOnInit() {
     this.userRole = this.authService.getUserRole();
-    this.exchanges = [this.dummyExchange];
-    this.selectedExchange = this.dummyExchange;
+    // this.exchanges = [this.dummyExchange];
+    // this.selectedExchange = this.dummyExchange;
 
-    // this.messageService.getExchanges('', 1, 100).subscribe({
-    //   next: (res) => {
-    //     this.exchanges = res.response?.data ?? [];
-    //     console.log(this.exchanges);
-    //
-    //     if (this.exchanges.length > 0) {
-    //       // Select the last conversation
-    //       this.selectedExchange = this.exchanges[this.exchanges.length - 1];
-    //     }
-    //   },
-    //   error: (err) => {
-    //     console.error('Eroare la încărcarea convorbirilor:', err);
-    //   }
-    // });
+    this.messageService.getExchanges('', 1, 100).subscribe({
+      next: (res) => {
+        this.exchanges = res.response?.data ?? [];
+        console.log(this.exchanges);
+
+        if (this.exchanges.length > 0) {
+          // Select the last conversation
+          this.selectedExchange = this.exchanges[this.exchanges.length - 1];
+        }
+      },
+      error: (err) => {
+        console.error('Eroare la încărcarea convorbirilor:', err);
+      }
+    });
   }
 
   loadExchange(senderUserId: string): void {

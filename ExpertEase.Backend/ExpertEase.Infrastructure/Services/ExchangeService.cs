@@ -44,7 +44,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
         {
             var requests = await repository.ListAsync(new RequestSpecialistProjectionSpec(userId, currentUserId), cancellationToken);
             
-            if (!requests.Any())
+            if (requests.Count == 0)
                 return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
             
             var senderUser = await repository.GetAsync(new UserSpec(userId), cancellationToken);
@@ -57,7 +57,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 Requests = requests,
             };
             
-            return ServiceResponse.CreateSuccessResponse<UserExchangeDTO>(userExchangeDTO);
+            return ServiceResponse.CreateSuccessResponse(userExchangeDTO);
         }
     }
 
@@ -72,8 +72,6 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
         }
         else if (user.Role == UserRoleEnum.Client)
         {
-            // var result = await repository.PageAsync(pagination, new ExchangeUserProjectionSpec(pagination.Search, currentUserId), cancellationToken);
-            // return ServiceResponse.CreateSuccessResponse(result);
             var requests = await repository.ListAsync(
                 new RequestUserProjectionSpec(currentUserId, orderByCreatedAt: true),
                 cancellationToken);
@@ -116,8 +114,6 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
         }
         else
         {
-            // var result = await repository.PageAsync(pagination, new ExchangeUserProjectionSpec(pagination.Search, currentUserId), cancellationToken);
-            // return ServiceResponse.CreateSuccessResponse(result);
             var requests = await repository.ListAsync(
                 new RequestSpecialistProjectionSpec(currentUserId, orderByCreatedAt: true),
                 cancellationToken);

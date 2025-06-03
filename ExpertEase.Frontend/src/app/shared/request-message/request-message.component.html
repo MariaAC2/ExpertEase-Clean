@@ -1,37 +1,3 @@
-<!--<div class="request-wrapper" [ngClass]="{ 'rejected-bg': request.status === 'Rejected' }">-->
-<!--  <div class="request-summary">-->
-<!--    <h3>Solicitare</h3>-->
-<!--    <p><strong>Data și ora:</strong> {{ request.requestedStartDate | date: 'short' }}</p>-->
-<!--    <p><strong>Descriere:</strong> {{ request.description }}</p>-->
-<!--    <p *ngIf="request.senderContactInfo?.address">-->
-<!--      <strong>Adresă:</strong> {{ request.senderContactInfo?.address }}-->
-<!--    </p>-->
-<!--    <p *ngIf="request.senderContactInfo?.phoneNumber">-->
-<!--      <strong>Telefon:</strong> {{ request.senderContactInfo?.phoneNumber }}-->
-<!--    </p>-->
-<!--&lt;!&ndash;    <div *ngIf="request.status === 'Pending'" class="action-buttons">&ndash;&gt;-->
-<!--&lt;!&ndash;      <button class="accept-btn" (click)="acceptRequest()">Acceptă</button>&ndash;&gt;-->
-<!--&lt;!&ndash;      <button class="reject-btn" (click)="rejectRequest()">Respinge</button>&ndash;&gt;-->
-<!--&lt;!&ndash;    </div>&ndash;&gt;-->
-<!--    <div class="status-button" *ngIf="userRole === 'Client' || request.status !== 'Pending'">-->
-<!--      <span class="request-status status-{{ request.status | lowercase }}">{{ request.status }}</span>-->
-<!--    </div>-->
-
-<!--&lt;!&ndash;    <div *ngIf="userRole === 'Specialist' && request.status === 'Pending'" class="action-buttons">&ndash;&gt;-->
-<!--&lt;!&ndash;      <button class="accept-btn" (click)="acceptRequest()">Acceptă</button>&ndash;&gt;-->
-<!--&lt;!&ndash;      <button class="reject-btn" (click)="rejectRequest()">Respinge</button>&ndash;&gt;-->
-<!--&lt;!&ndash;    </div>&ndash;&gt;-->
-<!--    <div class="action-buttons">-->
-<!--      <button class="accept-btn" (click)="acceptRequest()">-->
-<!--        <i class="fas fa-thumbs-up"></i> Acceptă-->
-<!--      </button>-->
-<!--      <button class="reject-btn" (click)="rejectRequest()">-->
-<!--        <i class="fas fa-thumbs-down"></i> Respinge-->
-<!--      </button>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
-
 <div class="request-wrapper">
   <div class="request-summary"
        [ngClass]="{
@@ -56,10 +22,10 @@
 
       <div *ngIf="userRole === 'Specialist'" class="action-buttons">
         <button class="accept-btn" (click)="acceptRequest()">
-          <i class="fas fa-thumbs-up"></i> Acceptă
+          Acceptă
         </button>
         <button class="reject-btn" (click)="rejectRequest()">
-          <i class="fas fa-thumbs-down"></i> Respinge
+          Respinge
         </button>
       </div>
     </div>

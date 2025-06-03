@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using ExpertEase.Infrastructure.Database;
+namespace ExpertEase.Infrastructure.Database;
 
 public class WebAppDatabaseContextFactory : IDesignTimeDbContextFactory<WebAppDatabaseContext>
 {

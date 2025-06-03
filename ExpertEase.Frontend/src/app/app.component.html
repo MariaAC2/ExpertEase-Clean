@@ -24,28 +24,28 @@
 
   <!-- Navigation links -->
   <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
-<!--    <li *ngIf="authService.getUserRole() === 'Client'">-->
-    <li>
+    <li *ngIf="authService.getUserRole() === 'Client'">
+<!--    <li>-->
       <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
     </li>
 
     <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
-    <li>
-<!--    <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">-->
+<!--    <li>-->
+    <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">
       <a routerLink="/messages" routerLinkActive="active">Mesajele tale</a>
     </li>
 
     <li>
-<!--      <a-->
-<!--        [routerLink]="authService.getToken() ? '/profile' : '/register'"-->
-<!--        routerLinkActive="active">-->
-<!--        {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}-->
-<!--      </a>-->
-      <a routerLink="/register" routerLinkActive="active">Contul tău</a>
+      <a
+        [routerLink]="authService.getToken() ? '/profile' : '/register'"
+        routerLinkActive="active">
+        {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}
+      </a>
+<!--      <a routerLink="/register" routerLinkActive="active">Contul tău</a>-->
     </li>
 
-    <li>
-<!--    <li *ngIf="authService.getUserRole() === 'Admin'">-->
+<!--    <li>-->
+    <li *ngIf="authService.getUserRole() === 'Admin'">
       <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
     </li>
   </ul>

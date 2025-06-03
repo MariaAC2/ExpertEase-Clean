@@ -6,6 +6,8 @@ public class Review: BaseEntity
     public User SenderUser { get; set; } = null!;
     public Guid ReceiverUserId { get; set; }
     public User ReceiverUser { get; set; } = null!;
+    public Guid ServiceTaskId { get; set; }
+    public ServiceTask ServiceTask { get; set; } = null!;
     public string Content { get; set; } = null!;
     public int Rating { get; set; }
 }

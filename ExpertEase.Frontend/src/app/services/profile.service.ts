@@ -16,7 +16,7 @@ import List = types.List;
   providedIn: 'root'
 })
 export class ProfileService {
-  private baseUrl = 'http://localhost:5241/api/profile/user/';
+  private baseUrl = 'http://localhost:5241/api/profile/user';
   constructor(private authService: AuthService, private http: HttpClient) { }
   getUserProfile() {
     const token = this.authService.getToken();
@@ -46,7 +46,7 @@ export class ProfileService {
     });
 
     return this.http.put<RequestResponse<BecomeSpecialistResponseDTO>>(
-      `${this.baseUrl}become_specialist`,
+      `${this.baseUrl}/become_specialist`,
       specialistProfile,
       { headers }
     ).pipe(

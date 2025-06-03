@@ -1,10 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
-using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
-using ExpertEase.Application.Specifications;
-using ExpertEase.Domain.Entities;
 using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Middlewares;
@@ -16,9 +13,23 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Org.BouncyCastle.Ocsp;
+using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Firestore;
+using Google.Cloud.Firestore.V1;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton(provider =>
+{
+    var credential = GoogleCredential.FromFile("expertease-1b005-firebase-adminsdk-fbsvc-eb9d677f52.json");
+    var firestoreBuilder = new FirestoreClientBuilder
+    {
+        Credential = credential
+    };
+
+    var client = firestoreBuilder.Build();
+    return FirestoreDb.Create("expertease-1b005", client);
+});
 
 builder.Services.AddDbContext<WebAppDatabaseContext>(o => 
     o.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));
@@ -47,8 +58,8 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<ICategoryService, CategoryService>()
     .AddScoped<IMailService, MailService>()
     .AddScoped<ISpecialistService, SpecialistService>()
-     .AddScoped<IExchangeService, ExchangeService>()
-     .AddScoped<IServiceTaskService, ServiceTaskService>()
+    .AddScoped<IExchangeService, ExchangeService>()
+    .AddScoped<IServiceTaskService, ServiceTaskService>()
     .AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddHostedService<InitializerWorker>();
@@ -86,8 +97,8 @@ var app = builder.Build();
 app.UseCors("AllowAll");
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// app.UseDefaultFiles();
+// app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSwagger();
@@ -97,9 +108,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapFallbackToFile("browser/index.html");
+// app.MapFallbackToFile("browser/index.html");
 
-app.Run();
+await app.RunAsync();
 
 void ConfigureAuthentication()
 {
@@ -116,7 +127,7 @@ void ConfigureAuthentication()
 
         if (jwtConfiguration == null)
         {
-            throw new ApplicationException("The JWT configuration needs to be set!");
+            throw new InvalidOperationException("The JWT configuration needs to be set!");
         }
 
         var key = Encoding.ASCII.GetBytes(jwtConfiguration.Key); // Use configured key to verify the JWT signature.

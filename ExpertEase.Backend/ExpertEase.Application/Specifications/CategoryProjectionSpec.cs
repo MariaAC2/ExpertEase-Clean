@@ -7,18 +7,17 @@ namespace ExpertEase.Application.Specifications;
 
 public class CategoryProjectionSpec : Specification<Category, CategoryDTO>
 {
-    public CategoryProjectionSpec(bool orderByCreatedAt = false)
+    public CategoryProjectionSpec(bool orderByName = false)
     {
-        Query.OrderBy(c => c.Name);
         Query.Select(e => new CategoryDTO
         {
             Id = e.Id,
             Name = e.Name,
             Description = e.Description,
         });
-        if (orderByCreatedAt)
+        if (orderByName)
         {
-            Query.OrderByDescending(e => e.CreatedAt);
+            Query.OrderBy(e => e.Name);
         }
     }
     

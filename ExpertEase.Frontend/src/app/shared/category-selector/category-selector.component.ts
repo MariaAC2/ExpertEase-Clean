@@ -55,13 +55,21 @@ export class CategorySelectorComponent implements OnInit {
   @Output() categoryChange = new EventEmitter<string[]>();
 
   ngOnInit() {
-    this.allCategories = this.dummyCategories;
-    // this.getCategories();
+    // this.allCategories = this.dummyCategories;
+    this.getCategories();
   }
 
   getCategories() {
-    this.categoryService.getCategories(this.searchTerm).subscribe(response => {
-      this.allCategories = response.response;
+    this.categoryService.getCategories().subscribe({
+      next: (response) => {
+        const search = this.removeDiacritics(this.searchTerm);
+        this.allCategories = response.response!.filter(cat =>
+          this.removeDiacritics(cat.name).includes(search)
+        );
+      },
+      error: (err) => {
+        console.error('Eroare la obținerea categoriilor:', err.errorMessage);
+      }
     });
   }
 
@@ -69,14 +77,6 @@ export class CategorySelectorComponent implements OnInit {
     if (this.selectedCategoryIds.includes(id)) return;
     this.selectedCategoryIds.push(id);
     this.categoryChange.emit(this.selectedCategoryIds);
-  }
-
-  add() {
-    if (this.category && !this.selectedCategoryIds.includes(this.category)) {
-      this.selectedCategoryIds.push(this.category);
-      this.categoryChange.emit(this.selectedCategoryIds);
-      this.category = null;
-    }
   }
 
   remove(id: string) {
@@ -90,6 +90,11 @@ export class CategorySelectorComponent implements OnInit {
 
   onSearch(term: string) {
     this.searchTerm = term;
-    // this.getCategories();
+    this.getCategories();
   }
+
+  removeDiacritics(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
 }

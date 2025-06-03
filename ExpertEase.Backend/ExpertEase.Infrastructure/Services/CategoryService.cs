@@ -104,23 +104,20 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
         return ServiceResponse.CreateSuccessResponse(result);
     }
     
-    public async Task<ServiceResponse<PagedResponse<CategoryDTO>>> GetCategoriesForSpecialist(Guid specialistId, PaginationQueryParams pagination,
+    public async Task<ServiceResponse<List<CategoryDTO>>> GetCategoriesForSpecialist(Guid specialistId, string? search = null,
         CancellationToken cancellationToken = default)
     {
         var specialist = await repository.GetAsync(new SpecialistSpec(specialistId), cancellationToken);
 
         if (specialist == null)
         {
-            return ServiceResponse.CreateErrorResponse<PagedResponse<CategoryDTO>>(
+            return ServiceResponse.CreateErrorResponse<List<CategoryDTO>>(
                 new(HttpStatusCode.NotFound, "Specialist not found", ErrorCodes.EntityNotFound));
         }
 
-        var totalCount = specialist.Categories.Count;
-
         var categories = specialist.Categories
+            .Where(c => string.IsNullOrWhiteSpace(search) || c.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
             .OrderBy(c => c.Name)
-            .Skip((pagination.Page - 1) * pagination.PageSize)
-            .Take(pagination.PageSize)
             .Select(c => new CategoryDTO
             {
                 Id = c.Id,
@@ -129,14 +126,7 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
             })
             .ToList();
 
-        var paged = new PagedResponse<CategoryDTO>(
-            pagination.Page,
-            pagination.PageSize,
-            totalCount,
-            categories
-        );
-
-        return ServiceResponse.CreateSuccessResponse(paged);
+        return ServiceResponse.CreateSuccessResponse(categories);
     }
     
     public async Task<ServiceResponse<CategoryDTO>> GetCategoryForSpecialist(Guid categoryId, Guid specialistUserId, CancellationToken cancellationToken = default)
@@ -253,5 +243,4 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
 
         return ServiceResponse.CreateSuccessResponse();
     }
-
 }

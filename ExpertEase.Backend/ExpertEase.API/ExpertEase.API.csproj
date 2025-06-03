@@ -9,6 +9,9 @@
 
     <ItemGroup>
       <PackageReference Include="Ardalis.EFCore.Extensions" Version="6.0.0" />
+      <PackageReference Include="FirebaseAdmin" Version="3.2.0" />
+      <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
+      <PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.14">
@@ -224,15 +227,23 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-5ZVAHMIR.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-CXOXKOPJ.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-QYW66XDP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\info.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\photo_media.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\star.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-DHWX5VNK.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-EHU4IPF3.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-4VWGUK25.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-DDY2LUDD.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-M7O75VQG.js" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="wwwroot\" />
     </ItemGroup>
 
-    <Target Name="BuildAngular" BeforeTargets="Build">
-      <Exec Command="npm install" WorkingDirectory="..\..\ExpertEase.Frontend" />
-      <Exec Command="ng build --configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />
-      <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />
-    </Target>
+<!--    <Target Name="BuildAngular" BeforeTargets="Build">-->
+<!--      <Exec Command="npm install" WorkingDirectory="..\..\ExpertEase.Frontend" />-->
+<!--      <Exec Command="ng build &#45;&#45;configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />-->
+<!--      <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />-->
+<!--    </Target>-->
 </Project>

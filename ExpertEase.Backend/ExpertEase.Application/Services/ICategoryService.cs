@@ -14,7 +14,7 @@ public interface ICategoryService
     Task<ServiceResponse<List<CategoryDTO>>> GetCategories(string? search = null,
         CancellationToken cancellationToken = default);
     Task<ServiceResponse<CategoryDTO>> GetCategoryForSpecialist(Guid categoryId, Guid id, CancellationToken cancellationToken = default);
-    Task<ServiceResponse<PagedResponse<CategoryDTO>>> GetCategoriesForSpecialist(Guid specialistId, PaginationQueryParams pagination, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<List<CategoryDTO>>> GetCategoriesForSpecialist(Guid specialistId, string? search = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddCategory(CategoryAddDTO category, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddCategoryToSpecialist(CategorySpecialistDTO category, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateCategory(CategoryUpdateDTO category, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

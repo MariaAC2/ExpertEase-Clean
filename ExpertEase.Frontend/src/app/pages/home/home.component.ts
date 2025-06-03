@@ -113,16 +113,16 @@ export class HomeComponent implements OnInit{
   }
 
   getPage(): void {
-    this.users = this.dummySpecialists; // For testing purposes, using dummy data
-    // this.homeService.getSpecialists(this.searchTerm, this.currentPage, this.pageSize).subscribe({
-    //   next: (res) => {
-    //     this.users = res.response?.data ?? [];
-    //     this.totalItems = res.response?.totalCount ?? 0;
-    //   },
-    //   error: (err) => {
-    //     this.error = err.error?.errorMessage?.message || 'A apărut o eroare.';
-    //   }
-    // });
+    // this.users = this.dummySpecialists; // For testing purposes, using dummy data
+    this.homeService.getSpecialists(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+      next: (res) => {
+        this.users = res.response?.data ?? [];
+        this.totalItems = res.response?.totalCount ?? 0;
+      },
+      error: (err) => {
+        this.error = err.error?.errorMessage?.message || 'A apărut o eroare.';
+      }
+    });
   }
 
   addRequest(data: { [key: string]: any }) {
