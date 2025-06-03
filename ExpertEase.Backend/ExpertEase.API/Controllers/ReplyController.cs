@@ -1,18 +1,15 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
-using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
-using ExpertEase.Application.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.GlobalControllers;
+namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("/api/[controller]/[action]")]
-[Tags("UserReplies")]
 public class ReplyController(IUserService userService, IReplyService replyService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Specialist")]
@@ -79,7 +76,7 @@ public class ReplyController(IUserService userService, IReplyService replyServic
     }
     
     [Authorize(Roles = "Specialist")]
-    [HttpPatch("{id:guid}/cancel")]
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Cancel([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();

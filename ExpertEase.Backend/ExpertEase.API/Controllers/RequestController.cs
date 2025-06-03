@@ -1,18 +1,15 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
-using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
-using ExpertEase.Application.Specifications;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.GlobalControllers;
+namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("/api/[controller]/[action]")]
-[Tags("UserRequests")]
 public class RequestController(IUserService userService, IRequestService requestService) : AuthorizedController(userService)
 {
     [Authorize(Roles = "Client")]

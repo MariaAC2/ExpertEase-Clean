@@ -6,7 +6,7 @@ using ExpertEase.Domain.Enums;
 using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.UserControllers;
+namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]

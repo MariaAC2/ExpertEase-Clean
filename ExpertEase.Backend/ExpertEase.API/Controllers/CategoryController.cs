@@ -9,7 +9,7 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.GlobalControllers;
+namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -19,12 +19,6 @@ public class CategoryController(IUserService userService, ICategoryService categ
     [HttpPost]
     public async Task<ActionResult<RequestResponse>> Add([FromBody] CategoryAddDTO category)
     {
-        // var currentUser = await GetCurrentUser();
-        //
-        // return currentUser.Result != null ?
-        //     CreateRequestResponseFromServiceResponse(await categoryService.AddCategory(category, currentUser.Result)) :
-        //     CreateErrorMessageResult(currentUser.Error);
-        
         var currentUser = await GetCurrentUser();
 
         if (currentUser.Result == null)
@@ -74,7 +68,7 @@ public class CategoryController(IUserService userService, ICategoryService categ
     
     [Authorize(Roles = "Admin, SuperAdmin")]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<PagedResponse<CategoryAdminDTO>>>> GetPagedForAdmin(
+    public async Task<ActionResult<RequestResponse<PagedResponse<CategoryAdminDTO>>>> GetPageForAdmin(
         [FromQuery] PaginationSearchQueryParams pagination)
     {
         return CreateRequestResponseFromServiceResponse(await categoryService.GetCategoriesAdmin(pagination));

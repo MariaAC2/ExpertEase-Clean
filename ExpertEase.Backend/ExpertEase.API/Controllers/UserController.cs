@@ -9,7 +9,7 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.GlobalControllers;
+namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -82,7 +82,7 @@ public class UserController(IUserService userService) : AuthorizedController(use
     
     [Authorize]
     [HttpPatch]
-    public async Task<ActionResult<RequestResponse>> UpdateUser([FromBody] UserUpdateDTO user)
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] UserUpdateDTO user)
     {
         var currentUser = await GetCurrentUser();
 

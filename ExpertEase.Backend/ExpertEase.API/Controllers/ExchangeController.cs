@@ -6,7 +6,7 @@ using ExpertEase.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpertEase.API.Controllers.UserControllers;
+namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("/api/[controller]/[action]")]
@@ -24,7 +24,7 @@ public class ExchangeController(IUserService userService, IExchangeService excha
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<PagedResponse<UserExchangeDTO>>>> GetPaged([FromQuery] PaginationSearchQueryParams pagination)
+    public async Task<ActionResult<RequestResponse<PagedResponse<UserExchangeDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination)
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
