@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {SpecialistDTO} from '../../models/api.models';
 import {ActivatedRoute, Router} from '@angular/router';
-import {HomeService} from '../../services/home.service';
+import {SpecialistService} from '../../services/specialist.service';
 
 @Component({
   selector: 'app-specialist-details',
@@ -10,8 +10,6 @@ import {HomeService} from '../../services/home.service';
   styleUrl: './specialist-details.component.scss'
 })
 export class SpecialistDetailsComponent implements OnInit {
-  // @Output() closeDetails = new EventEmitter<void>();
-
   specialist: SpecialistDTO | null = null;
   specialistId: string = '';
 
@@ -33,9 +31,8 @@ export class SpecialistDetailsComponent implements OnInit {
   };
 
   constructor(
-    private route: Router,
-    private activatedRoute: ActivatedRoute,
-    private homeService: HomeService
+    private readonly activatedRoute: ActivatedRoute,
+    private readonly homeService: SpecialistService
   ) {}
 
   ngOnInit() {

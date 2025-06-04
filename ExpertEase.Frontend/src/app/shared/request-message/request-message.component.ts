@@ -2,7 +2,7 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {RequestDTO, StatusEnum} from '../../models/api.models';
 import {DatePipe, LowerCasePipe, NgClass, NgIf} from '@angular/common';
 import {AuthService} from '../../services/auth.service';
-import {SpecialistRequestService} from '../../services/specialist.request.service';
+import {RequestService} from '../../services/request.service';
 
 @Component({
   selector: 'app-request-message',
@@ -35,7 +35,7 @@ export class RequestMessageComponent implements OnInit {
   @Output() makeOffer = new EventEmitter<string>();
   constructor(
     private authService: AuthService,
-    private specialistRequestService: SpecialistRequestService
+    private requestService: RequestService
   ) {}
 
   ngOnInit() {
@@ -57,5 +57,4 @@ export class RequestMessageComponent implements OnInit {
   triggerOffer() {
     this.makeOffer.emit(this.request.id);
   }
-
 }

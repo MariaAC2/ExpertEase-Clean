@@ -8,41 +8,50 @@ import {RequestResponse, ServiceTaskDTO, ServiceTaskUpdateDTO} from '../models/a
 })
 export class TaskService {
 
-  private baseUrl: string = 'http://localhost:5241/api';
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  private readonly baseUrl: string = 'http://localhost:5241/api/ServiceTask';
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
-  getServiceTask(replyId: string, taskId: string){
-    const headers = this.authService.getAuthHeaders();
+  getServiceTask(taskId: string){
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
     return this.http.get<RequestResponse<ServiceTaskDTO>>(
-      `${this.baseUrl}/user/replies/${replyId}/task/${taskId}`,
+      `${this.baseUrl}/GetById/${taskId}`,
       { headers }
     );
   }
-  updateServiceTask(replyId: string, task: ServiceTaskUpdateDTO){
-    const headers = this.authService.getAuthHeaders();
-    return this.http.patch(
-      `${this.baseUrl}/specialist/replies/${replyId}/task/${task.id}`,
-      task,
-      { headers }
-    );
-  }
-
-  completeServiceTask(replyId: string, taskId: string){
+  updateServiceTask(task: ServiceTaskUpdateDTO){
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
     return this.http.patch(
-      `${this.baseUrl}/specialist/replies/${replyId}/task/${taskId}/complete`,
+      `${this.baseUrl}/Update/${task.id}`,
+      task,
+      { headers }
+    );
+  }
+
+  completeServiceTask(taskId: string){
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+    return this.http.patch(
+      `${this.baseUrl}/Complete/${taskId}`,
       {},
       { headers }
     );
   }
 
-  cancelServiceTask(replyId: string, taskId: string) {
-    const headers = this.authService.getAuthHeaders();
+  cancelServiceTask(taskId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
     return this.http.patch(
-      `${this.baseUrl}/specialist/replies/${replyId}/task/${taskId}/cancel`, {}, { headers }
+      `${this.baseUrl}/Complete/${taskId}`, {}, { headers }
     );
   }
 }

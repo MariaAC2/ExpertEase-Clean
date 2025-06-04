@@ -5,8 +5,8 @@ namespace ExpertEase.Domain.Entities;
 [FirestoreData]
 public abstract class FirebaseBaseEntity
 {
-    [FirestoreProperty]
-    public Guid Id { get; set; }
+    [FirestoreDocumentId] 
+    public string Id { get; set; } = null!;
 
     [FirestoreProperty]
     public DateTime CreatedAt { get; set; }

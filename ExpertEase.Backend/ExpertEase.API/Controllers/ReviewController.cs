@@ -13,13 +13,13 @@ namespace ExpertEase.API.Controllers;
 public class ReviewController(IUserService userService, IReviewService reviewService):AuthorizedController(userService)
 {
     [Authorize]
-    [HttpPost]
-    public async Task<ActionResult<RequestResponse>> Add([FromBody] ReviewAddDTO review)
+    [HttpPost("{serviceTaskId:guid}")]
+    public async Task<ActionResult<RequestResponse>> Add([FromRoute] Guid serviceTaskId, [FromBody] ReviewAddDTO review)
     {
         var currentUser = await GetCurrentUser();
     
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await reviewService.AddReview(review, currentUser.Result)) :
+            CreateRequestResponseFromServiceResponse(await reviewService.AddReview(serviceTaskId, review, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
     

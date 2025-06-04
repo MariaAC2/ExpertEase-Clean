@@ -43,7 +43,7 @@ export const routes: Routes = [
   {
     path: 'messages',
     component: MessagesComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'profile/user/become-specialist',

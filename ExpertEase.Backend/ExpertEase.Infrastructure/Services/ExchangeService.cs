@@ -1,9 +1,11 @@
-﻿using ExpertEase.Application.DataTransferObjects.UserDTOs;
+﻿using ExpertEase.Application.DataTransferObjects.MessageDTOs;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
+using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
@@ -11,7 +13,7 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IExchangeService
+public class ExchangeService(IRepository<WebAppDatabaseContext> repository, IMessageService messageService): IExchangeService
 {
     public async Task<ServiceResponse<UserExchangeDTO>> GetExchange(Guid currentUserId, Guid userId,
         CancellationToken cancellationToken = default)
@@ -21,12 +23,16 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
         if (user.Role == UserRoleEnum.Admin)
         {
             return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.NotAllowed);
-        } else if (user.Role == UserRoleEnum.Client)
+        }
+
+        if (user.Role == UserRoleEnum.Client)
         {
             var requests = await repository.ListAsync(new RequestUserProjectionSpec(currentUserId, userId), cancellationToken);
             
             if (requests.Count == 0)
                 return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
+            
+            var messages = await messageService.GetMessagesBetweenUsers(currentUserId, userId, cancellationToken);
             
             var receiverUser = await repository.GetAsync(new UserSpec(userId), cancellationToken);
             if (receiverUser == null)
@@ -36,6 +42,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 Id = user.Id,
                 FullName = user.FullName,
                 Requests = requests,
+                Messages = messages
             };
             
             return ServiceResponse.CreateSuccessResponse(userExchangeDTO);
@@ -46,6 +53,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
             
             if (requests.Count == 0)
                 return ServiceResponse.CreateErrorResponse<UserExchangeDTO>(CommonErrors.EntityNotFound);
+            var messages = await messageService.GetMessagesBetweenUsers(userId, currentUserId, cancellationToken);
             
             var senderUser = await repository.GetAsync(new UserSpec(userId), cancellationToken);
             if (senderUser == null)
@@ -55,6 +63,7 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
                 Id = user.Id,
                 FullName = user.FullName,
                 Requests = requests,
+                Messages = messages
             };
             
             return ServiceResponse.CreateSuccessResponse(userExchangeDTO);
@@ -70,7 +79,8 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
         {
             return ServiceResponse.CreateErrorResponse<PagedResponse<UserExchangeDTO>>(CommonErrors.NotAllowed);
         }
-        else if (user.Role == UserRoleEnum.Client)
+
+        if (user.Role == UserRoleEnum.Client)
         {
             var requests = await repository.ListAsync(
                 new RequestUserProjectionSpec(currentUserId, orderByCreatedAt: true),
@@ -85,12 +95,24 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
             {
                 var senderId = group.Key;
                 var senderUser = await repository.GetAsync(new UserSpec(senderId), cancellationToken);
+                var messagesResponse = await messageService.GetMessagesBetweenUsers(currentUserId, senderId, cancellationToken);
+                
+                var unreadMessages = messagesResponse
+                    .Where(m => m.ReceiverId == currentUserId.ToString() && !m.IsRead)
+                    .ToList();
+
+                foreach (var unread in unreadMessages)
+                {
+                    unread.IsRead = true;
+                    await messageService.MarkMessageAsRead(unread.Id, cancellationToken);
+                }
     
                 var exchange = new UserExchangeDTO
                 {
                     Id = senderId,
                     FullName = senderUser?.FullName ?? "N/A",
-                    Requests = group.ToList()
+                    Requests = group.ToList(),
+                    Messages = messagesResponse,
                 };
 
                 exchangeList.Add(exchange);
@@ -127,12 +149,24 @@ public class ExchangeService(IRepository<WebAppDatabaseContext> repository): IEx
             {
                 var senderId = group.Key;
                 var senderUser = await repository.GetAsync(new UserSpec(senderId), cancellationToken);
+                var messagesResponse = await messageService.GetMessagesBetweenUsers(senderId, currentUserId, cancellationToken);
+                
+                var unreadMessages = messagesResponse
+                    .Where(m => m.ReceiverId == currentUserId.ToString() && !m.IsRead)
+                    .ToList();
+
+                foreach (var unread in unreadMessages)
+                {
+                    unread.IsRead = true;
+                    await messageService.MarkMessageAsRead(unread.Id, cancellationToken);
+                }
     
                 var exchange = new UserExchangeDTO
                 {
                     Id = senderId,
                     FullName = senderUser?.FullName ?? "N/A",
-                    Requests = group.ToList()
+                    Requests = group.ToList(),
+                    Messages = messagesResponse,
                 };
 
                 exchangeList.Add(exchange);

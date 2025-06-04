@@ -1,0 +1,45 @@
+.bubble {
+  display: flex;
+  width: 100%; // ensure left/right alignment
+  margin: 8px 0;
+
+  &-left {
+    justify-content: flex-start;
+  }
+
+  &-right {
+    justify-content: flex-end;
+  }
+}
+
+.bubble-content {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  word-wrap: break-word;
+  min-width: 80px;
+  max-width: 70%;
+  text-align: left;
+
+  &.left {
+    background-color: white;
+    border: 1px solid #514c70;
+    color: #000;
+    border-top-left-radius: 4px;
+  }
+
+  &.right {
+    background-color: #a79ed7;
+    border: 1px solid #514c70;
+    color: #000;
+    border-top-right-radius: 4px;
+  }
+
+  .timestamp {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+    text-align: right;
+  }
+}

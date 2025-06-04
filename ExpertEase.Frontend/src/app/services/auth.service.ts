@@ -13,16 +13,16 @@ export interface DecodedToken {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private baseUrl = 'http://localhost:5241/api/auth';
+  private readonly baseUrl = 'http://localhost:5241/api/Auth';
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   registerUser(data: UserRegisterDTO) {
-    return this.http.post(`${this.baseUrl}/register`, data);
+    return this.http.post(`${this.baseUrl}/Register`, data);
   }
 
   loginUser(data: LoginDTO) {
-    return this.http.post<RequestResponse<LoginResponseDTO>>(`${this.baseUrl}/login`, data).pipe(
+    return this.http.post<RequestResponse<LoginResponseDTO>>(`${this.baseUrl}/Login`, data).pipe(
       tap((result) => {
         const token = result.response?.token;
 
@@ -60,10 +60,7 @@ export class AuthService {
     return decoded?.nameid ?? null;
   }
 
-  getAuthHeaders(): HttpHeaders {
-    const token = this.getToken();
-    return new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
+  logout() {
+    localStorage.removeItem('access_token');
   }
 }

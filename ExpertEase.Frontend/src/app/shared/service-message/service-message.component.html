@@ -22,7 +22,7 @@
     <div *ngIf="serviceTask.status === 'Confirmed'">
       <p *ngIf="userRole === 'Client'" class="status-button status-pending">În așteptare...</p>
 
-      <div class="action-buttons">
+      <div *ngIf="userRole === 'Specialist'" class="action-buttons">
         <button class="accept-btn" (click)="completeTask()">
           Confirmă
         </button>

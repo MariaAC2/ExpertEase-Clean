@@ -94,6 +94,7 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
             // create and send review
             // create transfer
             task.CompletedAt = DateTime.UtcNow;
+            task.Status = JobStatusEnum.Completed;
             // var addTransferResult = await transactionService.AddTransfer(task, cancellationToken);
             //
             // if (!addTransferResult.IsOk)
@@ -104,6 +105,7 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
         else if (serviceTask.Status == JobStatusEnum.Cancelled)
         {
             task.CancelledAt = DateTime.UtcNow;
+            task.Status = JobStatusEnum.Cancelled;
         }
 
         await repository.UpdateAsync(task, cancellationToken);

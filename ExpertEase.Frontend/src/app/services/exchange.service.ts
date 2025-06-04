@@ -6,19 +6,19 @@ import {AuthService} from './auth.service';
 @Injectable({
   providedIn: 'root'
 })
-export class MessagesService {
-  private baseUrl: string = 'http://localhost:5241/api/messages';
+export class ExchangeService {
+  private baseUrl: string = 'http://localhost:5241/api/Exchange';
 
-  constructor(private authService: AuthService, private http: HttpClient) { }
+  constructor(private readonly authService: AuthService, private readonly http: HttpClient) { }
 
-  getExchange(senderUserId: string) {
+  getExchange(senderUserId: string | undefined) {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
     return this.http.get<RequestResponse<UserExchangeDTO>>(
-      `${this.baseUrl}/${senderUserId}`,
+      `${this.baseUrl}/GetById/${senderUserId}`,
       { headers }
     );
   }
@@ -35,7 +35,7 @@ export class MessagesService {
       .set('pageSize', pageSize);
 
     return this.http.get<RequestResponse<PagedResponse<UserExchangeDTO>>>(
-      `${this.baseUrl}`,
+      `${this.baseUrl}/GetPage`,
       { headers, params }
     );
   }

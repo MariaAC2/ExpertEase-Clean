@@ -164,6 +164,21 @@ export interface LoginDTO {
     password?: string;
 }
 
+export interface MessageAddDTO {
+    receiverId: string;
+    content: string;
+}
+
+export interface MessageDTO {
+    id: string;
+    senderId: string;
+    receiverId: string;
+    content: string;
+    isRead: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface LoginResponseDTO {
     token: string;
     user: UserDTO;
@@ -318,7 +333,7 @@ export enum StatusEnum {
     Accepted = "Accepted",
     Rejected = "Rejected",
     Cancelled = "Cancelled",
-    Confirmed = "Confirmed",
+    Completed = "Completed",
     Failed = "Failed",
 }
 
@@ -385,6 +400,7 @@ export interface UserExchangeDTO {
     id: string;
     fullName: string;
     requests: RequestDTO[];
+    messages: MessageDTO[];
 }
 
 export interface UserRegisterDTO {

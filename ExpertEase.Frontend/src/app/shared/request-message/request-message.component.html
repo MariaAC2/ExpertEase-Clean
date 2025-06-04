@@ -2,7 +2,7 @@
   <div class="request-summary"
        [ngClass]="{
        'rejected-bg': request.status === 'Rejected',
-       'accepted-bg': request.status === 'Accepted' || request.status === 'Confirmed',
+       'accepted-bg': request.status === 'Accepted' || request.status === 'Completed',
      }">
     <h3>Solicitare</h3>
 
@@ -18,7 +18,7 @@
     <!-- Status-specific actions -->
     <!-- Pending -->
     <div *ngIf="request.status === 'Pending'">
-      <p *ngIf="userRole === 'Client'" class="status-button status-pending">În așteptare...</p>
+      <p *ngIf="userRole === 'Client'" class="status-button">În așteptare...</p>
 
       <div *ngIf="userRole === 'Specialist'" class="action-buttons">
         <button class="accept-btn" (click)="acceptRequest()">
@@ -35,4 +35,3 @@
     </div>
   </div>
 </div>
-

@@ -32,9 +32,41 @@
       <Folder Include="wwwroot\" />
     </ItemGroup>
 
-<!--    <Target Name="BuildAngular" BeforeTargets="Build">-->
-<!--      <Exec Command="npm install" WorkingDirectory="..\..\ExpertEase.Frontend" />-->
-<!--      <Exec Command="ng build &#45;&#45;configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />-->
-<!--      <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />-->
-<!--    </Target>-->
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\avatar.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\account.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\edit.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\history.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\info.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\logout.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\photo_media.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\reviews.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\search.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\settings.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\star-filled.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\star.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\star-rating.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-FG23LUU5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-PQ66OXEZ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\favicon.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\index.html" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\logo.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-NN27JYX3.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SCVZW7IE.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-X3DPFNPV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\polyfills-FFHMD2TL.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-PTSJMDYR.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-C6GIURGB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-LJMVVTPX.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-OUXPURWY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-3X3QWOR5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-BVD5N2MS.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-QNUAXBUL.js" />
+    </ItemGroup>
+
+    <Target Name="BuildAngular" BeforeTargets="Build">
+      <Exec Command="npm install" WorkingDirectory="..\..\ExpertEase.Frontend" />
+      <Exec Command="ng build --configuration production" WorkingDirectory="..\..\ExpertEase.Frontend" />
+      <Exec Command="xcopy /E /I /Y ..\..\ExpertEase.Frontend\dist\expert-ease.frontend\* wwwroot\" />
+    </Target>
 </Project>

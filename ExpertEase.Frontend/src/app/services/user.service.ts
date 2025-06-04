@@ -12,10 +12,10 @@ import { jwtDecode } from 'jwt-decode';
 import {AuthService, DecodedToken} from './auth.service';
 
 @Injectable({ providedIn: 'root' })
-export class AdminUsersService {
-  private baseUrl = 'http://localhost:5241/api/admin/users';
+export class UserService {
+  private readonly baseUrl = 'http://localhost:5241/api/User';
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) {}
 
   getUser(userId: string) {
     const token = this.authService.getToken();
@@ -23,7 +23,16 @@ export class AdminUsersService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<UserDTO>>(`${this.baseUrl}/${userId}`, {headers});
+    return this.http.get<RequestResponse<UserDTO>>(`${this.baseUrl}/GetById/${userId}`, {headers});
+  }
+
+  getUserProfile() {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.get<RequestResponse<UserDTO>>(`${this.baseUrl}/Get`, {headers});
   }
 
   getUsers(search: string | undefined, page: number, pageSize: number) {
@@ -33,12 +42,12 @@ export class AdminUsersService {
     });
 
     const params = new HttpParams()
-      .set('search', search || '')
+      .set('search', search ?? '')
       .set('page', page)
       .set('pageSize', pageSize);
 
     return this.http.get<RequestResponse<PagedResponse<UserDTO>>>(
-      `${this.baseUrl}`,
+      `${this.baseUrl}/GetPage`,
       { headers, params }
     );
   }
@@ -50,7 +59,7 @@ export class AdminUsersService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.post(`${this.baseUrl}`, user, { headers });
+    return this.http.post(`${this.baseUrl}/Add`, user, { headers });
   }
 
   updateUser(userId: string, user: AdminUserUpdateDTO) {
@@ -60,7 +69,17 @@ export class AdminUsersService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.patch(`${this.baseUrl}/${userId}`, user, { headers });
+    return this.http.patch(`${this.baseUrl}/Update/${userId}`, user, { headers });
+  }
+
+  updateUserProfile(user: UserUpdateDTO) {
+    const token = this.authService.getToken();
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.patch(`${this.baseUrl}`, user, {headers});
   }
 
   deleteUser(userId: string) {
@@ -70,6 +89,6 @@ export class AdminUsersService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.delete(`${this.baseUrl}/${userId}`, {headers});
+    return this.http.delete(`${this.baseUrl}/Delete/${userId}`, {headers});
   }
 }

@@ -1,0 +1,6 @@
+<div class="bubble" [ngClass]="{'bubble-left': !isOwnMessage, 'bubble-right': isOwnMessage}">
+  <div class="bubble-content" [ngClass]="{ 'left': !isOwnMessage, 'right': isOwnMessage }">
+    {{ message.content }}
+    <div class="timestamp">{{ message.createdAt | date:'shortTime' }}</div>
+  </div>
+</div>

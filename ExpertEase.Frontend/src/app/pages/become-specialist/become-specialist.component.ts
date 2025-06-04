@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import {BecomeSpecialistDTO, SpecialistAddDTO,} from '../../models/api.models';
+import {BecomeSpecialistDTO} from '../../models/api.models';
 import {dtoToFormFields} from '../../models/form.models';
-import {ProfileService} from '../../services/profile.service';
 import {Router} from '@angular/router';
 import {DynamicFormComponent} from '../../shared/dynamic-form/dynamic-form.component';
-import {BinaryOperatorExpr} from '@angular/compiler';
 import {NgSwitch, NgSwitchCase} from '@angular/common';
 import {CategorySelectorComponent} from '../../shared/category-selector/category-selector.component';
+import {AuthService} from '../../services/auth.service';
+import {SpecialistProfileService} from '../../services/specialist-profile.service';
 
 @Component({
   selector: 'app-become-specialist',
@@ -44,7 +44,9 @@ export class BecomeSpecialistComponent {
 
   isAddUserFormVisible = false;
 
-  constructor(private profileService: ProfileService, private router: Router) {
+  constructor(private readonly authService: AuthService,
+              private readonly specialistProfileService: SpecialistProfileService,
+              private readonly router: Router) {
     const defaultFormValues: Omit<BecomeSpecialistDTO, 'userId'> = {
       phoneNumber: '',
       address: '',
@@ -68,7 +70,12 @@ export class BecomeSpecialistComponent {
   }
 
   addEntity() {
-    const currentUserId = this.profileService.getCurrentUserId();
+    const currentUserId = this.authService.getUserId();
+
+    if (!currentUserId) {
+      console.error('User ID not found');
+      return;
+    }
 
     const userToSubmit: BecomeSpecialistDTO = {
       userId: currentUserId,
@@ -79,7 +86,7 @@ export class BecomeSpecialistComponent {
       categories: this.specialistData.categories
     };
 
-    this.profileService.becomeSpecialist(userToSubmit).subscribe({
+    this.specialistProfileService.becomeSpecialist(userToSubmit).subscribe({
       next: () => {
         this.closeAddUserForm();
         this.router.navigate(['/home']);

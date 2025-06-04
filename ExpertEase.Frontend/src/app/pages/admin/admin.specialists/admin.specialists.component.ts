@@ -9,8 +9,7 @@ import {
 } from '../../../models/api.models';
 import {TableColumn} from '../../../models/table.models';
 import {dtoToDictionary, dtoToFormFields} from '../../../models/form.models';
-import {AdminUsersService} from '../../../services/admin.users.service';
-import {AdminSpecialistsService} from '../../../services/admin.specialists.service';
+import {SpecialistService} from '../../../services/specialist.service';
 import {AdminDetailsComponent} from '../../../shared/admin-details/admin-details.component';
 import {DynamicFormComponent} from '../../../shared/dynamic-form/dynamic-form.component';
 import {DynamicTableComponent} from '../../../shared/dynamic-table/dynamic-table.component';
@@ -187,9 +186,7 @@ export class AdminSpecialistsComponent {
     }
   );
 
-  constructor(private adminService: AdminSpecialistsService) {}
-
-  ngOnInit(): void {
+  constructor(private readonly adminService: SpecialistService) {
     const defaultFormValues: SpecialistAddDTO = {
       fullName: '',
       email: '',

@@ -1,9 +1,10 @@
 import {Component, OnInit} from '@angular/core';
 import {DatePipe, NgForOf, NgIf} from '@angular/common';
 import {IconButtonComponent} from '../../shared/icon-button/icon-button.component';
-import {ProfileService} from '../../services/profile.service';
 import {UserDTO, UserRoleEnum} from '../../models/api.models';
 import {Router} from '@angular/router';
+import {UserService} from '../../services/user.service';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -34,7 +35,7 @@ export class ProfileComponent implements OnInit {
       ]
     }
   };
-  constructor(private profileService: ProfileService, private route: Router) {}
+  constructor(private readonly profileService: UserService, private readonly authService: AuthService, private readonly route: Router) {}
   ngOnInit() {
     // this.user = this.dummyUser;
     this.profileService.getUserProfile().subscribe({
@@ -73,7 +74,7 @@ export class ProfileComponent implements OnInit {
     const confirmed = window.confirm('Sigur vrei să te deloghezi?');
 
     if (confirmed) {
-      this.profileService.logout();
+      this.authService.logout();
     }
     this.route.navigate(['/home']);
   }

@@ -13,8 +13,8 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class UserRequestService {
-  private baseUrl = 'http://localhost:5241/api/user/requests';
+export class RequestService {
+  private readonly baseUrl = 'http://localhost:5241/api/Request';
   constructor(private http: HttpClient, private authService: AuthService) { }
 
   // getRequest(userId: string) {
@@ -50,8 +50,36 @@ export class UserRequestService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.post(`${this.baseUrl}`, user, { headers });
+    return this.http.post(`${this.baseUrl}/Add`, user, { headers });
   }
+
+  acceptRequest(requestId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.patch(`${this.baseUrl}/Accept/${requestId}`, {}, { headers });
+  }
+
+  rejectRequest(requestId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.patch(`${this.baseUrl}/Reject/${requestId}`, {}, { headers });
+  }
+
+  cancelRequest(requestId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.patch(`${this.baseUrl}/Cancel/${requestId}`, {}, { headers });
+  }
+
   //
   // updateRequest(userId: string, user: RequestUpdateDTO) {
   //   const token = this.authService.getToken();

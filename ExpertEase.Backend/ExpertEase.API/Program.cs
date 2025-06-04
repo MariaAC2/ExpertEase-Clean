@@ -47,6 +47,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
+builder.Services.AddScoped<IFirebaseRepository, FirebaseRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IUserService, UserService>()
     .AddScoped<IAccountService, AccountService>()
@@ -60,7 +61,8 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<ISpecialistService, SpecialistService>()
     .AddScoped<IExchangeService, ExchangeService>()
     .AddScoped<IServiceTaskService, ServiceTaskService>()
-    .AddScoped<IReviewService, ReviewService>();
+    .AddScoped<IReviewService, ReviewService>()
+    .AddScoped<IMessageService, MessageService>();
 
 builder.Services.AddHostedService<InitializerWorker>();
 
@@ -97,8 +99,8 @@ var app = builder.Build();
 app.UseCors("AllowAll");
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-// app.UseDefaultFiles();
-// app.UseStaticFiles();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSwagger();
@@ -108,7 +110,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-// app.MapFallbackToFile("browser/index.html");
+app.MapFallbackToFile("browser/index.html");
 
 await app.RunAsync();
 

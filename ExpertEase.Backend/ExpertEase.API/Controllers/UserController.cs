@@ -15,25 +15,27 @@ namespace ExpertEase.API.Controllers;
 [Route("api/[controller]/[action]")]
 public class UserController(IUserService userService) : AuthorizedController(userService)
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<UserDTO>>> GetById([FromRoute] Guid id)
     {
         var currentUser = await GetCurrentUser();
 
-        if (currentUser.Result == null)
-            return CreateErrorMessageResult<UserDTO>(currentUser.Error);
-
-        var hasAdminPrivileges = currentUser.Result.Role is UserRoleEnum.Admin or UserRoleEnum.SuperAdmin;
-        var isOwner = currentUser.Result.Id == id;
-
-        if (!hasAdminPrivileges && !isOwner)
-            return CreateErrorMessageResult<UserDTO>(
-                new ErrorMessage(HttpStatusCode.Forbidden, "Only the admin or own user can see user details!", ErrorCodes.WrongUser));
-
-        return CreateRequestResponseFromServiceResponse(await UserService.GetUser(id));
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await UserService.GetUserAdmin(id, currentUser.Result.Id)) :
+            CreateErrorMessageResult<UserDTO>(currentUser.Error);
     }
+    
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<RequestResponse<UserDTO>>> Get()
+    {
+        var currentUser = await GetCurrentUser();
 
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await UserService.GetUser(currentUser.Result.Id)) :
+            CreateErrorMessageResult<UserDTO>(currentUser.Error);
+    }
     
     [Authorize(Roles = "Admin")]
     [HttpGet]

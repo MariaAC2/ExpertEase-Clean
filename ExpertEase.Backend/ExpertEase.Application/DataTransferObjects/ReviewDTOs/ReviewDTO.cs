@@ -6,8 +6,6 @@ namespace ExpertEase.Application.DataTransferObjects.ReviewDTOs;
 public class ReviewDTO
 {
     [Required]
-    public Guid Id { get; set; }
-    [Required]
     public Guid ReceiverUserId { get; set; }
     [Required]
     public string SenderUserFullName { get; set; } = null!;
@@ -22,9 +20,11 @@ public class ReviewAdminDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
-    public UserDTO SenderUser { get; set; } = null!;
+    public Guid SenderUserId { get; set; }
     [Required]
-    public UserDTO ReceiverUser { get; set; } = null!;
+    public Guid ReceiverUserId { get; set; }
+    [Required]
+    public Guid ServiceTaskId { get; set; }
     [Required]
     public string Content { get; set; } = null!;
     [Required]

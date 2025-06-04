@@ -2,11 +2,11 @@ import {Component, OnInit} from '@angular/core';
 import {RequestAddDTO, SpecialistDTO} from '../../models/api.models';
 import {CommonModule} from '@angular/common';
 import {dtoToDictionary} from '../../models/form.models';
-import {HomeService} from '../../services/home.service';
+import {SpecialistService} from '../../services/specialist.service';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {SearchInputComponent} from '../../shared/search-input/search-input.component';
 import {PaginationComponent} from '../../shared/pagination/pagination.component';
-import {UserRequestService} from '../../services/user.request.service';
+import {RequestService} from '../../services/request.service';
 import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-card.component';
 
 @Component({
@@ -96,17 +96,7 @@ export class HomeComponent implements OnInit{
     }
   ];
 
-  constructor(private homeService: HomeService, private userRequestService: UserRequestService) { }
-
-  closeDetails() {
-    this.isUserDetailsVisible = false;
-  }
-
-  openRequestForm(specialist: SpecialistDTO) {
-    this.isRequestFormVisible = true;
-    this.selectedSpecialist = specialist;
-    this.requestForm.receiverUserId = specialist.id;
-  }
+  constructor(private readonly homeService: SpecialistService, private readonly userRequestService: RequestService) { }
 
   ngOnInit() {
     this.getPage();

@@ -9,7 +9,7 @@ public class ServiceTask : BaseEntity
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string Description { get; set; } = null!;
-    public string Address { get; set; }
+    public string Address { get; set; } = null!;
     public JobStatusEnum Status { get; set; }
     public DateTime? CompletedAt { get; set; }
     public DateTime? CancelledAt { get; set; }

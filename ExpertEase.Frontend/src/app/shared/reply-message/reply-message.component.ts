@@ -1,7 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {ReplyDTO, StatusEnum} from '../../models/api.models';
 import {AuthService} from '../../services/auth.service';
-import {SpecialistRequestService} from '../../services/specialist.request.service';
 import {CurrencyPipe, DatePipe, NgClass, NgIf} from '@angular/common';
 
 @Component({

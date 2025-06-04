@@ -5,7 +5,7 @@ namespace ExpertEase.Infrastructure.Repositories;
 
 public class FirebaseRepository(FirestoreDb _firestoreDb) : IFirebaseRepository
 {
-    public async Task<T?> GetAsync<T>(string collection, Guid id, CancellationToken cancellationToken = default)
+    public async Task<T?> GetAsync<T>(string collection, string id, CancellationToken cancellationToken = default)
         where T : FirebaseBaseEntity
     {
         var doc = await _firestoreDb.Collection(collection).Document(id.ToString()).GetSnapshotAsync(cancellationToken);
@@ -21,6 +21,24 @@ public class FirebaseRepository(FirestoreDb _firestoreDb) : IFirebaseRepository
         var snapshot = await collectionRef.GetSnapshotAsync(cancellationToken);
 
         return snapshot.Documents.Select(doc => doc.ConvertTo<T>()).ToList();
+    }
+    
+    public async Task<List<T>> ListAsync<T>(string collection, Func<CollectionReference, Query> queryBuilder, CancellationToken cancellationToken = default) where T : FirebaseBaseEntity
+    {
+        var collectionRef = _firestoreDb.Collection(collection);
+        var query = queryBuilder(collectionRef);
+
+        var snapshot = await query.GetSnapshotAsync(cancellationToken);
+        return snapshot.Documents
+            .Select(doc => doc.ConvertTo<T>())
+            .ToList();
+    }
+    
+    public async Task<List<TDto>> ListAsync<T, TDto>(string collection, Func<T, TDto> mapper, CancellationToken cancellationToken = default)
+        where T : FirebaseBaseEntity
+    {
+        var entities = await ListAsync<T>(collection, cancellationToken);
+        return entities.Select(mapper).ToList();
     }
     
     public async Task<T> AddAsync<T>(string collection, T entity, CancellationToken cancellationToken = default)

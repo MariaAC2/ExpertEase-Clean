@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {
-  JobStatusEnum,
+  JobStatusEnum, MessageAddDTO,
   ReplyAddDTO,
   ReplyDTO,
   RequestDTO,
@@ -13,11 +13,9 @@ import {
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {AuthService} from '../../services/auth.service';
-import {MessagesService} from '../../services/messages.service';
-import {ActivatedRoute, RouterLink} from '@angular/router';
-import {SpecialistRequestService} from '../../services/specialist.request.service';
-import {SpecialistReplyService} from '../../services/specialist.reply.service';
-import {UserReplyService} from '../../services/user.reply.service';
+import {ExchangeService} from '../../services/exchange.service';
+import {RouterLink} from '@angular/router';
+import {ReplyService} from '../../services/reply.service';
 import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
 import {ReplyFormComponent} from '../../shared/reply-form/reply-form.component';
 import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.component';
@@ -25,17 +23,21 @@ import {ServiceMessageComponent} from '../../shared/service-message/service-mess
 import {TaskService} from '../../services/task.service';
 import {ReviewService} from '../../services/review.service';
 import {ReviewFormComponent} from '../../shared/review-form/review-form.component';
+import {RequestService} from '../../services/request.service';
+import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
+import {MessageService} from '../../services/message.service';
 
 @Component({
   selector: 'app-messages',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ServiceMessageComponent, ReviewFormComponent, RouterLink],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ServiceMessageComponent, ReviewFormComponent, RouterLink, MessageBubbleComponent],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss'
 })
 export class MessagesComponent implements OnInit {
-  exchange: UserExchangeDTO | undefined;
+  messageContent: string = '';
   request: RequestDTO | undefined;
   userRole: string | null | undefined;
+  userId: string | null | undefined;
   isReplyFormVisible: boolean = false;
   isReviewFormVisible: boolean = false;
   replyForm: {
@@ -60,16 +62,33 @@ export class MessagesComponent implements OnInit {
     content: '',
   }
   selectedRequestId: string | undefined | null;
-
   exchanges: UserExchangeDTO[] = [];
   selectedExchange: UserExchangeDTO | undefined | null;
-
-  selectedTask: ServiceTaskDTO | undefined;
   selectedTaskId: string | undefined;
 
   dummyExchange: UserExchangeDTO = {
     id: 'user-1234',
     fullName: 'Maria Testescu',
+    messages: [
+      {
+        id: 'message-1234',
+        senderId: 'user-1234',
+        receiverId: 'user-9999',
+        content: 'Bună ziua! Am nevoie de ajutor pentru o traducere medicală.',
+        isRead: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'message-5678',
+        senderId: 'user-9999',
+        receiverId: 'user-1234',
+        content: 'Bună ziua! Inteleg ca aveti nevoie de ajutor pentru o traducere medicală. Cum vă pot ajuta?',
+        isRead: true,
+        createdAt: new Date(new Date().getTime() + 5 * 60 * 1000), // +5 minute
+        updatedAt: new Date(new Date().getTime() + 5 * 60 * 1000), // +5 minute
+      }
+    ],
     requests: [
       {
         id: 'request-5678',
@@ -89,44 +108,45 @@ export class MessagesComponent implements OnInit {
             startDate: new Date(),
             endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
             status: StatusEnum.Pending,
-            serviceTask: {
-              id: 'task-001',
-              replyId: 'reply-7890',
-              specialistId: 'specialist-111',
-              userId: 'user-1234',
-              startDate: new Date(),
-              endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
-              description: 'Traducere documente medicale',
-              address: 'Strada Exemplu 10, București',
-              price: 150,
-              status: JobStatusEnum.Confirmed,
-              completedAt: new Date(),
-              cancelledAt: new Date(),
-            }
+          //   serviceTask: {
+          //     id: 'task-001',
+          //     replyId: 'reply-7890',
+          //     specialistId: 'specialist-111',
+          //     userId: 'user-1234',
+          //     startDate: new Date(),
+          //     endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
+          //     description: 'Traducere documente medicale',
+          //     address: 'Strada Exemplu 10, București',
+          //     price: 150,
+          //     status: JobStatusEnum.Confirmed,
+          //     completedAt: new Date(),
+          //     cancelledAt: new Date(),
+          //   }
           }
         ]
       }
     ]
   };
 
-  constructor(private authService: AuthService,
-              private specialistRequestService: SpecialistRequestService,
-              private specialistReplyService: SpecialistReplyService,
-              private userReplyService: UserReplyService,
-              private messageService: MessagesService,
-              private taskService: TaskService,
-              private reviewService: ReviewService,
-              private route: ActivatedRoute) {}
+  constructor(private readonly authService: AuthService,
+              private readonly requestService: RequestService,
+              private readonly replyService: ReplyService,
+              private readonly exchangeService: ExchangeService,
+              private readonly messageService: MessageService,
+              private readonly taskService: TaskService,
+              private readonly reviewService: ReviewService) {}
 
   ngOnInit() {
     this.userRole = this.authService.getUserRole();
+    this.userId = this.authService.getUserId();
+    // this.userId = 'user-1234';
     // this.exchanges = [this.dummyExchange];
     // this.selectedExchange = this.dummyExchange;
 
-    this.messageService.getExchanges('', 1, 100).subscribe({
+    this.exchangeService.getExchanges('', 1, 100).subscribe({
       next: (res) => {
         this.exchanges = res.response?.data ?? [];
-        console.log(this.exchanges);
+        console.log('Convorbiri încărcate:', this.exchanges);
 
         if (this.exchanges.length > 0) {
           // Select the last conversation
@@ -139,8 +159,9 @@ export class MessagesComponent implements OnInit {
     });
   }
 
-  loadExchange(senderUserId: string): void {
-    this.messageService.getExchange(senderUserId).subscribe({
+  loadExchange(senderUserId: string | undefined): void {
+    console.log('Loading exchange for user:', senderUserId);
+    this.exchangeService.getExchange(senderUserId).subscribe({
       next: (res) => {
         this.selectedExchange = res.response;
       },
@@ -150,10 +171,38 @@ export class MessagesComponent implements OnInit {
     });
   }
 
+  sendMessage(content: string) {
+    console.log("Sending message:", content);
+    if (!this.selectedExchange) {
+      console.error('No exchange selected');
+      return;
+    }
+
+    const message: MessageAddDTO = {
+      receiverId: this.selectedExchange.id,
+      content: content
+    };
+
+    this.messageService.sendMessage(message).subscribe({
+      next: (res) => {
+        console.log('Mesaj trimis cu succes:', res);
+        this.loadExchange(this.selectedExchange?.id);
+        this.messageContent = '';
+      },
+      error: (err) => {
+        console.error('Eroare la trimiterea mesajului:', err);
+      }
+    });
+  }
+
   acceptRequest(requestId: string) {
-    this.specialistRequestService.acceptRequest(requestId).subscribe({
+    this.requestService.acceptRequest(requestId).subscribe({
       next: () => {
         console.log('Cererea a fost acceptată');
+        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+        if (request) {
+          this.loadExchange(this.selectedExchange?.id); // Refresh exchange
+        }
       },
       error: (err) => {
         console.error('Eroare la acceptare:', err);
@@ -162,12 +211,16 @@ export class MessagesComponent implements OnInit {
   }
 
   rejectRequest(requestId: string) {
-    this.specialistRequestService.rejectRequest(requestId).subscribe({
+    this.requestService.rejectRequest(requestId).subscribe({
       next: () => {
-        console.log('Cererea a fost acceptată');
+        console.log('Cererea a fost respinsă');
+        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+        if (request) {
+          this.loadExchange(this.selectedExchange?.id); // Refresh exchange
+        }
       },
       error: (err) => {
-        console.error('Eroare la acceptare:', err);
+        console.error('Eroare la respingere:', err);
       }
     });
   }
@@ -190,13 +243,13 @@ export class MessagesComponent implements OnInit {
     }
 
     const replyDataToSend : ReplyAddDTO = replyData as ReplyAddDTO;
-    this.specialistReplyService.addReply(this.selectedRequestId, replyDataToSend).subscribe({
+    this.replyService.addReply(this.selectedRequestId, replyDataToSend).subscribe({
       next: () => {
         console.log('Reply submitted successfully!');
         this.closeReplyForm();
         // Refresh messages if needed
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Eroare la trimiterea ofertei:', err);
       }
     });
@@ -208,53 +261,45 @@ export class MessagesComponent implements OnInit {
     this.selectedRequestId = null;
   }
 
-  // acceptReply(requestId: string, replyId: string): void {
-  //   this.userReplyService.acceptReply(requestId, replyId).subscribe({
-  //     next: () => {
-  //       // Refresh the thread or update the reply status locally
-  //       console.log('Reply accepted');
-  //       // this.refreshExchange(); // optional: reload data
-  //     },
-  //     error: (err) => console.error('Error accepting reply:', err)
-  //   });
-  // }
-
-  // acceptReply(requestId: string, replyId: string): void {
-  //   this.userReplyService.acceptReply(requestId, replyId).subscribe(() => {
-  //     const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-  //     if (request) {
-  //       this.loadExchange(request.senderUserId); // This is your senderUserId
-  //     } else {
-  //       console.warn('Request not found in selectedExchange');
-  //     }
-  //   });
-  // }
-
   acceptReply(requestId: string, replyId: string): void {
-    this.userReplyService.acceptReply(requestId, replyId).subscribe(() => {
-      const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+    this.replyService.acceptReply(replyId).subscribe({
+      next: () => {
+        console.log('Reply accepted');
+        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+        if (request) {
+          const currentUserId = this.authService.getUserId();
+          const otherUserId = request.senderUserId === currentUserId
+            ? request.receiverUserId
+            : request.senderUserId;
 
-      const currentUserId = this.authService.getUserId();
-      const otherUserId =
-        request?.senderUserId === currentUserId
-          ? request.receiverUserId
-          : request?.senderUserId;
-
-      if (otherUserId) {
-        this.loadExchange(otherUserId);
-      } else {
-        console.warn('Could not determine other user in conversation.');
-      }
+          if (otherUserId) {
+            this.loadExchange(this.selectedExchange?.id);
+          }
+        }
+      },
+      error: (err) => console.error('Error accepting reply:', err)
     });
   }
 
   rejectReply(requestId: string, replyId: string): void {
-    this.userReplyService.rejectReply(requestId, replyId).subscribe({
+    this.replyService.rejectReply(replyId).subscribe({
       next: () => {
         console.log('Reply rejected');
-        // this.refreshExchange(); // optional
+        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+        if (request) {
+          const currentUserId = this.authService.getUserId();
+          const otherUserId = request.senderUserId === currentUserId
+            ? request.receiverUserId
+            : request.senderUserId;
+
+          if (otherUserId) {
+            this.loadExchange(this.selectedExchange?.id);
+          }
+        }
       },
-      error: (err) => console.error('Error rejecting reply:', err)
+      error: (err) => {
+        console.error('Error rejecting reply:', err);
+      }
     });
   }
 
@@ -270,19 +315,8 @@ export class MessagesComponent implements OnInit {
     return lastReply?.serviceTask ? lastReply : undefined;
   }
 
-  // completeTask(replyId: string, taskId: string) {
-  //   this.taskService.completeServiceTask(replyId, taskId).subscribe({
-  //     next: () => {
-  //       console.log('Cererea a fost acceptată');
-  //     },
-  //     error: (err) => {
-  //       console.error('Eroare la acceptare:', err);
-  //     }
-  //   });
-  // }
-
   completeTask(replyId: string, taskId: string) {
-    this.taskService.completeServiceTask(replyId, taskId).subscribe({
+    this.taskService.completeServiceTask(taskId).subscribe({
       next: () => {
         console.log('Task marked as completed');
         this.selectedTaskId = taskId;
@@ -296,7 +330,7 @@ export class MessagesComponent implements OnInit {
         const task = reply?.serviceTask;
 
         if (task) {
-          this.prepareReviewForm(task);
+          this.showReviewForm(task);
         } else {
           console.warn("Task not found in local data");
         }
@@ -306,6 +340,19 @@ export class MessagesComponent implements OnInit {
       }
     });
   }
+
+  showReviewForm(task: ServiceTaskDTO): void {
+    const currentUserId = this.authService.getUserId();
+
+    const isUserInvolved = currentUserId === task.userId || currentUserId === task.specialistId;
+    const isCompleted = task.status === JobStatusEnum.Completed;
+
+    if (isUserInvolved && isCompleted) {
+      // Optional: also check if a review has already been left by this user for this task
+      this.prepareReviewForm(task);
+    }
+  }
+
 
   submitReview(replyData: { [key: string]: any }) {
     console.log(this.selectedTaskId);
@@ -339,23 +386,23 @@ export class MessagesComponent implements OnInit {
   }
 
   prepareReviewForm(task: ServiceTaskDTO): void {
-    const currentUserRole = this.authService.getUserRole();
+    const currentUserId = this.authService.getUserId();
 
-    // Determine who the recipient of the review is
-    const recipientId = currentUserRole === UserRoleEnum.Client
-      ? task.userId
-      : task.specialistId;
+    const recipientId = currentUserId === task.userId
+      ? task.specialistId
+      : task.userId;
 
     this.reviewForm = {
       receiverUserId: recipientId,
-      rating: 0, // default value before user input
+      rating: 0,
       content: '',
     };
 
     this.isReviewFormVisible = true;
   }
+
   cancelTask(replyId: string, taskId: string) {
-    this.taskService.cancelServiceTask(replyId, taskId).subscribe({
+    this.taskService.cancelServiceTask(taskId).subscribe({
       next: () => {
         console.log('Cererea a fost acceptată');
       },

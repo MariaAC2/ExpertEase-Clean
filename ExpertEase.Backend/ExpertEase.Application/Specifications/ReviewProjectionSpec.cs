@@ -52,18 +52,9 @@ public class ReviewAdminProjectionSpec : Specification<Review, ReviewAdminDTO>
         Query.Select(x => new ReviewAdminDTO
         {
             Id = x.Id,
-            SenderUser = new UserDTO
-            {
-                Id = x.SenderUser.Id,
-                FullName = x.SenderUser.FullName,
-                Email = x.SenderUser.Email
-            },
-            ReceiverUser = new UserDTO
-            {
-                Id = x.ReceiverUser.Id,
-                FullName = x.ReceiverUser.FullName,
-                Email = x.ReceiverUser.Email
-            },
+            SenderUserId = x.SenderUserId,
+            ReceiverUserId = x.ReceiverUserId,
+            ServiceTaskId = x.ServiceTaskId,
             Content = x.Content,
             Rating = x.Rating
         });

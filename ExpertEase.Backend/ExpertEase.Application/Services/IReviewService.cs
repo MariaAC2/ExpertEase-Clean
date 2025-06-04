@@ -13,7 +13,7 @@ public interface IReviewService
     Task<ServiceResponse<PagedResponse<ReviewDTO>>> GetReviews(Guid userId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     Task<ServiceResponse<PagedResponse<ReviewAdminDTO>>> GetReviewsAdmin(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     // public Task<ServiceResponse<int>> GetRequestCount(CancellationToken cancellationToken = default);
-    Task<ServiceResponse> AddReview(ReviewAddDTO review, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> AddReview(Guid serviceTaskId, ReviewAddDTO review, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateRequest(ReviewUpdateDTO review, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteReview(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
 }

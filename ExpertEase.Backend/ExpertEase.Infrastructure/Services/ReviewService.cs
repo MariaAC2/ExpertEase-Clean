@@ -16,7 +16,7 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class ReviewService(IRepository<WebAppDatabaseContext> repository): IReviewService
 {
-    public async Task<ServiceResponse> AddReview(ReviewAddDTO review, UserDTO? requestingUser = null,
+    public async Task<ServiceResponse> AddReview(Guid serviceTaskId, ReviewAddDTO review, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser == null)
@@ -47,12 +47,21 @@ public class ReviewService(IRepository<WebAppDatabaseContext> repository): IRevi
             return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.NotFound, "User with this ID not found", ErrorCodes.EntityNotFound));
         }
         
+        var serviceTask = await repository.GetAsync(new ServiceTaskSpec(serviceTaskId), cancellationToken);
+        
+        if (serviceTask == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Service task not found", ErrorCodes.EntityNotFound));
+        }
+        
         var reviewEntity = new Review
         {
             SenderUserId = requestingUser.Id,
             SenderUser = sender,
             ReceiverUserId = review.ReceiverUserId,
             ReceiverUser = receiver,
+            ServiceTaskId = serviceTaskId,
+            ServiceTask = serviceTask,
             Content = review.Content,
             Rating = review.Rating
         };

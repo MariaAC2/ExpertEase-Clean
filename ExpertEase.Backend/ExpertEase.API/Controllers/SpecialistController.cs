@@ -12,25 +12,16 @@ namespace ExpertEase.API.Controllers;
 [Route("api/[controller]/[action]")]
 public class SpecialistController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
-    
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<SpecialistDTO>>> GetById([FromRoute] Guid id)
     {
-        var currentUser = await GetCurrentUser();
-        
-        return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialist(id)) : 
-            CreateErrorMessageResult<SpecialistDTO>(currentUser.Error);
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialist(id));
     }
     
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination)
     {
-        var currentUser = await GetCurrentUser();
-    
-        return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(pagination)) :
-            CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(currentUser.Error);
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(pagination));
     }
     
     [Authorize(Roles = "Admin")]

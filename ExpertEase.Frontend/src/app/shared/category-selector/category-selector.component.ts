@@ -2,8 +2,8 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {NgForOf, NgIf} from '@angular/common';
 import {CategoryDTO} from '../../models/api.models';
-import {ProfileService} from '../../services/profile.service';
 import {SearchInputComponent} from '../search-input/search-input.component';
+import {CategoryService} from '../../services/category.service';
 
 @Component({
   selector: 'app-category-selector',
@@ -49,7 +49,7 @@ export class CategorySelectorComponent implements OnInit {
     }
   ];
 
-  constructor(public categoryService: ProfileService) {}
+  constructor(public categoryService: CategoryService) {}
 
   @Input() selectedCategoryIds: string[] = [];
   @Output() categoryChange = new EventEmitter<string[]>();
@@ -60,7 +60,7 @@ export class CategorySelectorComponent implements OnInit {
   }
 
   getCategories() {
-    this.categoryService.getCategories().subscribe({
+    this.categoryService.getAllCategories().subscribe({
       next: (response) => {
         const search = this.removeDiacritics(this.searchTerm);
         this.allCategories = response.response!.filter(cat =>
@@ -96,5 +96,4 @@ export class CategorySelectorComponent implements OnInit {
   removeDiacritics(value: string): string {
     return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
-
 }

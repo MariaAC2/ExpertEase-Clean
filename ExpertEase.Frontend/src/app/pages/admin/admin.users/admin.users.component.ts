@@ -1,6 +1,5 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {AdminUsersService} from '../../../services/admin.users.service';
 import {AdminUserUpdateDTO, UserAddDTO, UserDTO, UserRoleEnum, UserUpdateDTO} from '../../../models/api.models';
 import {FormsModule} from '@angular/forms';
 import {DynamicFormComponent} from '../../../shared/dynamic-form/dynamic-form.component';
@@ -10,6 +9,7 @@ import {DynamicTableComponent} from '../../../shared/dynamic-table/dynamic-table
 import {AdminDetailsComponent} from '../../../shared/admin-details/admin-details.component';
 import {SearchInputComponent} from '../../../shared/search-input/search-input.component';
 import {PaginationComponent} from '../../../shared/pagination/pagination.component';
+import {UserService} from '../../../services/user.service';
 
 @Component({
   selector: 'app-admin-users',
@@ -122,7 +122,7 @@ export class AdminUsersComponent implements OnInit {
     }
   );
 
-  constructor(private adminService: AdminUsersService) {}
+  constructor(private readonly adminService: UserService) {}
 
   ngOnInit(): void {
     const defaultFormValues: UserAddDTO = {

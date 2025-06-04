@@ -9,7 +9,7 @@ import {
   CategoryAdminDTO, CategoryUpdateDTO, UserRoleEnum,
 } from '../../../models/api.models';
 import {dtoToDictionary, dtoToFormFields} from '../../../models/form.models';
-import {CategoriesService} from '../../../services/categories.service';
+import {CategoryService} from '../../../services/category.service';
 import {TableColumn} from '../../../models/table.models';
 import {PaginationComponent} from '../../../shared/pagination/pagination.component';
 
@@ -108,7 +108,7 @@ export class AdminCategoriesComponent implements OnInit {
       description: this.selectedEntity?.description || '',
     },
   );
-  constructor(private adminService: CategoriesService) {}
+  constructor(private adminService: CategoryService) {}
 
   ngOnInit(): void {
     const defaultFormValues: CategoryAddDTO = {
@@ -128,7 +128,7 @@ export class AdminCategoriesComponent implements OnInit {
 
   getEntity(categoryId: string): void {
     console.log(categoryId);
-    this.adminService.getCategory(categoryId).subscribe({
+    this.adminService.getCategoryById(categoryId).subscribe({
       next: (res) => {
         // console.log(res.response);
         this.entityDetailsId = res.response?.id;
@@ -143,7 +143,7 @@ export class AdminCategoriesComponent implements OnInit {
   }
 
   getPage(): void {
-    this.adminService.getCategoriesAdmin(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+    this.adminService.getCategoriesAdminPage(this.searchTerm, this.currentPage, this.pageSize).subscribe({
       next: (res) => {
         console.log(res.response);
         this.entities = res.response?.data ?? [];
@@ -192,7 +192,7 @@ export class AdminCategoriesComponent implements OnInit {
       description: data['description'] || this.formData['description']
     };
 
-    this.adminService.updateCategory(this.selectedEntityId, updatePayload).subscribe({
+    this.adminService.updateCategory(updatePayload).subscribe({
       next: () => {
         this.closeUpdateEntityForm();
         this.getPage();
