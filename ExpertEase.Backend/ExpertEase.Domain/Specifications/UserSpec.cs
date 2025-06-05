@@ -32,4 +32,9 @@ public sealed class UserSpec : Specification<User>
             .ThenInclude(r => r.ReceiverUser);
         Query.Include(e => e.Reviews);
     }
+    
+    public UserSpec(IEnumerable<Guid> ids)
+    {
+        Query.Where(u => ids.Contains(u.Id));
+    }
 }

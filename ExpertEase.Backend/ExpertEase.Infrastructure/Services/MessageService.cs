@@ -34,14 +34,18 @@ public class MessageService(IFirebaseRepository firebaseRepository) : IMessageSe
 
     public async Task<List<MessageDTO>> GetMessagesBetweenUsers(Guid user1Id, Guid user2Id, CancellationToken cancellationToken = default)
     {
-        var messages = await firebaseRepository.ListAsync<Message>("messages", cancellationToken);
+        var user1 = user1Id.ToString();
+        var user2 = user2Id.ToString();
 
-        var filteredMessages = messages.Where(m => (m.SenderId == user1Id.ToString() && m.ReceiverId == user2Id.ToString()) ||
-                                                   (m.SenderId == user2Id.ToString() && m.ReceiverId == user1Id.ToString())).ToList();
+        var messages = await firebaseRepository.ListAsync<Message>(
+            "messages",
+            col => col
+                .WhereIn("SenderId", new[] { user1, user2 })
+                .WhereIn("ReceiverId", new[] { user1, user2 })
+                .OrderBy("CreatedAt"),
+            cancellationToken);
 
-        var dtos = filteredMessages
-            .OrderBy(m => m.CreatedAt)
-            .Select(m => new MessageDTO
+        var dtos = messages.Select(m => new MessageDTO
         {
             Id = m.Id,
             SenderId = m.SenderId,

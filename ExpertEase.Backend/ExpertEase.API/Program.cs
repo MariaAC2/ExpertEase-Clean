@@ -59,7 +59,7 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<ICategoryService, CategoryService>()
     .AddScoped<IMailService, MailService>()
     .AddScoped<ISpecialistService, SpecialistService>()
-    .AddScoped<IExchangeService, ExchangeService>()
+    .AddScoped<IConversationService, ConversationService>()
     .AddScoped<IServiceTaskService, ServiceTaskService>()
     .AddScoped<IReviewService, ReviewService>()
     .AddScoped<IMessageService, MessageService>();

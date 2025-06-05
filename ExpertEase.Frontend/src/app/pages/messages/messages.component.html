@@ -5,7 +5,7 @@
       <div
         class="conversation"
         *ngFor="let conv of exchanges"
-        (click)="selectExchange(conv)"
+        (click)="loadExchange(conv.id)"
         [class.active]="conv.id === selectedExchange?.id">
         <img src="assets/avatar.svg" alt="avatar">
         {{ conv.fullName }}

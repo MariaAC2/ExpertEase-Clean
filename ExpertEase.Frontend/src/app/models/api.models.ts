@@ -396,11 +396,16 @@ export interface UserDTO {
     specialist?: SpecialistProfileDTO;
 }
 
-export interface UserExchangeDTO {
+export interface UserConversationDTO {
     id: string;
     fullName: string;
     requests: RequestDTO[];
     messages: MessageDTO[];
+}
+
+export interface ConversationDTO {
+  id: string;
+  fullName: string;
 }
 
 export interface UserRegisterDTO {

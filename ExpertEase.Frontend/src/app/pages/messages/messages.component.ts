@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {
+  ConversationDTO,
   JobStatusEnum, MessageAddDTO,
   ReplyAddDTO,
   ReplyDTO,
@@ -7,7 +8,7 @@ import {
   ReviewAddDTO,
   ServiceTaskDTO,
   StatusEnum,
-  UserExchangeDTO,
+  UserConversationDTO,
   UserRoleEnum
 } from '../../models/api.models';
 import {CommonModule} from '@angular/common';
@@ -62,71 +63,9 @@ export class MessagesComponent implements OnInit {
     content: '',
   }
   selectedRequestId: string | undefined | null;
-  exchanges: UserExchangeDTO[] = [];
-  selectedExchange: UserExchangeDTO | undefined | null;
+  exchanges: ConversationDTO[] = [];
+  selectedExchange: UserConversationDTO | undefined | null;
   selectedTaskId: string | undefined;
-
-  dummyExchange: UserExchangeDTO = {
-    id: 'user-1234',
-    fullName: 'Maria Testescu',
-    messages: [
-      {
-        id: 'message-1234',
-        senderId: 'user-1234',
-        receiverId: 'user-9999',
-        content: 'Bună ziua! Am nevoie de ajutor pentru o traducere medicală.',
-        isRead: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: 'message-5678',
-        senderId: 'user-9999',
-        receiverId: 'user-1234',
-        content: 'Bună ziua! Inteleg ca aveti nevoie de ajutor pentru o traducere medicală. Cum vă pot ajuta?',
-        isRead: true,
-        createdAt: new Date(new Date().getTime() + 5 * 60 * 1000), // +5 minute
-        updatedAt: new Date(new Date().getTime() + 5 * 60 * 1000), // +5 minute
-      }
-    ],
-    requests: [
-      {
-        id: 'request-5678',
-        senderUserId: 'user-1234',
-        receiverUserId: 'user-9999',
-        requestedStartDate: new Date(),
-        description: 'Aș dori ajutor pentru o traducere medicală.',
-        status: StatusEnum.Accepted,
-        senderContactInfo: {
-          phoneNumber: '0740123456',
-          address: 'Strada Exemplu 10, București'
-        },
-        replies: [
-          {
-            id: 'reply-7890',
-            price: 150,
-            startDate: new Date(),
-            endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
-            status: StatusEnum.Pending,
-          //   serviceTask: {
-          //     id: 'task-001',
-          //     replyId: 'reply-7890',
-          //     specialistId: 'specialist-111',
-          //     userId: 'user-1234',
-          //     startDate: new Date(),
-          //     endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // +3 zile
-          //     description: 'Traducere documente medicale',
-          //     address: 'Strada Exemplu 10, București',
-          //     price: 150,
-          //     status: JobStatusEnum.Confirmed,
-          //     completedAt: new Date(),
-          //     cancelledAt: new Date(),
-          //   }
-          }
-        ]
-      }
-    ]
-  };
 
   constructor(private readonly authService: AuthService,
               private readonly requestService: RequestService,
@@ -143,14 +82,14 @@ export class MessagesComponent implements OnInit {
     // this.exchanges = [this.dummyExchange];
     // this.selectedExchange = this.dummyExchange;
 
-    this.exchangeService.getExchanges('', 1, 100).subscribe({
+    this.exchangeService.getExchanges().subscribe({
       next: (res) => {
-        this.exchanges = res.response?.data ?? [];
+        this.exchanges = res.response ?? [];
         console.log('Convorbiri încărcate:', this.exchanges);
 
         if (this.exchanges.length > 0) {
-          // Select the last conversation
-          this.selectedExchange = this.exchanges[this.exchanges.length - 1];
+          const lastUser = this.exchanges[this.exchanges.length - 1];
+          this.loadExchange(lastUser.id);
         }
       },
       error: (err) => {
@@ -253,12 +192,6 @@ export class MessagesComponent implements OnInit {
         console.error('Eroare la trimiterea ofertei:', err);
       }
     });
-  }
-
-  selectExchange(exchange: UserExchangeDTO) {
-    this.selectedExchange = exchange;
-    this.isReplyFormVisible = false;
-    this.selectedRequestId = null;
   }
 
   acceptReply(requestId: string, replyId: string): void {

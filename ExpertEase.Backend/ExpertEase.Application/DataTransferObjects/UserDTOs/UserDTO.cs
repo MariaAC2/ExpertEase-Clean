@@ -53,15 +53,3 @@ public class ContactInfoDTO
     [Required]
     public string Address { get; set; } = null!;
 }
-
-public class UserExchangeDTO
-{
-    [Required]
-    public Guid Id { get; set; }
-    [Required]
-    public string FullName { get; set; } = null!;
-    [Required]
-    public List<RequestDTO> Requests { get; set; } = new List<RequestDTO>();
-    [Required]
-    public List<MessageDTO> Messages { get; set; } = new List<MessageDTO>();
-}
