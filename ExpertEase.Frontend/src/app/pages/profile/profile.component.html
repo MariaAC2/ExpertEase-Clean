@@ -2,7 +2,11 @@
   <div class="account-header">
     <div class="avatar-wrapper">
       <div class="avatar">
-        <img src="assets/avatar.svg" alt="User avatar" />
+        <img [src]="user?.profilePictureUrl! || 'assets/avatar.svg'" alt="User avatar" />
+<!--        <label class="upload-btn">-->
+<!--          <input type="file" (change)="onFileSelected($event)" accept="image/*" hidden />-->
+<!--          <img src="assets/icons/photo_media.svg" alt="Upload icon" />-->
+<!--        </label>-->
       </div>
       <div class="rating-badge">
         <img src="assets/star-rating.svg" alt="User star" />
@@ -23,7 +27,8 @@
     </app-icon-button>
   </div>
 
-  <div *ngIf="user?.role === UserRoleEnum.Specialist" class="card">
+<!--  *ngIf="user?.role === UserRoleEnum.Specialist"-->
+  <div class="card">
     <div class="info">
       <h2 class="full-name">Anunțul tău</h2>
       <div class="details-block">

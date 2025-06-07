@@ -12,6 +12,8 @@ public class SpecialistDTO
     [Required]
     public string Email { get; set; } = null!;
     [Required]
+    public string? ProfilePictureUrl { get; set; } = null!;
+    [Required]
     public string PhoneNumber { get; set; } = null!;
     [Required]
     public string Address { get; set; } = null!;

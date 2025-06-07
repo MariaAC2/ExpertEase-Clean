@@ -18,5 +18,5 @@ public interface IFirebaseRepository
         where T : FirebaseBaseEntity;
     public Task<T> AddAsync<T>(string collection, T entity, CancellationToken cancellationToken = default) where T : FirebaseBaseEntity;
     public Task<T> UpdateAsync<T>(string collection, T entity, CancellationToken cancellationToken = default) where T : FirebaseBaseEntity;
-    public Task DeleteAsync<T>(string collection, Guid id, CancellationToken cancellationToken = default) where T : FirebaseBaseEntity;
+    public Task DeleteAsync<T>(string collection, string id, CancellationToken cancellationToken = default) where T : FirebaseBaseEntity;
 }

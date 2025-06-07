@@ -13,6 +13,7 @@ public class User : BaseEntity
     public UserRoleEnum Role { get; set; }
     public ContactInfo? ContactInfo { get; set; }
     public SpecialistProfile? SpecialistProfile { get; set; }
+    public string? ProfilePictureUrl { get; set; }
     public Account Account { get; set; } = null!;
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public ICollection<Request> Requests { get; set; } = new List<Request>();

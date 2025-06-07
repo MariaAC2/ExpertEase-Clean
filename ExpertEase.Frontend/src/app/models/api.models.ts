@@ -281,6 +281,7 @@ export interface SpecialistDTO {
     id: string;
     fullName: string;
     email: string;
+    profilePictureUrl?: string;
     phoneNumber: string;
     address: string;
     yearsExperience: number;
@@ -392,6 +393,7 @@ export interface UserDTO {
     createdAt: Date;
     updatedAt: Date;
     rating: number;
+    profilePictureUrl?: string;
     contactInfo?: ContactInfoDTO;
     specialist?: SpecialistProfileDTO;
 }

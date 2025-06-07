@@ -5,6 +5,7 @@ import {UserDTO, UserRoleEnum} from '../../models/api.models';
 import {Router} from '@angular/router';
 import {UserService} from '../../services/user.service';
 import {AuthService} from '../../services/auth.service';
+import {PhotoService} from '../../services/photo.service';
 
 @Component({
   selector: 'app-profile',
@@ -35,7 +36,10 @@ export class ProfileComponent implements OnInit {
       ]
     }
   };
-  constructor(private readonly profileService: UserService, private readonly authService: AuthService, private readonly route: Router) {}
+  constructor(private readonly profileService: UserService,
+              private readonly authService: AuthService,
+              private readonly photoService: PhotoService,
+              private readonly route: Router) {}
   ngOnInit() {
     // this.user = this.dummyUser;
     this.profileService.getUserProfile().subscribe({
@@ -48,6 +52,36 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.photoService.addProfilePicture(file).subscribe({
+      next: (res) => {
+        console.log('Upload success:', res);
+        console.log(this.user?.profilePictureUrl);
+      },
+      error: (err) => {
+        console.error('Upload error:', err);
+      }
+    });
+  }
+
+  uploadProfilePicture(file: File) {
+    this.photoService.addProfilePicture(file).subscribe({
+      next: (res) => {
+        console.log('Upload success:', res);
+      },
+      error: (err) => {
+        console.error('Upload error:', err);
+      }
+    });
+  }
+
 
   onEdit() {
     // open modal or navigate to profile edit

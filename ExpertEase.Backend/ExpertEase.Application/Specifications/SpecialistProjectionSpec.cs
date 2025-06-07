@@ -11,12 +11,15 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
 {
     public SpecialistProjectionSpec(bool orderByCreatedAt = false)
     {
-        Query.Include(e => e.SpecialistProfile);
+        Query.Include(e => e.ContactInfo);
+        Query.Include(e => e.SpecialistProfile)
+            .ThenInclude(e => e.Categories);
         Query.Select(e => new SpecialistDTO
             {
                 Id = e.Id,
                 FullName = e.FullName,
                 Email = e.Email,
+                ProfilePictureUrl = e.ProfilePictureUrl,
                 PhoneNumber = e.ContactInfo != null ? e.ContactInfo.PhoneNumber : "",
                 Address = e.ContactInfo != null ? e.ContactInfo.Address : "",
                 YearsExperience = e.SpecialistProfile.YearsExperience,

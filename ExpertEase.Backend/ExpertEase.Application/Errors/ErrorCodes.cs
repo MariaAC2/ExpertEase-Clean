@@ -21,4 +21,5 @@ public enum ErrorCodes
     MailSendFailed,
     AccountAlreadyExists,
     EntityAlreadyExists,
+    UserNotFound
 }

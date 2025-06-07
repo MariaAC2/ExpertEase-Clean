@@ -33,6 +33,7 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             CreatedAt = e.CreatedAt,
             UpdatedAt = e.UpdatedAt,
             Rating = e.Rating,
+            ProfilePictureUrl = e.ProfilePictureUrl,
             ContactInfo = e.ContactInfo != null
                 ? new ContactInfoDTO
                 {

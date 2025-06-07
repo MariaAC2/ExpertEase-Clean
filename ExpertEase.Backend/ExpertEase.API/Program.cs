@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton(provider =>
 {
-    var credential = GoogleCredential.FromFile("expertease-1b005-firebase-adminsdk-fbsvc-eb9d677f52.json");
+    var credential = GoogleCredential.FromFile("expertease-1b005-firebase-adminsdk-fbsvc-f14acd0d61.json");
     var firestoreBuilder = new FirestoreClientBuilder
     {
         Credential = credential
@@ -62,7 +62,9 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IConversationService, ConversationService>()
     .AddScoped<IServiceTaskService, ServiceTaskService>()
     .AddScoped<IReviewService, ReviewService>()
-    .AddScoped<IMessageService, MessageService>();
+    .AddScoped<IMessageService, MessageService>()
+    .AddScoped<IFirebaseStorageService, FirebaseStorageService>()
+    .AddScoped<IPhotoService, PhotoService>();
 
 builder.Services.AddHostedService<InitializerWorker>();
 

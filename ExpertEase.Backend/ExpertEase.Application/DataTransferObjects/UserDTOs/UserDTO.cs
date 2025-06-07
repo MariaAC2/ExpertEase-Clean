@@ -28,6 +28,7 @@ public class UserDTO
     public DateTime UpdatedAt { get; set; }
     [Required]
     public int Rating { get; set; } = 0;
+    public string? ProfilePictureUrl { get; set; }
     public ContactInfoDTO? ContactInfo { get; set; }
     public SpecialistProfileDTO? Specialist { get; set; }
 }

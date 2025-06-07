@@ -7,4 +7,5 @@ public class SpecialistProfile : BaseEntity
     public int YearsExperience { get; set; }
     public string Description { get; set; } = null!;
     public ICollection<Category> Categories { get; set; } = new List<Category>();
+    public List<string> Portfolio { get; set; } = new();
 }

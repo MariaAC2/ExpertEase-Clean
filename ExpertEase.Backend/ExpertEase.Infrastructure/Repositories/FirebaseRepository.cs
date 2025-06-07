@@ -66,11 +66,11 @@ public class FirebaseRepository(FirestoreDb _firestoreDb) : IFirebaseRepository
         return entity;
     }
 
-    public async Task DeleteAsync<T>(string collection, Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync<T>(string collection, string id, CancellationToken cancellationToken = default)
         where T : FirebaseBaseEntity
     {
         await _firestoreDb.Collection(collection)
-            .Document(id.ToString())
+            .Document(id)
             .DeleteAsync(cancellationToken: cancellationToken);
     }
 }

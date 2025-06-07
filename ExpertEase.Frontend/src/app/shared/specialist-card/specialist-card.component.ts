@@ -1,12 +1,12 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {Router, RouterLink} from '@angular/router';
 import {SpecialistDTO} from '../../models/api.models';
 import {RequestFormComponent} from '../request-form/request-form.component';
 
 @Component({
   selector: 'app-specialist-card',
-  imports: [CommonModule, RequestFormComponent, RouterLink],
+  imports: [CommonModule, RequestFormComponent, RouterLink, NgOptimizedImage],
   templateUrl: './specialist-card.component.html',
   styleUrls: ['./specialist-card.component.scss']
 })
@@ -15,6 +15,7 @@ export class SpecialistCardComponent {
     id: '',
     fullName: '',
     email: '',
+    profilePictureUrl: '',
     phoneNumber: '',
     address: '',
     categories: [],
@@ -37,7 +38,7 @@ export class SpecialistCardComponent {
   @Output() specialistId = new EventEmitter<string>();
   @Output() requestFormSubmit = new EventEmitter<{ [key: string]: any }>();
 
-  constructor(private router: Router) { }
+  constructor(private readonly router: Router) { }
 
   goToSendRequest() {
     this.requestForm.receiverUserId = this.specialist.id;
