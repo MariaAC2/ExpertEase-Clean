@@ -1,0 +1,57 @@
+<div class="settings-container">
+  <h1 class="settings-title">Setările contului</h1>
+
+  <!-- Profilul tău -->
+  <section class="settings-section">
+    <h2>Profilul tău</h2>
+    <form>
+      <label for="fullName">Nume complet</label>
+      <input id="fullName" type="text" [(ngModel)]="settings.fullName" name="fullName">
+
+      <label for="email">Adresa e-mail</label>
+      <input id="email" type="email" [(ngModel)]="settings.email" name="email">
+
+      <label for="phone">Număr de telefon</label>
+      <input id="phone" type="text" [(ngModel)]="settings.phoneNumber" name="phone">
+
+      <label for="profileImage">Poza de profil</label>
+      <input id="profileImage" type="file" (change)="onImageUpload($event)">
+
+      <button type="button" (click)="changePassword()">Schimbă parola</button>
+    </form>
+  </section>
+
+  <!-- Setări cont -->
+  <section class="settings-section">
+    <h2>Setări aplicație</h2>
+    <form>
+      <label for="language">Limba aplicației</label>
+      <select id="language" [(ngModel)]="settings.language" name="language">
+        <option value="ro">Română</option>
+        <option value="en">English</option>
+      </select>
+
+      <label>
+        <input type="checkbox" [(ngModel)]="settings.darkMode" name="darkMode">
+        Activează modul întrunecat
+      </label>
+
+      <label>
+        <input type="checkbox" [(ngModel)]="settings.emailNotifications" name="emailNotifications">
+        Notificări prin e-mail
+      </label>
+
+      <label>
+        <input type="checkbox" [(ngModel)]="settings.smsNotifications" name="smsNotifications">
+        Notificări prin SMS
+      </label>
+    </form>
+  </section>
+
+  <!-- Siguranță și acțiuni -->
+  <section class="settings-section">
+    <h2>Siguranță și acțiuni</h2>
+    <button class="danger" (click)="deactivateAccount()">Dezactivează contul</button>
+    <button class="danger" (click)="deleteAccount()">Șterge contul</button>
+  </section>
+</div>

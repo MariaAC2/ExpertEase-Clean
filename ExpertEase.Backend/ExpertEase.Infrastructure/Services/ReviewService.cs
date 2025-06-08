@@ -109,9 +109,16 @@ public class ReviewService(IRepository<WebAppDatabaseContext> repository): IRevi
         return ServiceResponse.CreateSuccessResponse(result);
     }
     
-    public async Task<ServiceResponse<PagedResponse<ReviewDTO>>> GetReviews(Guid userId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<PagedResponse<ReviewDTO>>> GetReviews(Guid userId, PaginationReviewFilterQueryParams pagination, CancellationToken cancellationToken = default)
     {
-        var result = await repository.PageAsync(pagination, new ReviewProjectionSpec(pagination.Search, userId),  cancellationToken);
+        var result = await repository.PageAsync(pagination, new ReviewProjectionSpec(userId, true, pagination.Rating),  cancellationToken);
+        
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+    
+    public async Task<ServiceResponse<PagedResponse<ReviewDTO>>> GetReviewsList(Guid userId, PaginationQueryParams pagination, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.PageAsync(pagination, new ReviewProjectionSpec(userId), cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse(result);
     }

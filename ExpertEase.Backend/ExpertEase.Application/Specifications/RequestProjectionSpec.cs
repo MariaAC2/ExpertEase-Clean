@@ -13,9 +13,6 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
 {
     public RequestProjectionSpec(bool orderByCreatedAt = false)
     {
-        Query.Include(r => r.SenderUser);
-        Query.Include(r => r.ReceiverUser);
-        Query.Include(r => r.Replies);
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
@@ -75,10 +72,6 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
 {
     public RequestUserProjectionSpec(Guid senderUserId, bool orderByCreatedAt = false)
     {
-        Query.Include(r => r.SenderUser);
-        Query.Include(r => r.ReceiverUser);
-        Query.Include(r => r.Replies)
-            .ThenInclude(r => r.ServiceTask);
         Query.Where(e => e.SenderUserId == senderUserId);
         Query.Select(e => new RequestDTO
         {
@@ -103,18 +96,6 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
                 EndDate = r.EndDate,
                 Price = r.Price,
                 Status = r.Status,
-                ServiceTask = r.ServiceTask != null ? new ServiceTaskDTO
-                {
-                    Id = r.ServiceTask.Id,
-                    UserId = r.ServiceTask.UserId,
-                    SpecialistId = r.ServiceTask.SpecialistId,
-                    StartDate = r.ServiceTask.StartDate,
-                    EndDate = r.ServiceTask.EndDate,
-                    Description = r.ServiceTask.Description,
-                    Address = r.ServiceTask.Address,
-                    Price = r.ServiceTask.Price,
-                    Status = r.ServiceTask.Status
-                } : null
             }).ToList(),
         });
 
@@ -126,7 +107,6 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
     
     public RequestUserProjectionSpec(Guid senderUserId, Guid receiverUserId) : this(senderUserId)
     {
-        Query.Include(r => r.ReceiverUser);
         Query.Where(e => e.ReceiverUserId == receiverUserId);
     }
     public RequestUserProjectionSpec(Guid id, Guid senderUserId, Guid receiverUserId) : this(senderUserId, receiverUserId) => Query.Where(e => e.Id == id);
@@ -152,13 +132,7 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
 {
     public RequestSpecialistProjectionSpec(Guid receiverUserId, bool orderByCreatedAt = false)
     {
-        Query.Include(r => r.SenderUser);
-        Query.Include(r => r.ReceiverUser);
-        Query.Include(r => r.Replies)
-            .ThenInclude(r => r.ServiceTask);
-
         Query.Where(e => e.ReceiverUserId == receiverUserId);
-
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
@@ -175,7 +149,6 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
                         Address = e.Address
                     }
                     : null,
-
             Replies = e.Replies.Select(r => new ReplyDTO
             {
                 Id = r.Id,
@@ -183,18 +156,6 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
                 EndDate = r.EndDate,
                 Price = r.Price,
                 Status = r.Status,
-                ServiceTask = r.ServiceTask != null ? new ServiceTaskDTO
-                {
-                    Id = r.ServiceTask.Id,
-                    UserId = r.ServiceTask.UserId,
-                    SpecialistId = r.ServiceTask.SpecialistId,
-                    StartDate = r.ServiceTask.StartDate,
-                    EndDate = r.ServiceTask.EndDate,
-                    Description = r.ServiceTask.Description,
-                    Address = r.ServiceTask.Address,
-                    Price = r.ServiceTask.Price,
-                    Status = r.ServiceTask.Status
-                } : null
             }).ToList(),
         });
 
@@ -207,7 +168,6 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
     
     public RequestSpecialistProjectionSpec(Guid senderUserId, Guid receiverUserId) : this(receiverUserId)
     {
-        Query.Include(r => r.SenderUser);
         Query.Where(e => e.SenderUserId == senderUserId);
     }
     public RequestSpecialistProjectionSpec(Guid id, Guid senderUserId, Guid receiverUserId) : this(senderUserId, receiverUserId) => Query.Where(e => e.Id == id);

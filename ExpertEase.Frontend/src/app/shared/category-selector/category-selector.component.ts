@@ -49,14 +49,16 @@ export class CategorySelectorComponent implements OnInit {
     }
   ];
 
+  placeholder: string = 'Caută o categorie...';
+
   constructor(public categoryService: CategoryService) {}
 
   @Input() selectedCategoryIds: string[] = [];
   @Output() categoryChange = new EventEmitter<string[]>();
 
   ngOnInit() {
-    // this.allCategories = this.dummyCategories;
-    this.getCategories();
+    this.allCategories = this.dummyCategories;
+    // this.getCategories();
   }
 
   getCategories() {

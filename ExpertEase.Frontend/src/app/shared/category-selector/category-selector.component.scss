@@ -30,9 +30,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: center;
+  align-items: flex-start;
 }
-
 
 .tag.option {
   background-color: #333;
@@ -78,7 +77,7 @@ button {
 .search-category-wrapper {
   background-color: #f6efff;
   border-radius: 5px;
-  width: 250px;
+  width: 300px;
   margin: auto;
   border: 2px solid #c9b7ff;
 }

@@ -16,5 +16,4 @@ public class ReplyDTO
     public decimal Price { get; set; }
     [Required]
     public StatusEnum Status { get; set; }
-    public ServiceTaskDTO? ServiceTask { get; set; }
 }

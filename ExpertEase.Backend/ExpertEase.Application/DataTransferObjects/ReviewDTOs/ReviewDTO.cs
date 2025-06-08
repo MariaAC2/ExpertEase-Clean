@@ -10,6 +10,8 @@ public class ReviewDTO
     [Required]
     public string SenderUserFullName { get; set; } = null!;
     [Required]
+    public string? SenderUserProfilePictureUrl { get; set; }
+    [Required]
     public int Rating { get; set; }
     [Required]
     public string Content { get; set; } = null!;

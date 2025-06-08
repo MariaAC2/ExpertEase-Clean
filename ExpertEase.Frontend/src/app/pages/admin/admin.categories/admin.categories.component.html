@@ -11,7 +11,7 @@
   <div class="admin-table-container">
     <h2>Administrează toate categoriile</h2>
     <div class="search-box-wrapper">
-      <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+      <app-search-input [placeholder]="placeholder" (searchChanged)="onSearch($event)"></app-search-input>
     </div>
     <button class="add-btn" (click)="openAddEntityForm()">Adaugă categorie</button>
     <app-dynamic-table

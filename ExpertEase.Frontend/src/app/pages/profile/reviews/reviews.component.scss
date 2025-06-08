@@ -1,0 +1,83 @@
+.account-card {
+  background: #e0caff;
+  max-width: 1000px;
+  margin: 32px auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto Mono', monospace;
+  border: 3px solid black;
+}
+
+.reviews-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.reviews-container h2 {
+  font-size: 30px;
+  text-align: center;
+  margin-bottom: 32px;
+  font-weight: bold;
+  color: black;
+}
+
+.review-card {
+  background-color: #f5f2ff;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.review-card .header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.review-card .header img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 16px;
+}
+
+.review-card .header .review-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 4px; /* tweak this value to align the name to the star's top half */
+}
+
+.review-card .header .review-info strong {
+  font-size: 18px;
+  line-height: 1;
+  margin-left: 3px;
+  margin-bottom: 2px; /* reduced spacing between name and stars */
+}
+
+.review-card p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.review-card small {
+  display: block;
+  text-align: right;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+}
+
+.rating .star {
+  width: 24px;
+  height: 24px;
+  margin-right: 1px;
+}

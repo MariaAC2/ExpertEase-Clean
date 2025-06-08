@@ -7,8 +7,8 @@ import {PagedResponse, ReplyDTO, RequestResponse, ReviewAddDTO, ReviewDTO} from 
   providedIn: 'root'
 })
 export class ReviewService {
-  private baseUrl = `http://localhost:5241/api/`;
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  private baseUrl = `http://localhost:5241/api/Review`;
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
   addReview(serviceTaskId: string, review: ReviewAddDTO) {
     const token = this.authService.getToken();
@@ -18,17 +18,16 @@ export class ReviewService {
     return this.http.post(`${this.baseUrl}task/${serviceTaskId}/confirm/reviews`, review, { headers });
   }
 
-  getReviews(search: string, page: number, pageSize: number) {
+  getReviews(page: number, pageSize: number) {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
     const params = new HttpParams()
-      .set('search', search)
       .set('page', page)
       .set('pageSize', pageSize);
-    return this.http.get<RequestResponse<PagedResponse<ReviewDTO>>>(`${this.baseUrl}profile/reviews`, { params, headers });
+    return this.http.get<RequestResponse<PagedResponse<ReviewDTO>>>(`${this.baseUrl}/GetPage`, { params, headers });
   }
 
   getReview(reviewId: string) {
@@ -37,6 +36,6 @@ export class ReviewService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<ReviewDTO>>(`${this.baseUrl}profile/reviews/${reviewId}`, { headers });
+    return this.http.get<RequestResponse<ReviewDTO>>(`${this.baseUrl}/GetById/${reviewId}`, { headers });
   }
 }

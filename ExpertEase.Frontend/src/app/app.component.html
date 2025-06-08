@@ -24,8 +24,8 @@
 
   <!-- Navigation links -->
   <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
-    <li *ngIf="authService.getUserRole() === 'Client'">
-<!--    <li>-->
+<!--    <li *ngIf="authService.getUserRole() === 'Client'">-->
+    <li>
       <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
     </li>
 
@@ -44,8 +44,8 @@
       <a routerLink="/profile" routerLinkActive="active">Contul tău</a>
     </li>
 
-<!--    <li>-->
-    <li *ngIf="authService.getUserRole() === 'Admin'">
+    <li>
+<!--    <li *ngIf="authService.getUserRole() === 'Admin'">-->
       <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
     </li>
   </ul>

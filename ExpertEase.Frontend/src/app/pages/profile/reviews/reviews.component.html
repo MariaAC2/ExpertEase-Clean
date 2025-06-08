@@ -1,0 +1,36 @@
+<div class="account-card">
+  <div class="reviews-container">
+    <h2>Recenziile tale</h2>
+    <div *ngFor="let review of reviews" class="review-card">
+      <div class="header">
+        <img *ngIf="review.senderUserProfilePictureUrl" [src]="review.senderUserProfilePictureUrl" alt="Profil" />
+<!--        <div>-->
+<!--          <strong>{{ review.senderUserFullName }}</strong>-->
+<!--          <span class="rating">-->
+<!--            <ng-container *ngFor="let star of [].constructor(review.rating)">-->
+<!--              <img-->
+<!--                src="assets/icons/star-filled.svg"-->
+<!--                alt="star"-->
+<!--                style="width: 24px; height: 24px; margin-right: 0;"-->
+<!--              />-->
+<!--            </ng-container>-->
+<!--          </span>-->
+<!--        </div>-->
+        <div class="review-info">
+          <strong>{{ review.senderUserFullName }}</strong>
+          <span class="rating">
+            <ng-container *ngFor="let star of [].constructor(review.rating)">
+              <img
+                src="assets/icons/star-filled.svg"
+                alt="star"
+                style="width: 24px; height: 24px; margin-right: 0;"
+              />
+            </ng-container>
+          </span>
+        </div>
+      </div>
+      <p>{{ review.content }}</p>
+      <small>{{ review.createdAt | date: 'shortDate' }}</small>
+    </div>
+  </div>
+</div>

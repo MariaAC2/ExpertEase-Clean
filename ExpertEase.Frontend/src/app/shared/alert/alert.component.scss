@@ -1,0 +1,22 @@
+.alert {
+  position: relative;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+
+  &.info { background-color: #e0f0ff; color: #00599f; }
+  &.success { background-color: #d4edda; color: #155724; }
+  &.warning { background-color: #fff3cd; color: #856404; }
+  &.error { background-color: #f8d7da; color: #721c24; }
+
+  .close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+}

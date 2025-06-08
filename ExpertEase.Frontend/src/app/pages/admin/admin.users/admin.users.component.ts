@@ -55,6 +55,8 @@ export class AdminUsersComponent implements OnInit {
   isUserDetailsVisible = false;
   selectedUserId: string | null = null;
 
+  placeholder: string = 'Caută un utilizator...';
+
   columns: TableColumn[] = [
     { key: 'id', header: 'ID' },
 

@@ -36,13 +36,12 @@ public class ReviewController(IUserService userService, IReviewService reviewSer
     
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<PagedResponse<ReviewDTO>>>> GetPage(
-        [FromQuery] PaginationSearchQueryParams pagination, [FromQuery] Guid userId)
+    public async Task<ActionResult<RequestResponse<PagedResponse<ReviewDTO>>>> GetPage([FromQuery] PaginationQueryParams pagination)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
-            CreateRequestResponseFromServiceResponse(await reviewService.GetReviews(currentUser.Result.Id, pagination)) :
+            CreateRequestResponseFromServiceResponse(await reviewService.GetReviewsList(currentUser.Result.Id, pagination)) :
             CreateErrorMessageResult<PagedResponse<ReviewDTO>>(currentUser.Error);
     }
 }

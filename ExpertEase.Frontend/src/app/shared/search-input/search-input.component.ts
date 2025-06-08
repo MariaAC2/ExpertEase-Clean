@@ -11,6 +11,7 @@ import {FormsModule} from '@angular/forms';
 export class SearchInputComponent {
   searchTerm: string = '';
 
+  @Input() placeholder: string = 'Caută ...';
   @Output() searchChanged = new EventEmitter<string>();
   onSearchChanged() {
     this.searchChanged.emit(this.searchTerm.trim());

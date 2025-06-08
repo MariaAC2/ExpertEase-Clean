@@ -455,6 +455,7 @@ export interface ReviewDTO {
   id: string;
   receiverUserId: string;
   senderUserFullName: string,
+  senderUserProfilePictureUrl?: string;
   rating: number;
   content: string;
   createdAt: Date;

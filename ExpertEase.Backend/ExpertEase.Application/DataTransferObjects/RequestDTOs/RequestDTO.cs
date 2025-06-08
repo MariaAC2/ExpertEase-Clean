@@ -22,5 +22,5 @@ public class RequestDTO
     [Required]
     public StatusEnum Status { get; set; } = StatusEnum.Pending;
     
-    public List<ReplyDTO> Replies { get; set; } = new List<ReplyDTO>();
+    public List<ReplyDTO> Replies { get; set; } = new();
 }

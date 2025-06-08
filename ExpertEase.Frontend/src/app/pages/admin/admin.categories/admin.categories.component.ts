@@ -99,7 +99,7 @@ export class AdminCategoriesComponent implements OnInit {
   error: string | null = null;
 
   addEntityFormFields = dtoToFormFields(this.defaultEntity, {
-    description: { type: 'input', placeholder: 'Descrie categoria' }
+    description: { type: 'input', placeholder: 'Descrie categoria', required: false }
   });
 
   updateEntityFormFields = dtoToFormFields(
@@ -108,7 +108,8 @@ export class AdminCategoriesComponent implements OnInit {
       description: this.selectedEntity?.description || '',
     },
   );
-  constructor(private adminService: CategoryService) {}
+  placeholder: string = 'Caută o categorie...';
+  constructor(private readonly adminService: CategoryService) {}
 
   ngOnInit(): void {
     const defaultFormValues: CategoryAddDTO = {

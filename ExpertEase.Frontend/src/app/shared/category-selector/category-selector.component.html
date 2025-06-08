@@ -1,8 +1,8 @@
 <div class="tag-selector">
-  <h3 class="section-title">Listă categorii:</h3>
+  <h3 class="section-title">Alege din lista de categorii:</h3>
   <div class="category-box">
     <div class="search-category-wrapper">
-      <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
+      <app-search-input [placeholder]="placeholder" (searchChanged)="onSearch($event)"></app-search-input>
     </div>
     <div class="category-options">
       <span

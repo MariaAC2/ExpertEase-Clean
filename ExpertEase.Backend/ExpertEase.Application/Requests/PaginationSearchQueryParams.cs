@@ -7,3 +7,8 @@ public class PaginationSearchQueryParams : PaginationQueryParams
 {
     public string? Search { get; set; }
 }
+
+public class PaginationReviewFilterQueryParams : PaginationQueryParams
+{
+    public int? Rating { get; set; }
+}

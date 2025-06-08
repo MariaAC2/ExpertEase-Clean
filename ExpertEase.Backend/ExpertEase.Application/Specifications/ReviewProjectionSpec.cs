@@ -11,12 +11,12 @@ public class ReviewProjectionSpec : Specification<Review, ReviewDTO>
     public ReviewProjectionSpec(Guid userId, bool orderByCreatedAt = false)
     {
         Query.Include(e => e.SenderUser);
-        Query.Include(e => e.ReceiverUser);
         Query.Where(e=> e.ReceiverUserId == userId);
         Query.Select(x => new ReviewDTO
         {
             ReceiverUserId = x.ReceiverUserId,
             SenderUserFullName = x.SenderUser.FullName,
+            SenderUserProfilePictureUrl = x.SenderUser.ProfilePictureUrl,
             Rating = x.Rating,
             Content = x.Content
         });
@@ -29,18 +29,14 @@ public class ReviewProjectionSpec : Specification<Review, ReviewDTO>
     
     public ReviewProjectionSpec(Guid id, Guid userId) : this(userId) => Query.Where(e => e.Id == id);
     
-    public ReviewProjectionSpec(string? search, Guid userId) : this(userId, true) 
+    public ReviewProjectionSpec(Guid userId, bool orderByCreatedAt, int? ratingFilter = null) : this(userId, true)
     {
-        if (!string.IsNullOrWhiteSpace(search))
+        if (ratingFilter.HasValue)
         {
-            var searchExpr = $"%{search.Trim().Replace(" ", "%")}%";
-
-            Query.Where(r =>
-                EF.Functions.ILike(r.Content, searchExpr) ||
-                EF.Functions.ILike(r.Rating.ToString(), searchExpr)
-            );
+            Query.Where(r => r.Rating == ratingFilter.Value);
         }
     }
+
 }
 
 public class ReviewAdminProjectionSpec : Specification<Review, ReviewAdminDTO>

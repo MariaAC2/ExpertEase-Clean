@@ -110,7 +110,6 @@ export class AdminSpecialistsComponent {
   selectedUser: SpecialistDTO | null = null;
   entityDetails: Record<string, any> = {};
   entityDetailsId: string | undefined;
-  pageSizeOptions: number[] = [5, 10, 20, 50];
   pageSize: number = 10;
   currentPage: number = 1;
   totalItems: number = 0;
@@ -119,6 +118,8 @@ export class AdminSpecialistsComponent {
   isUpdateUserFormVisible = false;
   isUserDetailsVisible = false;
   selectedUserId: string | null = null;
+
+  placeholder: string = 'Caută un specialist...';
 
   columns: TableColumn[] = [
     { key: 'id', header: 'ID' },

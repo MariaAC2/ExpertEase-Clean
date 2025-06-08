@@ -89,6 +89,7 @@ export class ProfileComponent implements OnInit {
 
   goToReviews() {
     // navigate to reviews page
+    this.route.navigate(['profile/user-reviews']);
   }
 
   goToHistory() {
@@ -101,7 +102,7 @@ export class ProfileComponent implements OnInit {
   }
 
   goToSettings() {
-    // navigate to settings
+    this.route.navigate(['profile/user-settings']);
   }
 
   logout() {

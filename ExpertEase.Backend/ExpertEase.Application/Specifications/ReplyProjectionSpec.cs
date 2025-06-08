@@ -19,16 +19,6 @@ public class ReplyProjectionSpec : Specification<Reply, ReplyDTO>
             EndDate = x.EndDate,
             Price = x.Price,
             Status = x.Status,
-            ServiceTask = x.ServiceTask != null ? 
-                new ServiceTaskDTO
-            {
-                StartDate = x.ServiceTask.StartDate,
-                EndDate = x.ServiceTask.EndDate,
-                Description = x.ServiceTask.Description,
-                Address = x.ServiceTask.Address,
-                Price = x.ServiceTask.Price,
-                Status = x.ServiceTask.Status,
-            } : null
         });
         
         if (orderByCreatedAt)

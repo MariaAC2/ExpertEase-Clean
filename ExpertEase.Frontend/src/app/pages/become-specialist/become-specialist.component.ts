@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {BecomeSpecialistDTO} from '../../models/api.models';
 import {dtoToFormFields} from '../../models/form.models';
 import {Router} from '@angular/router';
@@ -19,7 +19,7 @@ import {SpecialistProfileService} from '../../services/specialist-profile.servic
   templateUrl: './become-specialist.component.html',
   styleUrl: './become-specialist.component.scss'
 })
-export class BecomeSpecialistComponent {
+export class BecomeSpecialistComponent implements OnInit {
   step = 1;
   specialistData: Omit<BecomeSpecialistDTO, 'userId'> = {
     yearsExperience: 0,
@@ -47,6 +47,9 @@ export class BecomeSpecialistComponent {
   constructor(private readonly authService: AuthService,
               private readonly specialistProfileService: SpecialistProfileService,
               private readonly router: Router) {
+  }
+
+  ngOnInit() {
     const defaultFormValues: Omit<BecomeSpecialistDTO, 'userId'> = {
       phoneNumber: '',
       address: '',

@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.MessageDTOs;
+﻿using System.Diagnostics;
+using ExpertEase.Application.DataTransferObjects.MessageDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
@@ -26,10 +27,14 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository, 
 
         if (user.Role == UserRoleEnum.Client)
         {
+            // var requests = await repository.ListAsync(new RequestUserProjectionSpec(currentUserId, userId), cancellationToken);
+            var swPostgres = Stopwatch.StartNew();
             var requests = await repository.ListAsync(new RequestUserProjectionSpec(currentUserId, userId), cancellationToken);
-            
             if (requests.Count == 0)
                 return ServiceResponse.CreateErrorResponse<UserConversationDTO>(CommonErrors.EntityNotFound);
+            
+            swPostgres.Stop();
+            Console.WriteLine($"PostgreSQL time: {swPostgres.ElapsedMilliseconds} ms");
             
             var messages = await messageService.GetMessagesBetweenUsers(currentUserId, userId, cancellationToken);
             var unreadMessages = messages
@@ -57,6 +62,7 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository, 
         }
         else
         {
+            var swPostgres = Stopwatch.StartNew();
             var requests = await repository.ListAsync(new RequestSpecialistProjectionSpec(userId, currentUserId), cancellationToken);
             
             if (requests.Count == 0)
@@ -67,6 +73,9 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository, 
             var unreadMessages = messages
                 .Where(m => m.ReceiverId == currentUserId.ToString() && !m.IsRead)
                 .ToList();
+            
+            swPostgres.Stop();
+            Console.WriteLine($"PostgreSQL time: {swPostgres.ElapsedMilliseconds} ms");
 
             foreach (var unread in unreadMessages)
             {

@@ -15,6 +15,8 @@ import {BecomeSpecialistComponent} from './pages/become-specialist/become-specia
 import {SpecialistDetailsComponent} from './shared/specialist-details/specialist-details.component';
 import {RequestFormComponent} from './shared/request-form/request-form.component';
 import {AdminCategoriesComponent} from './pages/admin/admin.categories/admin.categories.component';
+import {SettingsComponent} from './pages/profile/settings/settings.component';
+import {ReviewsComponent} from './pages/profile/reviews/reviews.component';
 
 export const routes: Routes = [
   {
@@ -48,7 +50,17 @@ export const routes: Routes = [
   {
     path: 'profile/user/become-specialist',
     component: BecomeSpecialistComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
+  },
+  {
+    path: 'profile/user-settings',
+    component: SettingsComponent,
+    // canActivate: [AuthGuard]
+  },
+  {
+    path: 'profile/user-reviews',
+    component: ReviewsComponent,
+    // canActivate: [AuthGuard]
   },
   {
     path: 'request-form',
@@ -68,27 +80,27 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [AuthGuard, RoleGuard],
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminComponent,
-    data: { roles: ['Admin'] }
+    // data: { roles: ['Admin'] }
   },
   {
     path: 'admin/users',
-    canActivate: [AuthGuard, RoleGuard],
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminUsersComponent,
-    data: { roles: ['Admin'] }
+    // data: { roles: ['Admin'] }
   },
   {
     path: 'admin/specialists',
-    canActivate: [AuthGuard, RoleGuard],
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminSpecialistsComponent,
-    data: { roles: ['Admin'] }
+    // data: { roles: ['Admin'] }
   },
   {
     path: 'admin/categories',
-    canActivate: [AuthGuard, RoleGuard],
+    // canActivate: [AuthGuard, RoleGuard],
     component: AdminCategoriesComponent,
-    data: { roles: ['Admin'] }
+    // data: { roles: ['Admin'] }
   },
   {
     path: '',

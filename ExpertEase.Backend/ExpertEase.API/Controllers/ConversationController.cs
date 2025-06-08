@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.UserDTOs;
+﻿using System.Diagnostics;
+using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
