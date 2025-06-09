@@ -14,6 +14,7 @@ public class User : BaseEntity
     public ContactInfo? ContactInfo { get; set; }
     public SpecialistProfile? SpecialistProfile { get; set; }
     public string? ProfilePictureUrl { get; set; }
+    public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public ICollection<Request> Requests { get; set; } = new List<Request>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public int Rating = 0;
@@ -24,6 +25,7 @@ public class User : BaseEntity
                $"- Role: {Role}\n" +
                $"- Contact Info: {(ContactInfo != null ? $"{ContactInfo.PhoneNumber}, {ContactInfo.Address}" : "N/A")}\n" +
                $"- Is Specialist: {(SpecialistProfile != null ? "Yes" : "No")}\n" +
-               $"- Rating: {Rating}\n";
+               $"- Rating: {Rating}\n" +
+               $"- Requests: {Requests.Count}, Reviews: {Reviews.Count}, Transactions: {Transactions.Count}";
     }
 }
