@@ -16,7 +16,6 @@ using ExpertEase.Infrastructure.Repositories;
 namespace ExpertEase.Infrastructure.Services;
 
 public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, 
-    ITransactionService transactionService,
     IReviewService reviewService): IServiceTaskService
 {
     public async Task<ServiceResponse> AddServiceTask(Reply lastReply, CancellationToken cancellationToken = default)

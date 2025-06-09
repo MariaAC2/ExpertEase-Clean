@@ -50,9 +50,7 @@ builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebApp
 builder.Services.AddScoped<IFirebaseRepository, FirebaseRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IUserService, UserService>()
-    .AddScoped<IAccountService, AccountService>()
     .AddScoped<ISpecialistProfileService, SpecialistProfileService>()
-    .AddScoped<ITransactionService, TransactionService>()
     .AddScoped<IRequestService, RequestService>()
     .AddScoped<IReplyService, ReplyService>()
     .AddScoped<ITransactionSummaryGenerator, TransactionSummaryGenerator>()
