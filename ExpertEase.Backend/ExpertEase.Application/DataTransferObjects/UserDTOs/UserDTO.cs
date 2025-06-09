@@ -1,7 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using ExpertEase.Application.DataTransferObjects.AccountDTOs;
-using ExpertEase.Application.DataTransferObjects.MessageDTOs;
-using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;

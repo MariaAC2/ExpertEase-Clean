@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using ExpertEase.Application.Constants;
-using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;

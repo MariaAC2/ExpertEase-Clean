@@ -33,29 +33,29 @@ public class RejectReasonMessage(string message, RejectionReason reason, bool is
     public RejectionReason Reason { get; } = reason;
     public bool IsValid { get; } = isValid;
 
-    public static RejectReasonMessage CreateRejectReasonMessage(Transaction transaction)
-    {
-        if (transaction.SenderUser != null && transaction.SenderUser.Id != transaction.SenderUserId)
-        {
-            return new RejectReasonMessage("Invalid sender details!", RejectionReason.InvalidSender, false);
-        }
-        if (transaction.ReceiverUser != null && transaction.ReceiverUser.Id != transaction.ReceiverUserId)
-        {
-            return new RejectReasonMessage("Invalid receiver details!", RejectionReason.InvalidReceiver, false);
-        }
-        if (transaction.Amount <= 0)
-        {
-            return new RejectReasonMessage("Invalid amount! Please add more than 0!", RejectionReason.InvalidAmount, false);
-        }
-        if (transaction.TransactionType == TransactionEnum.Deposit && transaction.Amount > 10000)
-        {
-            return new RejectReasonMessage("Transaction exceeds limit of 10000!", RejectionReason.ExceedsLimit, false);
-        }
-        if (transaction.TransactionType == TransactionEnum.Withdraw && transaction.Amount > 5000)
-        {
-            return new RejectReasonMessage("Transaction exceeds limit of 5000!", RejectionReason.ExceedsLimit, false);
-        }
-        
-        return new RejectReasonMessage("Valid transaction", RejectionReason.None, true);
-    }
+    // public static RejectReasonMessage CreateRejectReasonMessage(Transaction transaction)
+    // {
+    //     if (transaction.SenderUser != null && transaction.SenderUser.Id != transaction.SenderUserId)
+    //     {
+    //         return new RejectReasonMessage("Invalid sender details!", RejectionReason.InvalidSender, false);
+    //     }
+    //     if (transaction.ReceiverUser != null && transaction.ReceiverUser.Id != transaction.ReceiverUserId)
+    //     {
+    //         return new RejectReasonMessage("Invalid receiver details!", RejectionReason.InvalidReceiver, false);
+    //     }
+    //     if (transaction.Amount <= 0)
+    //     {
+    //         return new RejectReasonMessage("Invalid amount! Please add more than 0!", RejectionReason.InvalidAmount, false);
+    //     }
+    //     if (transaction.TransactionType == TransactionEnum.Deposit && transaction.Amount > 10000)
+    //     {
+    //         return new RejectReasonMessage("Transaction exceeds limit of 10000!", RejectionReason.ExceedsLimit, false);
+    //     }
+    //     if (transaction.TransactionType == TransactionEnum.Withdraw && transaction.Amount > 5000)
+    //     {
+    //         return new RejectReasonMessage("Transaction exceeds limit of 5000!", RejectionReason.ExceedsLimit, false);
+    //     }
+    //     
+    //     return new RejectReasonMessage("Valid transaction", RejectionReason.None, true);
+    // }
 }
