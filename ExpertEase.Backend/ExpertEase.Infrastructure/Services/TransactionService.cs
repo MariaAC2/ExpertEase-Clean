@@ -22,77 +22,77 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
 {
     public async Task<ServiceResponse> AddTransaction(TransactionAddDTO transaction, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {
-        if (requestingUser == null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User cannot add transaction because it doesn't exist!", ErrorCodes.CannotAdd));
-        }
-
-        var initiatorUserId = Guid.Empty;
-        if (transaction.TransactionType == TransactionEnum.Deposit)
-        {
-            if (transaction.ReceiverUserId == null)
-                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                "You can't deposit without a receiver id!"));
-            initiatorUserId = transaction.ReceiverUserId.Value;
-        }
-        else if (transaction.TransactionType == TransactionEnum.Withdraw)
-        {
-            if (transaction.SenderUserId == null)
-                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                "You can't withdraw without a sender id!"));
-            initiatorUserId = transaction.SenderUserId.Value;
-        }
-        
-        if (initiatorUserId != requestingUser.Id)
-                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-                    "You can't access this user's account!", ErrorCodes.WrongUser));
-
-        var initiator = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-        
-        if (initiator == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-        
-        var initiatorAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
-
-        if (initiatorAccount == null)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                "Account not found!", ErrorCodes.EntityNotFound));
-        }
-
-        if (requestingUser.Id != initiatorAccount.UserId)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
-                "You are not allowed to access this account!", ErrorCodes.WrongUser));
-        }
-        
-        var transactionToValidate = new Transaction
-        {
-            InitiatorUserId = initiator.Id,
-            InitiatorUser = initiator,
-            ExternalSource = transaction.ExternalSource,
-            Amount = transaction.Amount,
-            Description = transaction.Description,
-            TransactionType = transaction.TransactionType
-        };
-
-        if (transaction.TransactionType == TransactionEnum.Deposit)
-        {
-            transactionToValidate.ReceiverUserId = initiator.Id;
-            transactionToValidate.ReceiverUser = initiator;
-        } else if (transaction.TransactionType == TransactionEnum.Withdraw)
-        {
-            transactionToValidate.SenderUserId = initiator.Id;
-            transactionToValidate.SenderUser = initiator;
-        }
-
-        var summary = transactionGenerator.GenerateTransactionDetails(transactionToValidate);
-        var transactionValidation = await ValidateAndAddTransaction(transactionToValidate, summary, cancellationToken);
-        
-        if (!transactionValidation.IsOk)
-        {
-            return transactionValidation;
-        }
+        // if (requestingUser == null)
+        // {
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User cannot add transaction because it doesn't exist!", ErrorCodes.CannotAdd));
+        // }
+        //
+        // var initiatorUserId = Guid.Empty;
+        // if (transaction.TransactionType == TransactionEnum.Deposit)
+        // {
+        //     if (transaction.ReceiverUserId == null)
+        //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+        //         "You can't deposit without a receiver id!"));
+        //     initiatorUserId = transaction.ReceiverUserId.Value;
+        // }
+        // else if (transaction.TransactionType == TransactionEnum.Withdraw)
+        // {
+        //     if (transaction.SenderUserId == null)
+        //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+        //         "You can't withdraw without a sender id!"));
+        //     initiatorUserId = transaction.SenderUserId.Value;
+        // }
+        //
+        // if (initiatorUserId != requestingUser.Id)
+        //         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+        //             "You can't access this user's account!", ErrorCodes.WrongUser));
+        //
+        // var initiator = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+        //
+        // if (initiator == null)
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+        //
+        // var initiatorAccount = await repository.GetAsync(new AccountUserSpec(requestingUser.Id), cancellationToken);
+        //
+        // if (initiatorAccount == null)
+        // {
+        //     return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+        //         "Account not found!", ErrorCodes.EntityNotFound));
+        // }
+        //
+        // if (requestingUser.Id != initiatorAccount.UserId)
+        // {
+        //     return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.Forbidden,
+        //         "You are not allowed to access this account!", ErrorCodes.WrongUser));
+        // }
+        //
+        // var transactionToValidate = new Transaction
+        // {
+        //     InitiatorUserId = initiator.Id,
+        //     InitiatorUser = initiator,
+        //     ExternalSource = transaction.ExternalSource,
+        //     Amount = transaction.Amount,
+        //     Description = transaction.Description,
+        //     TransactionType = transaction.TransactionType
+        // };
+        //
+        // if (transaction.TransactionType == TransactionEnum.Deposit)
+        // {
+        //     transactionToValidate.ReceiverUserId = initiator.Id;
+        //     transactionToValidate.ReceiverUser = initiator;
+        // } else if (transaction.TransactionType == TransactionEnum.Withdraw)
+        // {
+        //     transactionToValidate.SenderUserId = initiator.Id;
+        //     transactionToValidate.SenderUser = initiator;
+        // }
+        //
+        // var summary = transactionGenerator.GenerateTransactionDetails(transactionToValidate);
+        // var transactionValidation = await ValidateAndAddTransaction(transactionToValidate, summary, cancellationToken);
+        //
+        // if (!transactionValidation.IsOk)
+        // {
+        //     return transactionValidation;
+        // }
         
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -101,55 +101,55 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
     public async Task<ServiceResponse> AddTransfer(ServiceTask serviceTask,
         CancellationToken cancellationToken = default)
     {
-        var sender = await repository.GetAsync(new UserSpec(serviceTask.Reply.Request.SenderUserId), cancellationToken);
-        
-        if (sender == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-        
-        var senderAccount = await repository.GetAsync(new AccountUserSpec(serviceTask.Reply.Request.SenderUser.Account.Id), cancellationToken);
-
-        if (senderAccount == null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
-                "Sender account not found!", ErrorCodes.EntityNotFound));
-        }
-
-        var receiver = await repository.GetAsync(new UserSpec(serviceTask.Reply.Request.ReceiverUserId), cancellationToken);
-        
-        if (receiver == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-
-        if (receiver.Role != UserRoleEnum.Specialist)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Receiver should be a specialist!", ErrorCodes.CannotAdd));
-
-        var receiverAccount = await repository.GetAsync(new AccountUserSpec(serviceTask.Reply.Request.SenderUser.Account.Id), cancellationToken);
-        if (receiverAccount == null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
-                "Receiver account not found!", ErrorCodes.EntityNotFound));
-        }
-
-        var transactionToValidate = new Transaction
-        {
-            InitiatorUserId = sender.Id,
-            InitiatorUser = sender,
-            SenderUserId = sender.Id,
-            SenderUser = sender,
-            ReceiverUserId = receiver.Id,
-            ReceiverUser = receiver,
-            Amount = serviceTask.Price,
-            Description = serviceTask.Description,
-            TransactionType = TransactionEnum.Transfer,
-        };
-        
-        var summary = transactionGenerator.GenerateTransferSummary(serviceTask);
-        
-        var transactionValidation = await ValidateAndAddTransaction(transactionToValidate, summary, cancellationToken);
-
-        if (!transactionValidation.IsOk)
-        {
-            return transactionValidation;
-        }
+        // var sender = await repository.GetAsync(new UserSpec(serviceTask.Reply.Request.SenderUserId), cancellationToken);
+        //
+        // if (sender == null)
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+        //
+        // var senderAccount = await repository.GetAsync(new AccountUserSpec(serviceTask.Reply.Request.SenderUser.Account.Id), cancellationToken);
+        //
+        // if (senderAccount == null)
+        // {
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
+        //         "Sender account not found!", ErrorCodes.EntityNotFound));
+        // }
+        //
+        // var receiver = await repository.GetAsync(new UserSpec(serviceTask.Reply.Request.ReceiverUserId), cancellationToken);
+        //
+        // if (receiver == null)
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+        //
+        // if (receiver.Role != UserRoleEnum.Specialist)
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Receiver should be a specialist!", ErrorCodes.CannotAdd));
+        //
+        // var receiverAccount = await repository.GetAsync(new AccountUserSpec(serviceTask.Reply.Request.SenderUser.Account.Id), cancellationToken);
+        // if (receiverAccount == null)
+        // {
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
+        //         "Receiver account not found!", ErrorCodes.EntityNotFound));
+        // }
+        //
+        // var transactionToValidate = new Transaction
+        // {
+        //     InitiatorUserId = sender.Id,
+        //     InitiatorUser = sender,
+        //     SenderUserId = sender.Id,
+        //     SenderUser = sender,
+        //     ReceiverUserId = receiver.Id,
+        //     ReceiverUser = receiver,
+        //     Amount = serviceTask.Price,
+        //     Description = serviceTask.Description,
+        //     TransactionType = TransactionEnum.Transfer,
+        // };
+        //
+        // var summary = transactionGenerator.GenerateTransferSummary(serviceTask);
+        //
+        // var transactionValidation = await ValidateAndAddTransaction(transactionToValidate, summary, cancellationToken);
+        //
+        // if (!transactionValidation.IsOk)
+        // {
+        //     return transactionValidation;
+        // }
         
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -315,37 +315,37 @@ public class TransactionService(IRepository<WebAppDatabaseContext> repository,
 
     private async Task<ServiceResponse> HandleDepositAccount(Transaction transaction, CancellationToken cancellationToken)
     {
-        if (transaction.ReceiverUserId == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                "You can't deposit without a receiver id!"));
-                    
-        var receiverAccount = await repository.GetAsync(new AccountUserSpec(transaction.ReceiverUserId.Value), 
-            cancellationToken);
-        if (receiverAccount == null)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                "Receiver's account not found!", ErrorCodes.EntityNotFound));
-        }
-        receiverAccount.Balance += transaction.Amount;
-        await repository.UpdateAsync(receiverAccount, cancellationToken);
+        // if (transaction.ReceiverUserId == null)
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+        //         "You can't deposit without a receiver id!"));
+        //             
+        // var receiverAccount = await repository.GetAsync(new AccountUserSpec(transaction.ReceiverUserId.Value), 
+        //     cancellationToken);
+        // if (receiverAccount == null)
+        // {
+        //     return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+        //         "Receiver's account not found!", ErrorCodes.EntityNotFound));
+        // }
+        // receiverAccount.Balance += transaction.Amount;
+        // await repository.UpdateAsync(receiverAccount, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse();
     }
 
     private async Task<ServiceResponse> HandleWithdrawalAccount(Transaction transaction, CancellationToken cancellationToken)
     {
-        if (transaction.SenderUserId == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
-                "You can't withdraw without a sender id!"));
-        var senderAccount = await repository.GetAsync(new AccountUserSpec(transaction.SenderUserId.Value), 
-            cancellationToken);
-        if (senderAccount == null)
-        {
-            return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
-                "Sender's account not found!", ErrorCodes.EntityNotFound));
-        }
-        senderAccount.Balance -= transaction.Amount;
-        await repository.UpdateAsync(senderAccount, cancellationToken);
+        // if (transaction.SenderUserId == null)
+        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+        //         "You can't withdraw without a sender id!"));
+        // var senderAccount = await repository.GetAsync(new AccountUserSpec(transaction.SenderUserId.Value), 
+        //     cancellationToken);
+        // if (senderAccount == null)
+        // {
+        //     return ServiceResponse.CreateErrorResponse<AccountDTO>(new(HttpStatusCode.NotFound,
+        //         "Sender's account not found!", ErrorCodes.EntityNotFound));
+        // }
+        // senderAccount.Balance -= transaction.Amount;
+        // await repository.UpdateAsync(senderAccount, cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }

@@ -20,13 +20,13 @@ public class AccountProjectionSpec : Specification<Account, AccountDTO>
 
 public class AccountUserProjectionSpec : Specification<Account, AccountDTO>
 {
-    public AccountUserProjectionSpec(Guid id)
-    {
-        Query.Select(e => new AccountDTO
-        {
-            Id = e.Id,
-            Currency = e.Currency,
-            Balance = e.Balance,
-        }).Where(e => e.UserId == id);
-    }
+    // public AccountUserProjectionSpec(Guid id)
+    // {
+    //     Query.Select(e => new AccountDTO
+    //     {
+    //         Id = e.Id,
+    //         Currency = e.Currency,
+    //         Balance = e.Balance,
+    //     }).Where(e => e.UserId == id);
+    // }
 }

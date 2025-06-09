@@ -1,0 +1,43 @@
+<div class="container">
+  <h2>Detalii serviciu</h2>
+
+  <div class="task-detail">
+    <label>Descriere:</label>
+    <span>{{ serviceTask.description }}</span>
+  </div>
+
+  <div class="task-detail">
+    <label>Adresă:</label>
+    <span>{{ serviceTask.address }}</span>
+  </div>
+
+  <div class="task-detail">
+    <p><strong>Data:</strong> {{ serviceTask.startDate | date: 'dd MMMM yyyy' }}</p>
+
+    <p>
+      <strong>De la ora:</strong> {{ serviceTask.startDate | date: 'HH:mm' }} &nbsp;—&nbsp;
+      <strong>Până la ora:</strong> {{ serviceTask.endDate | date: 'HH:mm' }}
+    </p>
+  </div>
+
+  <div class="task-detail">
+    <label>Metodă de plată:</label>
+    <div class="card-payment-option" (click)="selectCardPayment()">
+      <img src="assets/icons/card.svg" alt="Card bancar">
+      <div class="card-text">
+        <strong>Card bancar</strong>
+        <p>Utilizează un card de credit sau de debit</p>
+        <img src="assets/icons/visa.png" alt="Visa">
+        <img src="assets/icons/mastercard.png" alt="Mastercard">
+        <img src="assets/icons/discover.png" alt="Discover">
+      </div>
+      <span class="add-icon">+</span>
+    </div>
+    <p class="error-message" *ngIf="showError">Selectează metoda de plată pe care dorești s-o utilizezi</p>
+  </div>
+
+  <div class="pay-section">
+    <div class="price">Total de plată: {{ serviceTask.price | currency:'RON':'symbol-narrow':'1.2-2' }}</div>
+    <button class="pay-button" (click)="payForService()">Plătește</button>
+  </div>
+</div>

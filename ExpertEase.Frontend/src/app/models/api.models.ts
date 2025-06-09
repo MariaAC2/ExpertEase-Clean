@@ -176,7 +176,6 @@ export interface MessageDTO {
     content: string;
     isRead: boolean;
     createdAt: Date;
-    updatedAt: Date;
 }
 
 export interface LoginResponseDTO {
@@ -249,6 +248,7 @@ export interface ServiceTaskDTO {
     replyId: string;
     userId: string;
     specialistId: string;
+    specialistFullName: string;
     startDate: Date;
     endDate: Date;
     description: string;
@@ -257,6 +257,30 @@ export interface ServiceTaskDTO {
     status: JobStatusEnum;
     completedAt: Date;
     cancelledAt: Date;
+}
+
+export interface ServicePaymentDetailsDTO {
+  serviceTaskId: string;
+  startDate: Date;
+  endDate: Date;
+  description: string;
+  address: string;
+  price: number;
+}
+
+export interface UserPaymentDetailsDTO {
+    userId: string;
+    userFullName: string;
+    email: string;
+    phoneNumber: string;
+}
+
+export interface PaymentDetailsDTO {
+    serviceTaskId: string;
+    amount: number;
+    paymentMethod: string;
+    status: StatusEnum;
+    createdAt: Date;
 }
 
 export interface ServiceTaskUpdateDTO {

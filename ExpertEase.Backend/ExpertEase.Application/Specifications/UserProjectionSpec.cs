@@ -20,7 +20,6 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     /// </summary>
     public UserProjectionSpec(bool orderByCreatedAt = false)
     {
-        Query.Include(e => e.Account);
         Query.Include(e => e.SpecialistProfile)
             .ThenInclude(e => e.Categories);
         
@@ -72,7 +71,6 @@ public class AdminUserProjectionSpec: Specification<User, UserDTO>
 {
     public AdminUserProjectionSpec(Guid adminId, bool orderByCreatedAt = false)
     {
-        Query.Include(e => e.Account);
         Query.Include(e => e.SpecialistProfile)
             .ThenInclude(e => e.Categories);
         

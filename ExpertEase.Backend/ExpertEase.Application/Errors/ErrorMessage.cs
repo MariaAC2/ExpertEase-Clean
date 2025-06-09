@@ -55,11 +55,6 @@ public class RejectReasonMessage(string message, RejectionReason reason, bool is
         {
             return new RejectReasonMessage("Transaction exceeds limit of 5000!", RejectionReason.ExceedsLimit, false);
         }
-        if ((transaction.TransactionType == TransactionEnum.Withdraw || transaction.TransactionType == TransactionEnum.Transfer) 
-            && transaction.SenderUser != null && transaction.SenderUser.Account.Balance < transaction.Amount)
-        {
-            return new RejectReasonMessage("Insufficient funds! Please add more money to your account!", RejectionReason.InsufficientFunds, false);
-        }
         
         return new RejectReasonMessage("Valid transaction", RejectionReason.None, true);
     }

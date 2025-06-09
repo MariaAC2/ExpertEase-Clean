@@ -50,16 +50,6 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
         
         await repository.AddAsync(newUser, cancellationToken);
         
-        newUser.Account = new Account
-        {
-            UserId = newUser.Id,
-            Currency = "RON",
-            Balance = 0
-        };
-            
-        await repository.AddAsync(newUser.Account, cancellationToken);
-        await repository.UpdateAsync(newUser, cancellationToken);
-        
         return ServiceResponse.CreateSuccessResponse();
     }
 

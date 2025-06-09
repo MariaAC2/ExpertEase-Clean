@@ -15,7 +15,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {AuthService} from '../../services/auth.service';
 import {ExchangeService} from '../../services/exchange.service';
-import {RouterLink} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {ReplyService} from '../../services/reply.service';
 import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
 import {ReplyFormComponent} from '../../shared/reply-form/reply-form.component';
@@ -67,20 +67,74 @@ export class MessagesComponent implements OnInit {
   selectedExchange: UserConversationDTO | undefined | null;
   selectedTaskId: string | undefined;
 
+  dummy_exchanges: ConversationDTO[] = [
+    { id: 'spec456', fullName: 'Ana Popescu' },
+    { id: '2', fullName: 'Ion Vasile' },
+    { id: '3', fullName: 'Elena Georgescu' }
+  ];
+
+  dummy_selectedExchange: UserConversationDTO = {
+    id: 'spec456',
+    fullName: 'Ana Popescu',
+    requests: [
+      {
+        id: 'req1',
+        senderUserId: 'user123',
+        receiverUserId: 'spec456',
+        requestedStartDate: new Date('2025-06-01T10:00:00'),
+        description: 'Instalare aer condiționat',
+        status: StatusEnum.Accepted,
+        senderContactInfo: {
+          phoneNumber: '0722123456',
+          address: 'Str. Libertății, nr. 15'
+        },
+        replies: []
+      },
+      {
+        id: 'req2',
+        senderUserId: 'user123',
+        receiverUserId: 'spec456',
+        requestedStartDate: new Date('2025-06-05T14:30:00'),
+        description: 'Montare televizor pe perete',
+        status: StatusEnum.Pending,
+        replies: []
+      }
+    ],
+    messages: [
+      {
+        id: 'msg1',
+        senderId: 'user123',
+        receiverId: 'spec456',
+        content: 'Bună ziua, puteți veni săptămâna viitoare?',
+        createdAt: new Date('2025-05-31T12:00:00'),
+        isRead: true
+      },
+      {
+        id: 'msg2',
+        senderId: 'spec456',
+        receiverId: 'user123',
+        content: 'Sigur, marți este ok pentru mine.',
+        createdAt: new Date('2025-05-31T13:15:00'),
+        isRead: false
+      }
+    ]
+  };
+
   constructor(private readonly authService: AuthService,
               private readonly requestService: RequestService,
               private readonly replyService: ReplyService,
               private readonly exchangeService: ExchangeService,
               private readonly messageService: MessageService,
               private readonly taskService: TaskService,
-              private readonly reviewService: ReviewService) {}
+              private readonly reviewService: ReviewService,
+              private readonly route: Router) {}
 
   ngOnInit() {
     this.userRole = this.authService.getUserRole();
     this.userId = this.authService.getUserId();
-    // this.userId = 'user-1234';
-    // this.exchanges = [this.dummyExchange];
-    // this.selectedExchange = this.dummyExchange;
+    this.userId = 'spec456';
+    this.exchanges = this.dummy_exchanges;
+    this.selectedExchange = this.dummy_selectedExchange;
 
     this.exchangeService.getExchanges().subscribe({
       next: (res) => {
@@ -343,5 +397,11 @@ export class MessagesComponent implements OnInit {
         console.error('Eroare la acceptare:', err);
       }
     });
+  }
+
+  openMediaPicker() {
+    // Implement media picker logic here
+    console.log('Open media picker');
+    this.route.navigate(['/service-payment']);
   }
 }

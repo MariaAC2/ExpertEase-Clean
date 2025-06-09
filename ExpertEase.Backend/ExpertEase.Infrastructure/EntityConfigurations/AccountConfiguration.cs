@@ -17,10 +17,6 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Currency)
             .HasMaxLength(5)
             .IsRequired();
-        builder.HasOne(a => a.User)
-            .WithOne(u => u.Account)
-            .HasForeignKey<Account>(a => a.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
         builder.Property(a => a.CreatedAt)
             .IsRequired();
         builder.Property(a => a.UpdatedAt)

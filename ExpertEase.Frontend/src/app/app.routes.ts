@@ -17,6 +17,7 @@ import {RequestFormComponent} from './shared/request-form/request-form.component
 import {AdminCategoriesComponent} from './pages/admin/admin.categories/admin.categories.component';
 import {SettingsComponent} from './pages/profile/settings/settings.component';
 import {ReviewsComponent} from './pages/profile/reviews/reviews.component';
+import {ServicePaymentComponent} from './shared/service-payment/service-payment.component';
 
 export const routes: Routes = [
   {
@@ -77,6 +78,10 @@ export const routes: Routes = [
   {
     path: 'specialist-details',
     component: SpecialistDetailsComponent
+  },
+  {
+    path: 'service-payment',
+    component: ServicePaymentComponent,
   },
   {
     path: 'admin',

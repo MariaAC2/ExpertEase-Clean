@@ -19,6 +19,7 @@ export class ServiceMessageComponent {
     replyId: '',
     userId: '',
     specialistId: '',
+    specialistFullName: '',
     startDate: new Date(),
     endDate: new Date(),
     description: '',

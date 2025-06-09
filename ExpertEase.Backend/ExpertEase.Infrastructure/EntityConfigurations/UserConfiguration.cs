@@ -45,10 +45,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(s => s.User)
             .HasForeignKey<SpecialistProfile>(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(u=>u.Account)
-            .WithOne(a => a.User)
-            .HasForeignKey<Account>(a => a.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Transactions)
             .WithOne(t => t.InitiatorUser)
             .HasForeignKey(t => t.InitiatorUserId)
