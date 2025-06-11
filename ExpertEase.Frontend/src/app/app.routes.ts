@@ -18,6 +18,9 @@ import {AdminCategoriesComponent} from './pages/admin/admin.categories/admin.cat
 import {SettingsComponent} from './pages/profile/settings/settings.component';
 import {ReviewsComponent} from './pages/profile/reviews/reviews.component';
 import {ServicePaymentComponent} from './shared/service-payment/service-payment.component';
+import {ContactUsComponent} from './pages/contact-us/contact-us.component';
+import {TermsComponent} from './pages/terms/terms.component';
+import {PrivacyComponent} from './pages/privacy/privacy.component';
 
 export const routes: Routes = [
   {
@@ -27,6 +30,18 @@ export const routes: Routes = [
   {
     path: 'about',
     component: AboutComponent
+  },
+  {
+    path: 'contact-us',
+    component: ContactUsComponent
+  },
+  {
+    path: 'terms',
+    component: TermsComponent
+  },
+  {
+    path: 'privacy',
+    component: PrivacyComponent
   },
   {
     path: 'profile',

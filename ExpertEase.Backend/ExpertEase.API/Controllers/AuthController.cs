@@ -4,6 +4,7 @@ using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Infrastructure.Authorization;
+using ExpertEase.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpertEase.API.Controllers;
@@ -16,6 +17,12 @@ public class AuthController(IUserService _userService) : ResponseController
     public async Task<ActionResult<RequestResponse<LoginResponseDTO>>> Login([FromBody] LoginDTO login) // The FromBody attribute indicates that the parameter is deserialized from the JSON body.
     {
         return CreateRequestResponseFromServiceResponse(await _userService.Login(login with { Password = PasswordUtils.HashPassword(login.Password)})); // The "with" keyword works only with records and it creates another object instance with the updated properties. 
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<RequestResponse<LoginResponseDTO>>> SocialLogin([FromBody] SocialLoginDTO login) // The FromBody attribute indicates that the parameter is deserialized from the JSON body.
+    {
+        return CreateRequestResponseFromServiceResponse(await _userService.SocialLogin(login));
     }
     
     [HttpPost]

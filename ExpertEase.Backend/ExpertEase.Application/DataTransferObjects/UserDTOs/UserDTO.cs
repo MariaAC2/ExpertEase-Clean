@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.MessageDTOs;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
@@ -23,6 +22,8 @@ public class UserDTO
     [Required]
     public UserRoleEnum Role { get; set; }
     [Required]
+    public AuthProvider AuthProvider { get; set; } = AuthProvider.Local;
+    [Required]
     public DateTime CreatedAt { get; set; }
     [Required]
     public DateTime UpdatedAt { get; set; }
@@ -31,20 +32,6 @@ public class UserDTO
     public string? ProfilePictureUrl { get; set; }
     public ContactInfoDTO? ContactInfo { get; set; }
     public SpecialistProfileDTO? Specialist { get; set; }
-}
-
-public class UserTransactionDTO
-{
-    [Required]
-    public Guid Id { get; set; }
-    [Required]
-    public string FirstName { get; set; } = null!;
-    [Required]
-    public string LastName { get; set; } = null!;
-    [Required]
-    public string Email { get; set; } = null!;
-    [Required]
-    public UserRoleEnum Role { get; set; }
 }
 
 public class ContactInfoDTO

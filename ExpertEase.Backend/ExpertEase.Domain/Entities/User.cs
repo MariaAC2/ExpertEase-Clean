@@ -11,19 +11,9 @@ public class User : BaseEntity
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
+    public AuthProvider AuthProvider { get; set; } = AuthProvider.Local;
     public ContactInfo? ContactInfo { get; set; }
     public SpecialistProfile? SpecialistProfile { get; set; }
     public string? ProfilePictureUrl { get; set; }
-    public ICollection<Request> Requests { get; set; } = new List<Request>();
-    public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public int Rating = 0;
-    
-    public override string ToString()
-    {
-        return $"User: {FullName} ({Email})\n" +
-               $"- Role: {Role}\n" +
-               $"- Contact Info: {(ContactInfo != null ? $"{ContactInfo.PhoneNumber}, {ContactInfo.Address}" : "N/A")}\n" +
-               $"- Is Specialist: {(SpecialistProfile != null ? "Yes" : "No")}\n" +
-               $"- Rating: {Rating}\n";
-    }
 }

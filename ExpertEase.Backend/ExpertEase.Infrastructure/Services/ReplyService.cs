@@ -1,7 +1,9 @@
 ﻿using System.Net;
 using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.PaymentDTOs;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
+using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
@@ -16,7 +18,9 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServiceTaskService serviceTaskService) : IReplyService
+public class ReplyService(IRepository<WebAppDatabaseContext> repository, 
+    IServiceTaskService serviceTaskService,
+    IPaymentService paymentService) : IReplyService
 {
     public async Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
@@ -165,7 +169,12 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
                 "Only pending replies can be updated", ErrorCodes.CannotUpdate));
         }
-        
+
+        if (reply.Status is StatusEnum.Cancelled)
+        {
+            entity.Status = StatusEnum.Cancelled;
+            await repository.UpdateAsync(entity, cancellationToken);
+        }
         if (reply.Status is StatusEnum.Rejected)
         {
             entity.Status = StatusEnum.Rejected;
@@ -175,11 +184,13 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             if (request == null)
                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
             
-            if (request.Replies.Any() && request.Replies.Count == 5)
-            {
-                request.Status = StatusEnum.Failed;
-                await repository.UpdateAsync(request, cancellationToken);
-            }
+            var activeReplies = request.Replies
+                .Where(r => r.Status != StatusEnum.Cancelled)
+                .ToList();
+
+            if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
+            request.Status = StatusEnum.Failed;
+            await repository.UpdateAsync(request, cancellationToken);
         } else if (reply.Status is StatusEnum.Accepted)
         {
             entity.Status = StatusEnum.Accepted;
@@ -189,17 +200,67 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
             if (request == null)
                 return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
             
-            if (request.Replies.Any())
-            {
-                request.Status = StatusEnum.Completed;
-                await repository.UpdateAsync(request, cancellationToken);
-                // create transfer transaction
-                var transferResult = await serviceTaskService.AddServiceTask(entity, cancellationToken);
+            var activeReplies = request.Replies
+                .Where(r => r.Status != StatusEnum.Cancelled)
+                .ToList();
 
-                if (!transferResult.IsOk)
+            if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
+            request.Status = StatusEnum.Completed;
+            await repository.UpdateAsync(request, cancellationToken);
+            await using var transaction = await repository.DbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var serviceTask = new ServiceTaskAddDTO
                 {
-                    return transferResult;
+                    UserId = request.SenderUserId,
+                    SpecialistId = request.ReceiverUserId,
+                    ReplyId = entity.Id,
+                    StartDate = entity.StartDate,
+                    EndDate = entity.EndDate,
+                    Description = request.Description,
+                    Address = request.Address,
+                    Price = entity.Price
+                };
+                var service = await serviceTaskService.AddServiceTask(serviceTask, cancellationToken);
+                if (service.Error != null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return ServiceResponse.CreateErrorResponse(service.Error);
                 }
+                    
+                var specialistAccountId = await repository.GetAsync(new StripeAccountIdProjectionSpec(request.ReceiverUserId), cancellationToken);
+                if (string.IsNullOrEmpty(specialistAccountId))
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Specialist has no connected Stripe account", ErrorCodes.Invalid));
+                }
+
+                if (service.Result != null)
+                {
+                    var payment = new PaymentAddDTO
+                    {
+                        ServiceTaskId = service.Result.Id,
+                        StripeAccountId = specialistAccountId,
+                        Amount = serviceTask.Price,
+                    };
+                    
+                    var paymentResponse = await paymentService.AddPayment(payment, cancellationToken);
+                    
+                    if (paymentResponse.Error != null)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        return ServiceResponse.CreateErrorResponse(paymentResponse.Error);
+                    }
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                    
+                return ServiceResponse.CreateSuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, $"Transaction failed: {ex.Message}", ErrorCodes.TransactionFailed));
             }
         }
         else
@@ -233,11 +294,11 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository, IServic
                 "Reply not found", ErrorCodes.EntityNotFound));
         }
     
-        // if (entity.Status is not StatusEnum.Pending)
-        // {
-        //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-        //         "Only pending replies can be updated", ErrorCodes.CannotUpdate));
-        // }
+        if (entity.Status is not StatusEnum.Pending)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Only pending replies can be updated", ErrorCodes.CannotUpdate));
+        }
         
         entity.StartDate = reply.StartDate ?? entity.StartDate;
         entity.EndDate = reply.EndDate ?? entity.EndDate;

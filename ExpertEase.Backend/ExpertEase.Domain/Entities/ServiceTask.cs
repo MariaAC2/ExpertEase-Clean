@@ -17,4 +17,5 @@ public class ServiceTask : BaseEntity
     public Guid ReplyId { get; set; }
     public Reply Reply { get; set; } = null!;
     public Review? Review { get; set; } = null!;
+    public Payment Payment { get; set; } = null!;
 }

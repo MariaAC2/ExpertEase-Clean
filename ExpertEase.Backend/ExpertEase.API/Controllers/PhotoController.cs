@@ -14,17 +14,17 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
 {
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<RequestResponse>> AddProfilePicture([FromForm] IFormFile? file)
+    public async Task<ActionResult<RequestResponse>> AddProfilePicture([FromForm] UploadPhotoDTO photoDTO)
     {
         var currentUser = await GetCurrentUser();
 
-        if (file == null || file.Length == 0)
+        if (photoDTO.file == null || photoDTO.file.Length == 0)
             return CreateErrorMessageResult(new ErrorMessage(HttpStatusCode.BadRequest, "No file uploaded.", ErrorCodes.CannotAdd));
 
         var photo = new ProfilePictureAddDTO
         {
-            FileStream = file.OpenReadStream(),
-            ContentType = file.ContentType,
+            FileStream = photoDTO.file.OpenReadStream(),
+            ContentType = photoDTO.file.ContentType,
         };
 
         return currentUser.Result != null ?
@@ -34,23 +34,23 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
     
     [Authorize(Roles = "Specialist")]
     [HttpPost]
-    public async Task<ActionResult<RequestResponse>> AddPortfolioPicture([FromForm] IFormFile? file)
+    public async Task<ActionResult<RequestResponse>> AddPortfolioPicture([FromForm] UploadPhotoDTO photoDTO)
     {
         var currentUser = await GetCurrentUser();
         
         if (currentUser.Result == null)
             return CreateErrorMessageResult(currentUser.Error);
         
-        if (file == null || file.Length == 0)
+        if (photoDTO.file == null || photoDTO.file.Length == 0)
             return CreateErrorMessageResult(new ErrorMessage(HttpStatusCode.BadRequest, "No file uploaded.", ErrorCodes.CannotAdd));
 
-        var extension = Path.GetExtension(file.FileName);
+        var extension = Path.GetExtension(photoDTO.file.FileName);
         var fileName = $"{currentUser.Result.Id}{extension}";
         
         var photo = new PortfolioPictureAddDTO
         {
-            FileStream = file.OpenReadStream(),
-            ContentType = file.ContentType,
+            FileStream = photoDTO.file.OpenReadStream(),
+            ContentType = photoDTO.file.ContentType,
             FileName = fileName,
         };
 
@@ -59,17 +59,17 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
     
     [Authorize]
     [HttpPatch]
-    public async Task<ActionResult<RequestResponse>> UpdateProfilePicture([FromForm] IFormFile? file)
+    public async Task<ActionResult<RequestResponse>> UpdateProfilePicture([FromForm] UploadPhotoDTO photoDTO)
     {
         var currentUser = await GetCurrentUser();
         
-        if (file == null || file.Length == 0)
+        if (photoDTO.file == null || photoDTO.file.Length == 0)
             return CreateErrorMessageResult(new ErrorMessage(HttpStatusCode.BadRequest, "No file uploaded.", ErrorCodes.CannotAdd));
 
         var photo = new ProfilePictureAddDTO
         {
-            FileStream = file.OpenReadStream(),
-            ContentType = file.ContentType,
+            FileStream = photoDTO.file.OpenReadStream(),
+            ContentType = photoDTO.file.ContentType,
         };
 
         return currentUser.Result != null ?

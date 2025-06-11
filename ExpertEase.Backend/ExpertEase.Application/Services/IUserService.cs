@@ -12,8 +12,11 @@ public interface IUserService
     Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, Guid adminId, CancellationToken cancellationToken = default);
 
     Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(Guid adminId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
-    public Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
+    Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse<LoginResponseDTO>> Login(LoginDTO login, CancellationToken cancellationToken = default);
+
+    Task<ServiceResponse<LoginResponseDTO>> SocialLogin(SocialLoginDTO loginDto,
+        CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddUser(UserAddDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
 
     Task<ServiceResponse> UpdateUser(UserUpdateDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

@@ -25,20 +25,79 @@
   color: #3c1a7d; /* Optional: give it a standout color */
 }
 
-.home-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
 .about-info {
-  padding: 16px;
-  font-family: 'Roboto Mono', monospace; /* or another monospace */
+  max-width: 1600px;
+  margin: 10px auto;
+  padding: 0 24px;
+  font-family: 'Roboto Mono', monospace;
   font-size: 16px;
-  line-height: 1;
-  color: #222;
-  white-space: pre-wrap;         /* allows line breaks from HTML */
+  line-height: 1.6;
 }
 
+.about-info h2 {
+  margin-bottom: 12px;
+  color: #3c1a7d;
+}
+
+.about-info section {
+  border: 2px solid #3c1a7d;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  background-color: #fff;
+}
+
+.role-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.role-sections section {
+  flex: 1 1 45%;
+  border: 2px solid #3c1a7d;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  background-color: #fff;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  line-height: 25.6px; /* 1.6 × 16px */
+}
+
+.role-sections h2 {
+  color: #3c1a7d;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.role-sections p {
+  margin-bottom: 16px;
+}
+
+.role-sections ol,
+.role-sections ul {
+  padding-left: 24px;
+  margin-bottom: 24px;
+}
+
+.role-sections li {
+  margin-bottom: 12px;
+  line-height: 25.6px;
+}
+
+.role-sections li ul {
+  margin-top: 8px;
+  padding-left: 20px;
+}
+
+@media (max-width: 900px) {
+  .role-sections {
+    flex-direction: column;
+  }
+
+  .role-sections section {
+    flex: 1 1 100%;
+  }
+}

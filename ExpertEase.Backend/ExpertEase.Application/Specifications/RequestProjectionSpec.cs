@@ -68,6 +68,44 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
     }
 }
 
+public class RequestConversationProjectionSpec : Specification<Request, RequestDTO>
+{
+    public RequestConversationProjectionSpec(Guid conversationId, bool orderByCreatedAt = false)
+    {
+        Query.Where(e => e.ConversationId == conversationId.ToString());
+        Query.Select(e => new RequestDTO
+        {
+            Id = e.Id,
+            SenderUserId = e.SenderUserId,
+            ReceiverUserId = e.ReceiverUserId,
+            RequestedStartDate = e.RequestedStartDate,
+            Description = e.Description,
+            Status = e.Status,
+            SenderContactInfo =
+                e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
+                    ? new ContactInfoDTO
+                    {
+                        PhoneNumber = e.PhoneNumber,
+                        Address = e.Address
+                    }
+                    : null,
+            Replies = e.Replies.Select(r => new ReplyDTO
+            {
+                Id = r.Id,
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+                Price = r.Price,
+                Status = r.Status,
+            }).ToList(),
+        });
+
+        if (orderByCreatedAt)
+        {
+            Query.OrderByDescending(e => e.CreatedAt);
+        }
+    }
+}
+
 public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
 {
     public RequestUserProjectionSpec(Guid senderUserId, bool orderByCreatedAt = false)

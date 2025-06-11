@@ -5,9 +5,10 @@ namespace ExpertEase.Domain.Entities;
 public class Request: BaseEntity
 {
     public Guid SenderUserId { get; set; }
-    public User SenderUser { get; set; } = null!;
+    public User? SenderUser { get; set; } = null!;
     public Guid ReceiverUserId { get; set; }
     public User ReceiverUser { get; set; } = null!;
+    public string ConversationId { get; set; } = null!;
     public DateTime RequestedStartDate { get; set; }
     public string PhoneNumber { get; set; } = null!;
     public string Address { get; set; } = null!;

@@ -14,7 +14,10 @@ public class SpecialistProfileConfiguration: IEntityTypeConfiguration<Specialist
         builder.Property(e => e.YearsExperience)
             .IsRequired();
         builder.Property(e => e.Description)
-            .HasMaxLength(1000);
+            .HasMaxLength(1000)
+            .IsRequired();
+        builder.Property(e => e.StripeAccountId)
+            .IsRequired();
         builder.Property(e => e.CreatedAt)
             .IsRequired();
         builder.Property(e => e.UpdatedAt)

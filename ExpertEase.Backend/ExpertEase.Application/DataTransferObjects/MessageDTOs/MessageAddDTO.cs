@@ -3,5 +3,5 @@
 public class MessageAddDTO
 {
     public string Content { get; set; } = string.Empty;
-    public Guid ReceiverId { get; set; }
+    public Guid ConversationId { get; set; }
 }

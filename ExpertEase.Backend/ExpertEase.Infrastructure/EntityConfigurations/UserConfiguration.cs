@@ -45,13 +45,5 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(s => s.User)
             .HasForeignKey<SpecialistProfile>(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.HasMany(u => u.Requests)
-            .WithOne(r => r.SenderUser)
-            .HasForeignKey(r => r.SenderUserId)
-            .OnDelete(DeleteBehavior.Cascade);
-        builder.HasMany(u => u.Reviews)
-            .WithOne(r => r.SenderUser)
-            .HasForeignKey(r => r.SenderUserId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

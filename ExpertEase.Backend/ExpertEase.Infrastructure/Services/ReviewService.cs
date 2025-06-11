@@ -74,10 +74,8 @@ public class ReviewService(IRepository<WebAppDatabaseContext> repository): IRevi
         }
         
         await repository.AddAsync(reviewEntity, cancellationToken);
-        receiver.Reviews.Add(reviewEntity);
         
         var allReviews = await repository.ListAsync(new ReviewProjectionSpec(reviewEntity.ReceiverUserId), cancellationToken);
-        var total = allReviews.Count;
         var average = allReviews.Average(r => r.Rating);
         receiver.Rating = (int)Math.Round(average, MidpointRounding.AwayFromZero);
         await repository.UpdateAsync(receiver, cancellationToken);

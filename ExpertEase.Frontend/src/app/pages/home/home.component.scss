@@ -1,3 +1,23 @@
+.top-action-button {
+  position: absolute;
+  top: 100px;
+  right: 32px;
+  z-index: 10;
+}
+
+.contact-button {
+  text-decoration: none;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  color: black;
+}
+
+.contact-button:hover {
+  text-decoration: underline;
+}
+
 .user-list app-specialist-card {
   border-bottom: 1px solid #b7a4dd;
   padding-bottom: 1rem;

@@ -5,11 +5,13 @@ using ExpertEase.Application.Errors;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Domain.Entities;
+using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
+using ExpertEase.Infrastructure.Firebase.FirestoreMappers;
 using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class MessageService(IFirebaseRepository firebaseRepository) : IMessageService
+public class MessageService(IFirestoreRepository firestoreRepository) : IMessageService
 {
     public async Task<ServiceResponse> AddMessage(MessageAddDTO message, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {
@@ -17,39 +19,41 @@ public class MessageService(IFirebaseRepository firebaseRepository) : IMessageSe
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User not found", ErrorCodes.CannotAdd));
         }
-        
-        var messageEntity = new Message
+
+        var domainMessage = new Message
         {
-            Id = Guid.NewGuid().ToString(),
-            SenderId = requestingUser.Id.ToString(),
-            ReceiverId = message.ReceiverId.ToString(),
+            Id = Guid.NewGuid(),
+            SenderId = requestingUser.Id,
             Content = message.Content,
             IsRead = false,
+            ConversationId = message.ConversationId,
             CreatedAt = DateTime.UtcNow
         };
-        
-        await firebaseRepository.AddAsync("messages", messageEntity, cancellationToken);
+
+        var firestoreDto = MessageMapper.ToFirestoreDTO(domainMessage);
+        await firestoreRepository.AddAsync("messages", firestoreDto, cancellationToken);
+
         return ServiceResponse.CreateSuccessResponse();
     }
 
-    public async Task<List<MessageDTO>> GetMessagesBetweenUsers(Guid user1Id, Guid user2Id, CancellationToken cancellationToken = default)
+    public async Task<List<MessageDTO>> GetMessagesBetweenUsers(Guid conversationId, CancellationToken cancellationToken = default)
     {
-        var user1 = user1Id.ToString();
-        var user2 = user2Id.ToString();
+        var conversationIdStr = conversationId.ToString();
 
-        var messages = await firebaseRepository.ListAsync<Message>(
+        var messagesDto = await firestoreRepository.ListAsync<FirestoreMessageDTO>(
             "messages",
             col => col
-                .WhereIn("SenderId", new[] { user1, user2 })
-                .WhereIn("ReceiverId", new[] { user1, user2 })
+                .WhereEqualTo("ConversationId", conversationIdStr)
                 .OrderBy("CreatedAt"),
             cancellationToken);
 
-        var dtos = messages.Select(m => new MessageDTO
+        var domainMessages = messagesDto.Select(MessageMapper.FromFirestoreDTO).ToList();
+
+        var dtos = domainMessages.Select(m => new MessageDTO
         {
             Id = m.Id,
             SenderId = m.SenderId,
-            ReceiverId = m.ReceiverId,
+            ConversationId = m.ConversationId,
             Content = m.Content,
             IsRead = m.IsRead,
             CreatedAt = m.CreatedAt
@@ -57,16 +61,17 @@ public class MessageService(IFirebaseRepository firebaseRepository) : IMessageSe
 
         return dtos;
     }
+
     public async Task<ServiceResponse> MarkMessageAsRead(string messageId, CancellationToken cancellationToken = default)
     {
-        var message = await firebaseRepository.GetAsync<Message>("messages", messageId, cancellationToken);
+        var messageDto = await firestoreRepository.GetAsync<FirestoreMessageDTO>("messages", messageId, cancellationToken);
 
-        if (message == null)
+        if (messageDto == null)
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Message not found"));
 
-        message.IsRead = true;
+        messageDto.IsRead = true;
 
-        await firebaseRepository.UpdateAsync("messages", message, cancellationToken);
+        await firestoreRepository.UpdateAsync("messages", messageDto, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse();
     }

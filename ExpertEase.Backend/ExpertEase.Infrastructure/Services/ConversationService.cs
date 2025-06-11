@@ -6,15 +6,39 @@ using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Application.Specifications;
+using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
+using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Repositories;
+using Google.Cloud.Firestore;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ConversationService(IRepository<WebAppDatabaseContext> repository, IMessageService messageService): IConversationService
+public class ConversationService(IRepository<WebAppDatabaseContext> repository, IFirestoreRepository firestoreRepository, IMessageService messageService): IConversationService
 {
+    public async Task AddConversation(Conversation conversation, CancellationToken cancellationToken = default)
+    {
+        var firestoreDto = new FirestoreConversationDTO
+        {
+            Id = conversation.Id.ToString(),
+            ParticipantIds = conversation.ParticipantIds.Select(id => id.ToString()).ToList(),
+            RequestId = conversation.RequestId.ToString(),
+            CreatedAt = Timestamp.FromDateTime(conversation.CreatedAt.ToUniversalTime())
+        };
+
+        await firestoreRepository.AddAsync("conversations", firestoreDto, cancellationToken);
+    }
+    
+    public async Task UpdateConversationRequestId(Guid conversationId, Guid requestId, CancellationToken cancellationToken = default)
+    {
+        var dto = await firestoreRepository.GetAsync<FirestoreConversationDTO>("conversations", conversationId.ToString(), cancellationToken);
+        if (dto == null) return;
+
+        dto.RequestId = requestId.ToString();
+        await firestoreRepository.UpdateAsync("conversations", dto, cancellationToken);
+    }
     public async Task<ServiceResponse<UserConversationDTO>> GetExchange(Guid currentUserId, Guid userId,
         CancellationToken cancellationToken = default)
     {

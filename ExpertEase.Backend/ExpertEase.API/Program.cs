@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
+using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Middlewares;
 using ExpertEase.Infrastructure.Repositories;
 using ExpertEase.Infrastructure.Services;
@@ -16,6 +17,9 @@ using Microsoft.IdentityModel.Tokens;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Firestore.V1;
+using Stripe;
+using ReviewService = ExpertEase.Infrastructure.Services.ReviewService;
+using StripeConfiguration = Stripe.StripeConfiguration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,8 +50,9 @@ builder.Services.AddSwaggerGen(options =>
     options.SupportNonNullableReferenceTypes();
 });
 builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection(nameof(StripeConfiguration)));
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
-builder.Services.AddScoped<IFirebaseRepository, FirebaseRepository>();
+builder.Services.AddScoped<IFirestoreRepository, FirestoreRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IUserService, UserService>()
     .AddScoped<ISpecialistProfileService, SpecialistProfileService>()
@@ -62,7 +67,9 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IReviewService, ReviewService>()
     .AddScoped<IMessageService, MessageService>()
     .AddScoped<IFirebaseStorageService, FirebaseStorageService>()
-    .AddScoped<IPhotoService, PhotoService>();
+    .AddScoped<IPhotoService, PhotoService>()
+    .AddScoped<IStripeAccountService, StripeAccountService>()
+    .AddScoped<IPaymentService, PaymentService>();
 
 builder.Services.AddHostedService<InitializerWorker>();
 

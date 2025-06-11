@@ -15,71 +15,57 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRequestService
+public class RequestService(IRepository<WebAppDatabaseContext> repository, IConversationService conversationService) : IRequestService
 {
     public async Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser == null)
         {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "User not found", ErrorCodes.CannotAdd));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "User not found", ErrorCodes.CannotAdd));
         }
         if (requestingUser.Role != UserRoleEnum.Client)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only users can create requests", ErrorCodes.CannotAdd));
         }
-        
+
         var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
 
-        if (sender == null)
+        var requests = await repository.ListAsync(new RequestUserSpec(requestingUser.Id), cancellationToken);
+
+        if (requests.Count > 0)
         {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
-        }
-
-        if (sender.Id != requestingUser.Id)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the own user can create requests", ErrorCodes.CannotAdd));
-        }
-
-        if (sender.Requests.Any())
-        {
-            var lastReply = sender.Requests
-                .OrderByDescending(r => r.CreatedAt)
-                .First();
-
-            // if (lastReply != null)
-            // {
-            //     return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, lastReply.ToString()));
-            // }
-
+            var lastReply = requests.OrderByDescending(r => r.CreatedAt).First();
             if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Completed)
             {
-                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
             }
         }
-        
+
         var receiver = await repository.GetAsync(new UserSpec(request.ReceiverUserId), cancellationToken);
-        
         if (receiver == null)
         {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.NotFound, "User with this ID not found", ErrorCodes.EntityNotFound));
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this ID not found", ErrorCodes.EntityNotFound));
         }
-
         if (receiver.Role != UserRoleEnum.Specialist)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Requests are sent only to specialists!", ErrorCodes.CannotAdd));
         }
-        
-        // Ensure RequestedStartDate is UTC
-        if (request.RequestedStartDate.Kind == DateTimeKind.Unspecified)
+
+        request.RequestedStartDate = request.RequestedStartDate.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.RequestedStartDate, DateTimeKind.Utc) 
+            : request.RequestedStartDate.ToUniversalTime();
+
+        var conversation = new Conversation
         {
-            request.RequestedStartDate = DateTime.SpecifyKind(request.RequestedStartDate, DateTimeKind.Utc);
-        }
-        else
-        {
-            request.RequestedStartDate = request.RequestedStartDate.ToUniversalTime();
-        }
+            Id = Guid.NewGuid(),
+            ParticipantIds = new List<Guid> { requestingUser.Id, request.ReceiverUserId },
+            RequestId = Guid.Empty, // Temporary, will be set after request creation
+            CreatedAt = DateTime.UtcNow
+        };
         
+        await conversationService.AddConversation(conversation, cancellationToken);
+
         var requestEntity = new Request
         {
             SenderUserId = requestingUser.Id,
@@ -90,11 +76,11 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
             PhoneNumber = request.PhoneNumber,
             Address = request.Address,
             Description = request.Description,
-            Status = StatusEnum.Pending
+            Status = StatusEnum.Pending,
+            ConversationId = conversation.Id.ToString()
         };
-        
+
         var existingRequest = await repository.GetAsync(new RequestSearchSpec(requestEntity), cancellationToken);
-        
         if (existingRequest != null)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "Request already exists", ErrorCodes.CannotAdd));
@@ -108,10 +94,14 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository) : IRe
                 Address = request.Address
             };
         }
-        
+
         await repository.UpdateAsync(sender, cancellationToken);
         await repository.AddAsync(requestEntity, cancellationToken);
-        
+
+        // Update the conversation with the new request ID
+        conversation.RequestId = requestEntity.Id;
+        await conversationService.UpdateConversationRequestId(conversation.Id, requestEntity.Id, cancellationToken);
+
         return ServiceResponse.CreateSuccessResponse();
     }
 

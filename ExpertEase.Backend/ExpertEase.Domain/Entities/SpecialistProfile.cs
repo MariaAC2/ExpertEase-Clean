@@ -6,6 +6,7 @@ public class SpecialistProfile : BaseEntity
     public User User { get; set; } = null!;
     public int YearsExperience { get; set; }
     public string Description { get; set; } = null!;
+    public string StripeAccountId { get; set; } = null!;
     public ICollection<Category> Categories { get; set; } = new List<Category>();
     public List<string> Portfolio { get; set; } = new();
 }

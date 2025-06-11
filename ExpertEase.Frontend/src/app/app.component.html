@@ -1,18 +1,3 @@
-<!--<nav class="navbar">-->
-<!--  &lt;!&ndash; In your navbar HTML &ndash;&gt;-->
-<!--  <button class="logo-button toggle-btn" routerLink="/home" data-btn="Acasă">-->
-<!--    <img src="logo.svg" alt="Logo" />-->
-<!--  </button>-->
-<!--  <ul class="navbar-links">-->
-<!--    <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>-->
-<!--    <li><a routerLink="/solicitations" routerLinkActive="active">Mesajele mele</a></li>-->
-<!--    <li><a routerLink="/register" routerLinkActive="active">Contul meu</a></li>-->
-<!--    <li><a routerLink="/admin" routerLinkActive="active">Administrare</a></li>-->
-<!--  </ul>-->
-<!--</nav>-->
-
-<!--<router-outlet></router-outlet>-->
-
 <nav class="navbar">
   <!-- Logo button -->
   <button class="logo-button toggle-btn" routerLink="/home" data-btn="Acasă">
@@ -52,4 +37,14 @@
 </nav>
 
 <router-outlet></router-outlet>
-
+<footer class="site-footer">
+  <div class="footer-content">
+    <p>&copy; 2025 ExpertEase. Toate drepturile rezervate.</p>
+    <nav class="footer-links">
+      <a routerLink="/about" routerLinkActive="active">Despre noi</a>
+      <a routerLink="/contact-us" routerLinkActive="active">Contactează-ne!</a>
+      <a routerLink="/terms" routerLinkActive="active">Termeni și condiții</a>
+      <a routerLink="/privacy" routerLinkActive="active">Politică de confidențialitate</a>
+    </nav>
+  </div>
+</footer>

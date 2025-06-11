@@ -63,3 +63,31 @@
   }
 }
 
+.site-footer {
+  background-color: #3c1a7d;
+  color: #fff;
+  padding: 24px;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  margin-top: 64px;
+}
+
+.site-footer .footer-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.footer-links {
+  margin-top: 12px;
+}
+
+.footer-links a {
+  color: #fff;
+  text-decoration: none;
+  margin: 0 12px;
+  font-size: 14px;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}

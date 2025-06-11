@@ -3,15 +3,15 @@
     <div class="avatar-wrapper">
       <div class="avatar">
         <img [src]="user?.profilePictureUrl! || 'assets/avatar.svg'" alt="User avatar" />
-<!--        <label class="upload-btn">-->
-<!--          <input type="file" (change)="onFileSelected($event)" accept="image/*" hidden />-->
-<!--          <img src="assets/icons/photo_media.svg" alt="Upload icon" />-->
-<!--        </label>-->
+        <label class="upload-btn">
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
+          <img src="assets/icons/photo_media.svg" alt="Upload icon" />
+        </label>
       </div>
-      <div class="rating-badge">
-        <img src="assets/star-rating.svg" alt="User star" />
-        <span class="rating-value">{{ user?.rating }}</span>
-      </div>
+<!--      <div class="rating-badge">-->
+<!--        <img src="assets/star-rating.svg" alt="User star" />-->
+<!--        <span class="rating-value">{{ user?.rating }}</span>-->
+<!--      </div>-->
     </div>
 
     <div class="account-info">

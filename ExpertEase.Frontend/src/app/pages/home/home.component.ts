@@ -8,11 +8,12 @@ import {SearchInputComponent} from '../../shared/search-input/search-input.compo
 import {PaginationComponent} from '../../shared/pagination/pagination.component';
 import {RequestService} from '../../services/request.service';
 import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-card.component';
+import {RouterLink, RouterLinkActive} from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [SpecialistCardComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchInputComponent, PaginationComponent],
+  imports: [SpecialistCardComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchInputComponent, PaginationComponent, RouterLink, RouterLinkActive],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss', '../../shared/search-input/search-input.component.scss']
 })

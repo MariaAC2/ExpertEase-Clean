@@ -18,6 +18,7 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class SpecialistProfileService(
     IRepository<WebAppDatabaseContext> repository,
+    IStripeAccountService stripeAccountService,
     ILoginService loginService,
     IMailService mailService): ISpecialistProfileService
 {
@@ -66,6 +67,9 @@ public class SpecialistProfileService(
             YearsExperience = becomeSpecialistProfile.YearsExperience,
             Description = becomeSpecialistProfile.Description,
         };
+        
+        var stripeAccountId = await stripeAccountService.CreateConnectedAccount(user.Email);
+        user.SpecialistProfile.StripeAccountId = stripeAccountId;
 
         if (becomeSpecialistProfile.Categories != null)
         {

@@ -18,35 +18,30 @@ namespace ExpertEase.Infrastructure.Services;
 public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, 
     IReviewService reviewService): IServiceTaskService
 {
-    public async Task<ServiceResponse> AddServiceTask(Reply lastReply, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<ServiceTask>> AddServiceTask(ServiceTaskAddDTO service, CancellationToken cancellationToken = default)
     {
-        var sender = await repository.GetAsync(new UserSpec(lastReply.Request.SenderUserId), cancellationToken);
+        var reply = await repository.GetAsync(new ReplySpec(service.ReplyId), cancellationToken);
         
-        if (sender == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
-
-        var receiver = await repository.GetAsync(new UserSpec(lastReply.Request.ReceiverUserId), cancellationToken);
-        
-        if (receiver == null)
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this id not found!", ErrorCodes.EntityNotFound));
+        if (reply == null)
+            return ServiceResponse.CreateErrorResponse<ServiceTask>(new(HttpStatusCode.NotFound, "Reply with this id not found!", ErrorCodes.EntityNotFound));
         
         var serviceTask = new ServiceTask 
         {
-            UserId = sender.Id,
-            SpecialistId = receiver.Id,
-            ReplyId = lastReply.Id,
-            StartDate = lastReply.StartDate,
-            EndDate = lastReply.EndDate,
-            Address = lastReply.Request.Address,
-            Description = lastReply.Request.Description,
-            Price = lastReply.Price,
-            Status = JobStatusEnum.Confirmed,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UserId = service.UserId,
+            SpecialistId = service.SpecialistId,
+            ReplyId = service.ReplyId,
+            Reply = reply,
+            StartDate = service.StartDate,
+            EndDate = service.EndDate,
+            Address = service.Address,
+            Description = service.Description,
+            Price = service.Price,
+            Status = JobStatusEnum.PendingPayment,
         };
         
         await repository.AddAsync(serviceTask, cancellationToken);
-        return ServiceResponse.CreateSuccessResponse();
+        
+        return ServiceResponse.CreateSuccessResponse(serviceTask);
     }
     
     public async Task<ServiceResponse<ServiceTaskDTO>> GetServiceTask(Guid id, CancellationToken cancellationToken = default)

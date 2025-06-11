@@ -1,5 +1,6 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Domain.Entities;
+using ExpertEase.Domain.Enums;
 
 namespace ExpertEase.Domain.Specifications;
 
@@ -7,10 +8,8 @@ public sealed class RequestSpec : Specification<Request>
 {
     public RequestSpec(Guid id)
     {
-        Query.Include(e => e.Replies);
-        Query.Include(e=> e.SenderUser);
-        Query.Include(e => e.ReceiverUser);
         Query.Where(e => e.Id == id);
+        Query.Include(r => r.Replies);
     }
 }
 
@@ -21,19 +20,16 @@ public sealed class RequestSearchSpec : Specification<Request>
         Query.Where(e =>
             e.SenderUserId == request.SenderUserId &&
             e.ReceiverUserId == request.ReceiverUserId &&
-            e.RequestedStartDate == request.RequestedStartDate &&
-            e.PhoneNumber == request.PhoneNumber &&
-            e.Address == request.Address
+            e.RequestedStartDate == request.RequestedStartDate
         );
     }
 }
 
 public sealed class RequestUserSpec : Specification<Request>
 {
-    public RequestUserSpec(Guid id, Guid userId)
+    public RequestUserSpec(Guid userId)
     {
-        Query.Include(e => e.SenderUser);
-        Query.Where(e => e.SenderUserId == userId && e.Id == id);
+        Query.Where(e => e.SenderUserId == userId);
     }
 }
 

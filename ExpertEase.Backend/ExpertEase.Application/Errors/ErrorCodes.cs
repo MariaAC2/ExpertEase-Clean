@@ -22,5 +22,7 @@ public enum ErrorCodes
     AccountAlreadyExists,
     EntityAlreadyExists,
     UserNotFound,
-    NotImplemented
+    NotImplemented,
+    Invalid,
+    TransactionFailed
 }

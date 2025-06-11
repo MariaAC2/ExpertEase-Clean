@@ -1,20 +1,13 @@
-﻿using Google.Cloud.Firestore;
+﻿namespace ExpertEase.Domain.Entities;
 
-namespace ExpertEase.Domain.Entities;
-
-[FirestoreData]
-public class Photo: FirebaseBaseEntity
+public class Photo
 {
-    [FirestoreProperty]
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
     public string FileName { get; set; } = null!;
-    [FirestoreProperty]
     public string Url { get; set; } = null!;
-    [FirestoreProperty]
     public string ContentType { get; set; } = null!;
-    [FirestoreProperty]
     public long SizeInBytes { get; set; }
-    [FirestoreProperty]
-    public string UserId { get; set; } = null!;
-    [FirestoreProperty]
     public bool IsProfilePicture { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

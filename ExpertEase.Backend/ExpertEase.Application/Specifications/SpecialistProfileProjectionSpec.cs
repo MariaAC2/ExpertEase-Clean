@@ -1,6 +1,5 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects;
-using ExpertEase.Application.DataTransferObjects.AccountDTOs;
 using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
@@ -27,5 +26,14 @@ public class SpecialistProfileProjectionSpec : Specification<User, SpecialistPro
                 Name = c.Name
             }).ToList()
         });
+    }
+}
+
+public class StripeAccountIdProjectionSpec : Specification<User, string>
+{
+    public StripeAccountIdProjectionSpec(Guid id)
+    {
+        Query.Where(e => e.Id == id);
+        Query.Select(e => e.SpecialistProfile.StripeAccountId ?? string.Empty);
     }
 }

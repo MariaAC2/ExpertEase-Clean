@@ -1,1 +1,33 @@
-<p>contact-us works!</p>
+<div class="home-wrapper">
+  <div class="home-header">
+    <h1 style="font-style: italic;">Ai o țeavă spartă?</h1>
+    <h1 style="font-style: italic;">Ți s-a stricat chiuveta?</h1>
+    <h1>Nu-i problemă, găsește specialistul potrivit pe <strong class="brand-highlight">ExpertEase</strong>!</h1>
+  </div>
+  <p>Peste <strong>100 de specialiști</strong> înregistrați pe platforma noastră!</p>
+</div>
+
+<div class="contact-wrapper">
+  <h2>Contactează-ne</h2>
+  <p><strong>Email:</strong> contact&#64;expertease.ro</p>
+  <p><strong>Telefon:</strong> +40 712 345 678</p>
+  <p><strong>Adresă:</strong> Str. Exemplului 123, București</p>
+  <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+    <label for="name">Nume complet</label>
+    <input id="name" type="text" formControlName="name" placeholder="Ex: Ana Popescu" />
+
+    <label for="email">Email</label>
+    <input id="email" type="email" formControlName="email" placeholder="Ex: ana@email.com" />
+
+    <label for="subject">Subiect</label>
+    <input id="subject" type="text" formControlName="subject" placeholder="Subiectul mesajului" />
+
+    <label for="message">Mesaj</label>
+    <textarea id="message" rows="5" formControlName="message" placeholder="Scrie-ne mesajul tău..."></textarea>
+
+<!--    <button type="submit" class="send-button" [disabled]="contactForm.invalid">Trimite</button>-->
+    <div class="form-actions">
+      <button type="submit">Trimite</button>
+    </div>
+  </form>
+</div>

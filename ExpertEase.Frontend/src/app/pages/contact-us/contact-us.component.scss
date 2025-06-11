@@ -1,0 +1,85 @@
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.home-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-header h1 {
+  margin: 0.5rem 0;       /* reduce vertical margins */
+  text-align: center;     /* keep centered if not already */
+}
+
+.brand-highlight {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #3c1a7d; /* Optional: give it a standout color */
+}
+
+.contact-wrapper {
+  max-width: 600px;
+  margin: 10px auto;
+  padding: 24px;
+  font-family: 'Roboto Mono', monospace;
+  border: 2px solid #3c1a7d;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+h2 {
+  color: #3c1a7d;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin: 12px 0 4px;
+}
+
+input, textarea {
+  width: 100%;
+  height: auto;
+  padding: 8px 10px; /* avoid overly tall inputs */
+  line-height: 1.4;
+  font-size: 14px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.form-actions {
+  text-align: center;
+  margin-top: 20px;
+}
+
+button {
+  background-color: #d9c8ff; /* light purple */
+  color: black;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 0; /* remove padding so fixed size applies exactly */
+  width: 300px;
+  height: 44px;   /* fixed height */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  align-self: center; /* centers the button in flex container */
+}
+
+button:hover {
+  background-color: #cbb6ff; /* slightly darker on hover */
+}
