@@ -6,6 +6,7 @@ using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Middlewares;
+using ExpertEase.Infrastructure.Realtime;
 using ExpertEase.Infrastructure.Repositories;
 using ExpertEase.Infrastructure.Services;
 using ExpertEase.Infrastructure.Workers;
@@ -17,6 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Firestore.V1;
+using Microsoft.AspNetCore.SignalR;
 using Stripe;
 using ReviewService = ExpertEase.Infrastructure.Services.ReviewService;
 using StripeConfiguration = Stripe.StripeConfiguration;
@@ -43,6 +45,7 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+builder.Services.AddSignalR();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -70,8 +73,11 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IPhotoService, PhotoService>()
     .AddScoped<IStripeAccountService, StripeAccountService>()
     .AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IConversationNotifier, ConversationNotifier>();
+builder.Services.AddSingleton<IMessageUpdateQueue, MessageUpdateWorker>();
 
-builder.Services.AddHostedService<InitializerWorker>();
+builder.Services.AddHostedService<InitializerWorker>()
+    .AddHostedService<MessageUpdateWorker>();
 
 builder.Services.Configure<JwtConfiguration>(
     builder.Configuration.GetSection("JwtConfiguration"));
@@ -115,6 +121,7 @@ app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<ConversationHub>("/hubs/conversations");
 
 app.MapControllers();
 app.MapFallbackToFile("browser/index.html");

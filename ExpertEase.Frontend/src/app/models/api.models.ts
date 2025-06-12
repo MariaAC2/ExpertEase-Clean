@@ -165,7 +165,6 @@ export interface LoginDTO {
 }
 
 export interface MessageAddDTO {
-    receiverId: string;
     content: string;
 }
 
@@ -422,16 +421,19 @@ export interface UserDTO {
     specialist?: SpecialistProfileDTO;
 }
 
-export interface UserConversationDTO {
-    id: string;
-    fullName: string;
+export interface ConversationDTO {
+    conversationId: string;
+    userId: string;
+    userFullName: string;
+    userProfilePictureUrl?: string;
     requests: RequestDTO[];
     messages: MessageDTO[];
 }
 
-export interface ConversationDTO {
-  id: string;
-  fullName: string;
+export interface UserConversationDTO {
+  userId: string;
+  userFullName: string;
+  userProfilePictureUrl?: string;
 }
 
 export interface UserRegisterDTO {

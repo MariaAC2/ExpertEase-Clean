@@ -46,7 +46,7 @@ export const routes: Routes = [
   {
     path: 'profile',
     component: ProfileComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'home/:id',
@@ -61,12 +61,12 @@ export const routes: Routes = [
   {
     path: 'messages',
     component: MessagesComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user/become-specialist',
     component: BecomeSpecialistComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user-settings',

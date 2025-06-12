@@ -12,15 +12,4 @@ public class Reply : BaseEntity
     public StatusEnum Status { get; set; }
     public DateTime? RejectedAt { get; set; }
     public ServiceTask? ServiceTask { get; set; }
-    
-    public override string ToString()
-    {
-        return
-            $"Reply [{Id}]:\n" +
-            $"- Request ID: {RequestId}\n" +
-            $"- Start: {StartDate:yyyy-MM-dd HH:mm}\n" +
-            $"- End: {EndDate:yyyy-MM-dd HH:mm}\n" +
-            $"- Price: {Price:C}\n" +
-            $"- Status: {Status}";
-    }
 }

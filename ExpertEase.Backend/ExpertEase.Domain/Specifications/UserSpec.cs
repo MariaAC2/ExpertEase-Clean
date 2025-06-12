@@ -13,24 +13,11 @@ public sealed class UserSpec : Specification<User>
     public UserSpec(Guid id)
     {
         Query.Where(e => e.Id == id);
-        //
-        // Query.Include(e => e.Account);
-        // Query.Include(e => e.ContactInfo);
-        // Query.Include(e => e.SpecialistProfile);
-        // Query.Include(e=> e.Requests)
-        //     .ThenInclude(r => r.ReceiverUser);
-        // Query.Include(e => e.Reviews);
     }
 
     public UserSpec(string email)
     {
         Query.Where(e => e.Email == email);
-        // Query.Include(e => e.Account);
-        // Query.Include(e => e.ContactInfo);
-        // Query.Include(e => e.SpecialistProfile);
-        // Query.Include(e => e.Requests)
-        //     .ThenInclude(r => r.ReceiverUser);
-        // Query.Include(e => e.Reviews);
     }
     
     public UserSpec(IEnumerable<Guid> ids)

@@ -12,13 +12,13 @@ namespace ExpertEase.API.Controllers;
 public class MessageController(IUserService userService, IMessageService messageService): AuthorizedController(userService)
 {
     [Authorize]
-    [HttpPost]
-    public async Task<ActionResult<RequestResponse>> Add([FromBody] MessageAddDTO message)
+    [HttpPost("{conversationId:guid}")]
+    public async Task<ActionResult<RequestResponse>> Add([FromBody] MessageAddDTO message, [FromRoute] Guid conversationId)
     {
         var currentUser = await GetCurrentUser();
         
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await messageService.AddMessage(message, currentUser.Result)) : 
+            CreateRequestResponseFromServiceResponse(await messageService.AddMessage(message, conversationId, currentUser.Result)) : 
             CreateErrorMessageResult(currentUser.Error);
     }
     

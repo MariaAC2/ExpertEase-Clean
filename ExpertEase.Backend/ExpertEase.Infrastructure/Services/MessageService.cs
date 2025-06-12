@@ -7,13 +7,16 @@ using ExpertEase.Application.Services;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Firebase.FirestoreMappers;
+using ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 using ExpertEase.Infrastructure.Repositories;
+using Google.Cloud.Firestore;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class MessageService(IFirestoreRepository firestoreRepository) : IMessageService
+public class MessageService(IFirestoreRepository firestoreRepository,
+    IConversationNotifier notifier) : IMessageService
 {
-    public async Task<ServiceResponse> AddMessage(MessageAddDTO message, UserDTO? requestingUser, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse> AddMessage(MessageAddDTO message, Guid conversationId, UserDTO? requestingUser, CancellationToken cancellationToken = default)
     {
         if (requestingUser == null)
         {
@@ -26,13 +29,42 @@ public class MessageService(IFirestoreRepository firestoreRepository) : IMessage
             SenderId = requestingUser.Id,
             Content = message.Content,
             IsRead = false,
-            ConversationId = message.ConversationId,
+            ConversationId = conversationId,
             CreatedAt = DateTime.UtcNow
         };
 
         var firestoreDto = MessageMapper.ToFirestoreDTO(domainMessage);
         await firestoreRepository.AddAsync("messages", firestoreDto, cancellationToken);
+        
+        // 3. Fetch the related conversation
+        var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+            "conversations", conversationId.ToString(),
+            cancellationToken);
 
+        if (conversation == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
+        }
+        
+        conversation.LastMessage = message.Content;
+        conversation.LastMessageAt = Timestamp.FromDateTime(DateTime.UtcNow);
+
+        var senderIdStr = requestingUser.Id.ToString();
+        var receiverId = conversation.ParticipantIds.FirstOrDefault(id => id != senderIdStr);
+
+        if (!string.IsNullOrEmpty(receiverId))
+        {
+            conversation.UnreadCounts ??= new Dictionary<string, int>();
+            conversation.UnreadCounts.TryAdd(receiverId, 0);
+            conversation.UnreadCounts[receiverId]++;
+        }
+        await firestoreRepository.UpdateAsync("conversations", conversation, cancellationToken);
+
+        await notifier.NotifyNewMessage(Guid.Parse(receiverId), new
+        {
+            Message = message.Content,
+            Timestamp = DateTime.UtcNow
+        });
         return ServiceResponse.CreateSuccessResponse();
     }
 

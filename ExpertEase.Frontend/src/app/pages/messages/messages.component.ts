@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {
   ConversationDTO,
   JobStatusEnum, MessageAddDTO,
@@ -27,14 +27,15 @@ import {ReviewFormComponent} from '../../shared/review-form/review-form.componen
 import {RequestService} from '../../services/request.service';
 import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
 import {MessageService} from '../../services/message.service';
+import {SignalRService} from '../../services/signalr.service';
 
 @Component({
   selector: 'app-messages',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ServiceMessageComponent, ReviewFormComponent, RouterLink, MessageBubbleComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ReviewFormComponent, RouterLink, MessageBubbleComponent],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss'
 })
-export class MessagesComponent implements OnInit {
+export class MessagesComponent implements OnInit, OnDestroy {
   messageContent: string = '';
   request: RequestDTO | undefined;
   userRole: string | null | undefined;
@@ -63,62 +64,62 @@ export class MessagesComponent implements OnInit {
     content: '',
   }
   selectedRequestId: string | undefined | null;
-  exchanges: ConversationDTO[] = [];
-  selectedExchange: UserConversationDTO | undefined | null;
+  exchanges: UserConversationDTO[] = [];
+  selectedExchange: ConversationDTO | undefined | null;
   selectedTaskId: string | undefined;
 
-  dummy_exchanges: ConversationDTO[] = [
-    { id: 'spec456', fullName: 'Ana Popescu' },
-    { id: '2', fullName: 'Ion Vasile' },
-    { id: '3', fullName: 'Elena Georgescu' }
-  ];
-
-  dummy_selectedExchange: UserConversationDTO = {
-    id: 'spec456',
-    fullName: 'Ana Popescu',
-    requests: [
-      {
-        id: 'req1',
-        senderUserId: 'user123',
-        receiverUserId: 'spec456',
-        requestedStartDate: new Date('2025-06-01T10:00:00'),
-        description: 'Instalare aer condiționat',
-        status: StatusEnum.Accepted,
-        senderContactInfo: {
-          phoneNumber: '0722123456',
-          address: 'Str. Libertății, nr. 15'
-        },
-        replies: []
-      },
-      {
-        id: 'req2',
-        senderUserId: 'user123',
-        receiverUserId: 'spec456',
-        requestedStartDate: new Date('2025-06-05T14:30:00'),
-        description: 'Montare televizor pe perete',
-        status: StatusEnum.Pending,
-        replies: []
-      }
-    ],
-    messages: [
-      {
-        id: 'msg1',
-        senderId: 'user123',
-        receiverId: 'spec456',
-        content: 'Bună ziua, puteți veni săptămâna viitoare?',
-        createdAt: new Date('2025-05-31T12:00:00'),
-        isRead: true
-      },
-      {
-        id: 'msg2',
-        senderId: 'spec456',
-        receiverId: 'user123',
-        content: 'Sigur, marți este ok pentru mine.',
-        createdAt: new Date('2025-05-31T13:15:00'),
-        isRead: false
-      }
-    ]
-  };
+  // dummy_exchanges: ConversationDTO[] = [
+  //   { id: 'spec456', fullName: 'Ana Popescu' },
+  //   { id: '2', fullName: 'Ion Vasile' },
+  //   { id: '3', fullName: 'Elena Georgescu' }
+  // ];
+  //
+  // dummy_selectedExchange: UserConversationDTO = {
+  //   id: 'spec456',
+  //   fullName: 'Ana Popescu',
+  //   requests: [
+  //     {
+  //       id: 'req1',
+  //       senderUserId: 'user123',
+  //       receiverUserId: 'spec456',
+  //       requestedStartDate: new Date('2025-06-01T10:00:00'),
+  //       description: 'Instalare aer condiționat',
+  //       status: StatusEnum.Accepted,
+  //       senderContactInfo: {
+  //         phoneNumber: '0722123456',
+  //         address: 'Str. Libertății, nr. 15'
+  //       },
+  //       replies: []
+  //     },
+  //     {
+  //       id: 'req2',
+  //       senderUserId: 'user123',
+  //       receiverUserId: 'spec456',
+  //       requestedStartDate: new Date('2025-06-05T14:30:00'),
+  //       description: 'Montare televizor pe perete',
+  //       status: StatusEnum.Pending,
+  //       replies: []
+  //     }
+  //   ],
+  //   messages: [
+  //     {
+  //       id: 'msg1',
+  //       senderId: 'user123',
+  //       receiverId: 'spec456',
+  //       content: 'Bună ziua, puteți veni săptămâna viitoare?',
+  //       createdAt: new Date('2025-05-31T12:00:00'),
+  //       isRead: true
+  //     },
+  //     {
+  //       id: 'msg2',
+  //       senderId: 'spec456',
+  //       receiverId: 'user123',
+  //       content: 'Sigur, marți este ok pentru mine.',
+  //       createdAt: new Date('2025-05-31T13:15:00'),
+  //       isRead: false
+  //     }
+  //   ]
+  // };
 
   constructor(private readonly authService: AuthService,
               private readonly requestService: RequestService,
@@ -127,14 +128,12 @@ export class MessagesComponent implements OnInit {
               private readonly messageService: MessageService,
               private readonly taskService: TaskService,
               private readonly reviewService: ReviewService,
-              private readonly route: Router) {}
+              private readonly route: Router,
+              private signalRService: SignalRService) {}
 
   ngOnInit() {
     this.userRole = this.authService.getUserRole();
     this.userId = this.authService.getUserId();
-    this.userId = 'spec456';
-    this.exchanges = this.dummy_exchanges;
-    this.selectedExchange = this.dummy_selectedExchange;
 
     this.exchangeService.getExchanges().subscribe({
       next: (res) => {
@@ -143,13 +142,38 @@ export class MessagesComponent implements OnInit {
 
         if (this.exchanges.length > 0) {
           const lastUser = this.exchanges[this.exchanges.length - 1];
-          this.loadExchange(lastUser.id);
+          this.loadExchange(lastUser.userId);
         }
       },
       error: (err) => {
         console.error('Eroare la încărcarea convorbirilor:', err);
       }
     });
+
+    this.signalRService.connect(this.userId?.toString());
+
+    this.signalRService.onNewMessage((payload: { senderId: string, receiverId: string }) => {
+      console.log('New message received:', payload);
+
+      // Check if the currently selected exchange is the sender or receiver
+      const isRelatedToCurrentChat =
+        this.selectedExchange &&
+        (this.selectedExchange.userId === payload.senderId || this.selectedExchange.userId === payload.receiverId);
+
+      if (isRelatedToCurrentChat) {
+        // Reload only this exchange
+        const otherUserId = this.selectedExchange!.userId === this.userId ? payload.senderId : payload.receiverId;
+        this.loadExchange(otherUserId);
+      } else {
+        // Optionally, set a flag to show notification in inbox
+        console.log('Message is for another conversation');
+      }
+    });
+
+    // this.userId = 'spec456';
+    // this.exchanges = this.dummy_exchanges;
+    // this.selectedExchange = this.dummy_selectedExchange;
+    //
   }
 
   loadExchange(senderUserId: string | undefined): void {
@@ -172,14 +196,13 @@ export class MessagesComponent implements OnInit {
     }
 
     const message: MessageAddDTO = {
-      receiverId: this.selectedExchange.id,
       content: content
     };
 
-    this.messageService.sendMessage(message).subscribe({
+    this.messageService.sendMessage(this.selectedExchange?.conversationId, message).subscribe({
       next: (res) => {
         console.log('Mesaj trimis cu succes:', res);
-        this.loadExchange(this.selectedExchange?.id);
+        this.loadExchange(this.selectedExchange?.userId);
         this.messageContent = '';
       },
       error: (err) => {
@@ -194,7 +217,7 @@ export class MessagesComponent implements OnInit {
         console.log('Cererea a fost acceptată');
         const request = this.selectedExchange?.requests.find(r => r.id === requestId);
         if (request) {
-          this.loadExchange(this.selectedExchange?.id); // Refresh exchange
+          this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
         }
       },
       error: (err) => {
@@ -209,7 +232,7 @@ export class MessagesComponent implements OnInit {
         console.log('Cererea a fost respinsă');
         const request = this.selectedExchange?.requests.find(r => r.id === requestId);
         if (request) {
-          this.loadExchange(this.selectedExchange?.id); // Refresh exchange
+          this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
         }
       },
       error: (err) => {
@@ -260,7 +283,7 @@ export class MessagesComponent implements OnInit {
             : request.senderUserId;
 
           if (otherUserId) {
-            this.loadExchange(this.selectedExchange?.id);
+            this.loadExchange(this.selectedExchange?.userId);
           }
         }
       },
@@ -280,7 +303,7 @@ export class MessagesComponent implements OnInit {
             : request.senderUserId;
 
           if (otherUserId) {
-            this.loadExchange(this.selectedExchange?.id);
+            this.loadExchange(this.selectedExchange?.userId);
           }
         }
       },
@@ -403,5 +426,9 @@ export class MessagesComponent implements OnInit {
     // Implement media picker logic here
     console.log('Open media picker');
     this.route.navigate(['/service-payment']);
+  }
+
+  ngOnDestroy(): void {
+    this.signalRService.disconnect();
   }
 }

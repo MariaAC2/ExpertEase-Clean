@@ -25,7 +25,7 @@ export class SpecialistProfileService {
     });
 
     return this.http.put<RequestResponse<BecomeSpecialistResponseDTO>>(
-      `${this.baseUrl}/become_specialist`,
+      `${this.baseUrl}/BecomeSpecialist`,
       specialistProfile,
       { headers }
     ).pipe(

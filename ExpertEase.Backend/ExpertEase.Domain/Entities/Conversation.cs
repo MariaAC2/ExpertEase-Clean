@@ -7,6 +7,6 @@ public class Conversation
     public Guid? LastMessage { get; set; }
     public DateTime? LastMessageAt { get; set; }
     public Dictionary<string, int>? UnreadCounts { get; set; }
-    public Guid RequestId { get; set; }
+    public string RequestId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

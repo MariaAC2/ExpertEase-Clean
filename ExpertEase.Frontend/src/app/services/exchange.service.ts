@@ -13,7 +13,7 @@ import {AuthService} from './auth.service';
   providedIn: 'root'
 })
 export class ExchangeService {
-  private baseUrl: string = 'http://localhost:5241/api/Conversation';
+  private readonly baseUrl: string = 'http://localhost:5241/api/Conversation';
 
   constructor(private readonly authService: AuthService, private readonly http: HttpClient) { }
 
@@ -23,7 +23,7 @@ export class ExchangeService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<UserConversationDTO>>(
+    return this.http.get<RequestResponse<ConversationDTO>>(
       `${this.baseUrl}/GetById/${senderUserId}`,
       { headers }
     );
@@ -35,7 +35,7 @@ export class ExchangeService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<ConversationDTO[]>>(
+    return this.http.get<RequestResponse<UserConversationDTO[]>>(
       `${this.baseUrl}/GetPage`,
       { headers }
     );

@@ -5,7 +5,7 @@ namespace ExpertEase.Domain.Entities;
 public class Request: BaseEntity
 {
     public Guid SenderUserId { get; set; }
-    public User? SenderUser { get; set; } = null!;
+    public User SenderUser { get; set; } = null!;
     public Guid ReceiverUserId { get; set; }
     public User ReceiverUser { get; set; } = null!;
     public string ConversationId { get; set; } = null!;

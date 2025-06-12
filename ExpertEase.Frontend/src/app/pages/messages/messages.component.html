@@ -5,19 +5,19 @@
       <div
         class="conversation"
         *ngFor="let conv of exchanges"
-        (click)="loadExchange(conv.id)"
-        [class.active]="conv.id === selectedExchange?.id">
+        (click)="loadExchange(conv.userId)"
+        [class.active]="conv.userId === selectedExchange?.userId">
         <img src="assets/avatar.svg" alt="avatar">
-        {{ conv.fullName }}
+        {{ conv.userFullName }}
       </div>
     </div>
 
     <div class="chat-area" *ngIf="selectedExchange; else noSelection">
       <div class="chat-header">
-        <div>{{ selectedExchange.fullName }}</div>
+        <div>{{ selectedExchange.userFullName }}</div>
         <div>
           <button>
-            <img src="assets/icons/info.svg" alt="specialist_info" [routerLink]="['/specialist', selectedExchange.id]">
+            <img src="assets/icons/info.svg" alt="specialist_info" [routerLink]="['/specialist', selectedExchange.userId]">
           </button>
         </div>
       </div>

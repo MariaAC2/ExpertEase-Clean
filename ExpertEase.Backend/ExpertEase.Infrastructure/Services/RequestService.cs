@@ -11,11 +11,13 @@ using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
+using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Repositories;
+using Google.Cloud.Firestore;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class RequestService(IRepository<WebAppDatabaseContext> repository, IConversationService conversationService) : IRequestService
+public class RequestService(IRepository<WebAppDatabaseContext> repository, IFirestoreRepository firestoreRepository, IConversationService conversationService) : IRequestService
 {
     public async Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
@@ -30,18 +32,10 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IConv
         }
 
         var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-
-        var requests = await repository.ListAsync(new RequestUserSpec(requestingUser.Id), cancellationToken);
-
-        if (requests.Count > 0)
+        if (sender == null)
         {
-            var lastReply = requests.OrderByDescending(r => r.CreatedAt).First();
-            if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Completed)
-            {
-                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
-            }
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "User with this ID not found", ErrorCodes.EntityNotFound));
         }
-
         var receiver = await repository.GetAsync(new UserSpec(request.ReceiverUserId), cancellationToken);
         if (receiver == null)
         {
@@ -51,56 +45,103 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IConv
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Requests are sent only to specialists!", ErrorCodes.CannotAdd));
         }
-
-        request.RequestedStartDate = request.RequestedStartDate.Kind == DateTimeKind.Unspecified 
-            ? DateTime.SpecifyKind(request.RequestedStartDate, DateTimeKind.Utc) 
-            : request.RequestedStartDate.ToUniversalTime();
-
-        var conversation = new Conversation
-        {
-            Id = Guid.NewGuid(),
-            ParticipantIds = new List<Guid> { requestingUser.Id, request.ReceiverUserId },
-            RequestId = Guid.Empty, // Temporary, will be set after request creation
-            CreatedAt = DateTime.UtcNow
-        };
         
-        await conversationService.AddConversation(conversation, cancellationToken);
+        var sortedIds = new[] { requestingUser.Id, request.ReceiverUserId }.OrderBy(id => id);
+        var conversationKey = string.Join("_", sortedIds);
+        
+        var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+            "conversations",
+            collection => collection.WhereEqualTo("ConversationKey", conversationKey),
+            cancellationToken);
 
-        var requestEntity = new Request
+        if (conversation == null)
         {
-            SenderUserId = requestingUser.Id,
-            SenderUser = sender,
-            ReceiverUserId = request.ReceiverUserId,
-            ReceiverUser = receiver,
-            RequestedStartDate = request.RequestedStartDate,
-            PhoneNumber = request.PhoneNumber,
-            Address = request.Address,
-            Description = request.Description,
-            Status = StatusEnum.Pending,
-            ConversationId = conversation.Id.ToString()
-        };
-
-        var existingRequest = await repository.GetAsync(new RequestSearchSpec(requestEntity), cancellationToken);
-        if (existingRequest != null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "Request already exists", ErrorCodes.CannotAdd));
-        }
-
-        if (sender.ContactInfo == null)
-        {
-            sender.ContactInfo = new ContactInfo
+            var newConversation = new FirestoreConversationDTO
             {
-                PhoneNumber = request.PhoneNumber,
-                Address = request.Address
+                Id = Guid.NewGuid().ToString(),
+                ParticipantIds = [requestingUser.Id.ToString(), request.ReceiverUserId.ToString()],
+                Participants = conversationKey,
+                RequestId = "",
+                ClientData = new FirestoreUserConversationDTO
+                {
+                    UserId = requestingUser.Id.ToString(),
+                    UserFullName = requestingUser.FullName,
+                    UserProfilePictureUrl = requestingUser.ProfilePictureUrl
+                },
+                SpecialistData = new FirestoreUserConversationDTO
+                {
+                    UserId = request.ReceiverUserId.ToString(),
+                    UserFullName = receiver.FullName,
+                    UserProfilePictureUrl = receiver.ProfilePictureUrl
+                },
+                CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow.ToUniversalTime())
             };
+            await firestoreRepository.AddAsync("conversations", newConversation, cancellationToken);
+            
+            var conversationDTO = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+                "conversations",
+                collection => collection.WhereEqualTo("Participants", conversationKey),
+                cancellationToken);
+            
+            request.RequestedStartDate = request.RequestedStartDate.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(request.RequestedStartDate, DateTimeKind.Utc) 
+                : request.RequestedStartDate.ToUniversalTime();
+            
+            var requestEntity = new Request
+            {
+                SenderUserId = requestingUser.Id,
+                SenderUser = sender,
+                ReceiverUserId = request.ReceiverUserId,
+                ReceiverUser = receiver,
+                RequestedStartDate = request.RequestedStartDate,
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address,
+                Description = request.Description,
+                Status = StatusEnum.Pending,
+                ConversationId = conversationDTO.Id
+            };
+            await repository.AddAsync(requestEntity, cancellationToken);
+            
+            var request1 = await repository.GetAsync(new RequestSpec(requestEntity.Id), cancellationToken);
+            if (request1 == null)
+            {
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, "Request creation failed", ErrorCodes.CannotAdd));
+            }
+            
+            await conversationService.UpdateConversationRequestId(Guid.Parse(conversationDTO.Id), request1.Id, cancellationToken);
         }
+        else
+        {
+            var requests = await repository.ListAsync(new RequestConversationSpec(conversation.Id), cancellationToken);
+            
+            if (requests.Count > 0)
+            {
+                var lastReply = requests.OrderByDescending(r => r.CreatedAt).First();
+                if (lastReply.Status != StatusEnum.Failed && lastReply.Status != StatusEnum.Completed)
+                {
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Cannot create request until last request is finalized", ErrorCodes.CannotAdd));
+                }
+            }
 
-        await repository.UpdateAsync(sender, cancellationToken);
-        await repository.AddAsync(requestEntity, cancellationToken);
-
-        // Update the conversation with the new request ID
-        conversation.RequestId = requestEntity.Id;
-        await conversationService.UpdateConversationRequestId(conversation.Id, requestEntity.Id, cancellationToken);
+            request.RequestedStartDate = request.RequestedStartDate.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(request.RequestedStartDate, DateTimeKind.Utc) 
+                : request.RequestedStartDate.ToUniversalTime();
+            
+            var requestEntity = new Request
+            {
+                SenderUserId = requestingUser.Id,
+                SenderUser = sender,
+                ReceiverUserId = request.ReceiverUserId,
+                ReceiverUser = receiver,
+                RequestedStartDate = request.RequestedStartDate,
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address,
+                Description = request.Description,
+                Status = StatusEnum.Pending,
+                ConversationId = conversation.Id
+            };
+            await repository.AddAsync(requestEntity, cancellationToken);
+        }
 
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -157,7 +198,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IConv
         public async Task<ServiceResponse> UpdateRequestStatus(StatusUpdateDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role == UserRoleEnum.Client && request.Status != StatusEnum.Cancelled)
+        if (requestingUser is { Role: UserRoleEnum.Client } && request.Status != StatusEnum.Cancelled)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Users cannot accept or reject request", ErrorCodes.CannotUpdate));
         }

@@ -10,11 +10,11 @@ export class MessageService {
   private readonly baseUrl = 'http://localhost:5241/api/Message';
   constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
-  sendMessage(message: MessageAddDTO) {
+  sendMessage(conversationId: string, message: MessageAddDTO) {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
-    return this.http.post(`${this.baseUrl}/Add`, message, { headers });
+    return this.http.post(`${this.baseUrl}/Add/${conversationId}`, message, { headers });
   }
 }

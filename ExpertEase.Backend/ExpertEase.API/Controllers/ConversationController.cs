@@ -15,21 +15,21 @@ public class ConversationController(IUserService userService, IConversationServi
 {
     [Authorize]
     [HttpGet("{senderId:guid}")]
-    public async Task<ActionResult<RequestResponse<UserConversationDTO>>> GetById([FromRoute] Guid senderId)
+    public async Task<ActionResult<RequestResponse<ConversationDTO>>> GetById([FromRoute] Guid senderId)
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await conversationService.GetExchange(currentUser.Result.Id, senderId)) : 
-            CreateErrorMessageResult<UserConversationDTO>(currentUser.Error);
+            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationByUsers(currentUser.Result.Id, senderId)) : 
+            CreateErrorMessageResult<ConversationDTO>(currentUser.Error);
     }
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<List<ConversationDTO>>>> GetPage()
+    public async Task<ActionResult<RequestResponse<List<UserConversationDTO>>>> GetPage()
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await conversationService.GetExchanges(currentUser.Result.Id)) : 
-            CreateErrorMessageResult<List<ConversationDTO>>(currentUser.Error);
+            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationsByUsers(currentUser.Result.Id, CancellationToken.None)) : 
+            CreateErrorMessageResult<List<UserConversationDTO>>(currentUser.Error);
     }
 }

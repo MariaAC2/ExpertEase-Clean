@@ -25,6 +25,15 @@ public sealed class RequestSearchSpec : Specification<Request>
     }
 }
 
+public sealed class RequestConversationSpec : Specification<Request>
+{
+    public RequestConversationSpec(string conversationId)
+    {
+        Query.Where(e => e.ConversationId == conversationId);
+        Query.Include(r => r.Replies);
+    }
+}
+
 public sealed class RequestUserSpec : Specification<Request>
 {
     public RequestUserSpec(Guid userId)
