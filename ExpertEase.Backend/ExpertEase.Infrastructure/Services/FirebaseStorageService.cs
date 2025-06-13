@@ -12,7 +12,7 @@ public class FirebaseStorageService: IFirebaseStorageService
     
     public FirebaseStorageService()
     {
-        var credentialPath = Path.Combine(AppContext.BaseDirectory, "expertease-1b005-firebase-adminsdk-fbsvc-f14acd0d61.json");
+        var credentialPath = Path.Combine(AppContext.BaseDirectory, "SecretKey/expertease-1b005-firebase-adminsdk-fbsvc-21941fd086.json");
         var credential = GoogleCredential.FromFile(credentialPath);
         _storageClient = StorageClient.Create(credential);
     }
