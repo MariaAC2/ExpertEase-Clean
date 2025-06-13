@@ -27,7 +27,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton(provider =>
 {
-    var credential = GoogleCredential.FromFile("SecretKey/expertease-1b005-firebase-adminsdk-fbsvc-21941fd086.json");
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var firebasePath = configuration["Firebase:CredentialsPath"];
+
+    if (string.IsNullOrEmpty(firebasePath) || !System.IO.File.Exists(firebasePath))
+    {
+        throw new InvalidOperationException("Firebase credentials path is not set or the file doesn't exist.");
+    }
+
+    var credential = GoogleCredential.FromFile(firebasePath);
     var firestoreBuilder = new FirestoreClientBuilder
     {
         Credential = credential
@@ -36,6 +44,7 @@ builder.Services.AddSingleton(provider =>
     var client = firestoreBuilder.Build();
     return FirestoreDb.Create("expertease-1b005", client);
 });
+
 
 builder.Services.AddDbContext<WebAppDatabaseContext>(o => 
     o.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));

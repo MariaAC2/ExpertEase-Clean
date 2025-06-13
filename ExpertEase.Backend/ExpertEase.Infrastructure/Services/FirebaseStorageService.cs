@@ -2,6 +2,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Storage.v1.Data;
 using Google.Cloud.Storage.V1;
+using Microsoft.Extensions.Configuration;
 
 namespace ExpertEase.Infrastructure.Services;
 
@@ -10,12 +11,19 @@ public class FirebaseStorageService: IFirebaseStorageService
     private readonly StorageClient _storageClient;
     private readonly string _bucketName = "expertease-1b005.firebasestorage.app";
     
-    public FirebaseStorageService()
+    public FirebaseStorageService(IConfiguration configuration)
     {
-        var credentialPath = Path.Combine(AppContext.BaseDirectory, "SecretKey/expertease-1b005-firebase-adminsdk-fbsvc-21941fd086.json");
+        var credentialPath = configuration["Firebase:CredentialsPath"];
+    
+        if (string.IsNullOrEmpty(credentialPath) || !File.Exists(credentialPath))
+        {
+            throw new InvalidOperationException("Firebase credential path is not set or file does not exist.");
+        }
+
         var credential = GoogleCredential.FromFile(credentialPath);
         _storageClient = StorageClient.Create(credential);
     }
+
     
     public async Task<string> UploadImageAsync(Stream stream, string folder, string fileName, string contentType)
     {
