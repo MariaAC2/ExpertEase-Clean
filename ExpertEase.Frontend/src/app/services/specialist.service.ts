@@ -6,7 +6,7 @@ import {
   UserAddDTO,
   UserDTO, SpecialistAddDTO,
   SpecialistDTO, SpecialistUpdateDTO,
-  UserUpdateDTO
+  UserUpdateDTO, UserDetailsDTO
 } from '../models/api.models';
 import { jwtDecode } from 'jwt-decode';
 import {AuthService, DecodedToken} from './auth.service';
@@ -16,15 +16,6 @@ export class SpecialistService {
   private readonly baseUrl = 'http://localhost:5241/api/Specialist';
 
   constructor(private readonly http: HttpClient, private readonly authService: AuthService) {}
-
-  getSpecialist(userId: string) {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    return this.http.get<RequestResponse<SpecialistDTO>>(`${this.baseUrl}/GetById/${userId}`, {headers});
-  }
 
   getSpecialists(search: string | undefined, page: number, pageSize: number) {
     const token = this.authService.getToken();
@@ -41,6 +32,15 @@ export class SpecialistService {
       `${this.baseUrl}/GetPage`,
       { headers, params }
     );
+  }
+
+  getSpecialist(userId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.get<RequestResponse<SpecialistDTO>>(`${this.baseUrl}/GetById/${userId}`, {headers});
   }
 
   addSpecialist(user: SpecialistAddDTO) {

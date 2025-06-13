@@ -1,6 +1,6 @@
 ﻿namespace ExpertEase.Application.DataTransferObjects.MessageDTOs;
 
-public class FirestoreMessageAddDTO
+public class MessageAddDTO
 {
     public string Content { get; set; } = string.Empty;
 }

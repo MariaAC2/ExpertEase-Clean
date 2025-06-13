@@ -6,8 +6,6 @@ namespace ExpertEase.Application.DataTransferObjects.ReviewDTOs;
 public class ReviewDTO
 {
     [Required]
-    public Guid ReceiverUserId { get; set; }
-    [Required]
     public string SenderUserFullName { get; set; } = null!;
     [Required]
     public string? SenderUserProfilePictureUrl { get; set; }

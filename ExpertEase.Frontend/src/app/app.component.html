@@ -9,8 +9,8 @@
 
   <!-- Navigation links -->
   <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
-    <li *ngIf="authService.getUserRole() === 'Client'">
-<!--    <li>-->
+<!--    <li *ngIf="authService.getUserRole() === 'Client'">-->
+    <li>
       <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
     </li>
 

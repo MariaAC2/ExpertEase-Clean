@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.MessageDTOs;
 
 namespace ExpertEase.Application.DataTransferObjects.RequestDTOs;
 public class RequestAddDTO

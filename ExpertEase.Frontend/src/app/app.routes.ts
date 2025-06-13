@@ -66,7 +66,7 @@ export const routes: Routes = [
   {
     path: 'profile/user/become-specialist',
     component: BecomeSpecialistComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'profile/user-settings',

@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {AuthService} from './auth.service';
-import {PagedResponse, ReplyDTO, RequestResponse, ReviewAddDTO, ReviewDTO} from '../models/api.models';
+import {PagedResponse, RequestResponse, ReviewAddDTO, ReviewDTO} from '../models/api.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReviewService {
-  private baseUrl = `http://localhost:5241/api/Review`;
+  private readonly baseUrl = `http://localhost:5241/api/Review`;
   constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
   addReview(serviceTaskId: string, review: ReviewAddDTO) {

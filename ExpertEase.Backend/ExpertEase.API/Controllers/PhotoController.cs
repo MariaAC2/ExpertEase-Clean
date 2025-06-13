@@ -34,25 +34,12 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
     
     [Authorize(Roles = "Specialist")]
     [HttpPost]
-    public async Task<ActionResult<RequestResponse>> AddPortfolioPicture([FromForm] UploadPhotoDTO photoDTO)
+    public async Task<ActionResult<RequestResponse>> AddPortfolioPicture([FromForm] PortfolioPictureAddDTO photo)
     {
         var currentUser = await GetCurrentUser();
         
         if (currentUser.Result == null)
             return CreateErrorMessageResult(currentUser.Error);
-        
-        if (photoDTO.file == null || photoDTO.file.Length == 0)
-            return CreateErrorMessageResult(new ErrorMessage(HttpStatusCode.BadRequest, "No file uploaded.", ErrorCodes.CannotAdd));
-
-        var extension = Path.GetExtension(photoDTO.file.FileName);
-        var fileName = $"{currentUser.Result.Id}{extension}";
-        
-        var photo = new PortfolioPictureAddDTO
-        {
-            FileStream = photoDTO.file.OpenReadStream(),
-            ContentType = photoDTO.file.ContentType,
-            FileName = fileName,
-        };
 
         return CreateRequestResponseFromServiceResponse(await photoService.AddPortfolioPicture(photo, currentUser.Result));
     }

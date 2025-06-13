@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.MessageDTOs;
 using ExpertEase.Domain.Enums;
 
 namespace ExpertEase.Application.DataTransferObjects.ReplyDTOs;

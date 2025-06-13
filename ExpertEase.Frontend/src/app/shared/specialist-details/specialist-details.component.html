@@ -1,29 +1,56 @@
-<!--<div class="overlay">-->
-  <div class="specialist-card">
-    <button class="close-btn" aria-label="Înapoi" (click)="onCloseDetails()">←</button>
-    <div class="info">
-      <div class="top-row">
-        <div class="avatar-wrapper">
-          <div class="avatar">
-            <img [src]="specialist?.profilePictureUrl || 'assets/avatar.svg'" alt="User avatar"/>
-          </div>
-          <div class="rating-badge">
-            <img src="assets/star-rating.svg" alt="User star" />
-            <span class="rating-value">{{ specialist?.rating }}</span>
-          </div>
+<div class="specialist-card">
+  <button class="close-btn" aria-label="Înapoi" (click)="onCloseDetails()">←</button>
+
+  <div class="info">
+    <div class="top-row">
+      <div class="avatar-wrapper">
+        <div class="avatar">
+          <img [src]="userDetails?.profilePictureUrl || 'assets/avatar.svg'" alt="User avatar"/>
         </div>
-        <h2>{{ specialist?.fullName }}</h2>
+        <div class="rating-badge">
+          <img src="assets/star-rating.svg" alt="User star" />
+          <span class="rating-value">{{ userDetails?.rating }}</span>
+        </div>
       </div>
-<!--      <div class="same-row">-->
-        <p>
-          <strong>Email:</strong> {{ specialist?.email }}
-          <strong style="margin-left: 20px;">Telefon:</strong> {{ specialist?.phoneNumber }}
-        </p>
-<!--      </div>-->
-      <p><strong>Adresă:</strong> {{ specialist?.address }}</p>
-      <p><strong>Categorii:</strong> {{ specialist?.categories?.join(', ') }}</p>
-      <p><strong>Ani experiență:</strong> {{ specialist?.yearsExperience }}</p>
-      <p><strong>Descriere:</strong> {{ specialist?.description }}</p>
+      <h2>{{ userDetails?.fullName }}</h2>
+    </div>
+
+    <!-- Specialist-only section (shown only if email is present) -->
+    <ng-container *ngIf="userDetails?.email">
+      <p>
+        <strong>Email:</strong> {{ userDetails?.email }}
+        <strong style="margin-left: 20px;">Telefon:</strong> {{ userDetails?.phoneNumber }}
+      </p>
+      <p><strong>Adresă:</strong> {{ userDetails?.address }}</p>
+      <p><strong>Categorii:</strong>
+        <span class="tag" *ngFor="let cat of userDetails?.categories">{{ cat }}</span>
+      </p>
+      <p><strong>Ani experiență:</strong> {{ userDetails?.yearsExperience }}</p>
+      <p><strong>Descriere:</strong> {{ userDetails?.description }}</p>
+      <div class="portfolio-section" *ngIf="userDetails?.portfolio?.length">
+        <h3>Portofoliu:</h3>
+        <div class="portfolio-grid">
+          <img *ngFor="let image of userDetails?.portfolio"
+               [src]="image"
+               alt="Imagine portofoliu"
+               class="portfolio-image" />
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Reviews section -->
+    <div class="reviews-section">
+      <h3>Recenzii recente:</h3>
+      <div *ngIf="userDetails?.reviews?.length === 0">Nicio recenzie disponibilă.</div>
+      <div *ngFor="let review of userDetails?.reviews" class="review">
+        <div class="review-header">
+          <img [src]="review.senderUserProfilePictureUrl || 'assets/avatar.svg'" alt="Reviewer avatar" class="review-avatar">
+          <strong>{{ review.senderUserFullName }}</strong>
+          <span class="review-rating">⭐ {{ review.rating }}</span>
+        </div>
+        <p class="review-content">{{ review.content }}</p>
+        <small>{{ review.createdAt | date: 'short' }}</small>
+      </div>
     </div>
   </div>
-<!--</div>-->
+</div>

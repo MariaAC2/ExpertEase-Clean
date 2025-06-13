@@ -28,13 +28,19 @@ public class UserController(IUserService userService) : AuthorizedController(use
     
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<UserDTO>>> Get()
+    public async Task<ActionResult<RequestResponse<UserDTO>>> GetProfile()
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await UserService.GetUser(currentUser.Result.Id)) :
             CreateErrorMessageResult<UserDTO>(currentUser.Error);
+    }
+    
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RequestResponse<UserDetailsDTO>>> GetDetails([FromRoute] Guid id)
+    {
+        return CreateRequestResponseFromServiceResponse(await UserService.GetUserDetails(id));
     }
     
     [Authorize(Roles = "Admin")]

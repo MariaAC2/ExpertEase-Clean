@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {CurrencyPipe, DatePipe, NgClass, NgIf} from "@angular/common";
-import {JobStatusEnum, ReplyDTO, ServiceTaskDTO, StatusEnum} from '../../models/api.models';
+import {JobStatusEnum, ServiceTaskDTO, StatusEnum} from '../../models/api.models';
 
 @Component({
   selector: 'app-service-message',

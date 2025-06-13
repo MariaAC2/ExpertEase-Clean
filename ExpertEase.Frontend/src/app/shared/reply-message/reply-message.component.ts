@@ -17,10 +17,12 @@ import {CurrencyPipe, DatePipe, NgClass, NgIf} from '@angular/common';
 export class ReplyMessageComponent {
     @Input() reply: ReplyDTO = {
         id: '',
+        senderId: '',
         startDate: new Date(),
         endDate: new Date(),
         price: 0,
-        status: StatusEnum.Pending
+        status: StatusEnum.Pending,
+        requestId: '',
     }
     userRole: string | null = '';
     @Input() requestId: string = '';

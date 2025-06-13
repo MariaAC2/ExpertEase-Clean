@@ -7,7 +7,5 @@ namespace ExpertEase.Application.Services;
 
 public interface IMessageService
 {
-    public Task<ServiceResponse> AddMessage(MessageAddDTO message, Guid conversationId, UserDTO? requestingUser, CancellationToken cancellationToken = default);
-    public Task<List<MessageDTO>> GetMessagesBetweenUsers(Guid conversationId, CancellationToken cancellationToken = default);
     public Task<ServiceResponse> MarkMessageAsRead(string messageId, CancellationToken cancellationToken = default);
 }

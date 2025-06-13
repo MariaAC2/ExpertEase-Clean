@@ -14,7 +14,6 @@ public class ReviewProjectionSpec : Specification<Review, ReviewDTO>
         Query.Where(e=> e.ReceiverUserId == userId);
         Query.Select(x => new ReviewDTO
         {
-            ReceiverUserId = x.ReceiverUserId,
             SenderUserFullName = x.SenderUser.FullName,
             SenderUserProfilePictureUrl = x.SenderUser.ProfilePictureUrl,
             Rating = x.Rating,
@@ -36,7 +35,24 @@ public class ReviewProjectionSpec : Specification<Review, ReviewDTO>
             Query.Where(r => r.Rating == ratingFilter.Value);
         }
     }
+}
 
+public class UserDetailsReviewProjectionSpec : Specification<Review, ReviewDTO>
+{
+    public UserDetailsReviewProjectionSpec(Guid userId)
+    {
+        Query.Include(e => e.SenderUser);
+        Query.Where(e=> e.ReceiverUserId == userId);
+        Query.OrderByDescending(r => r.CreatedAt) // sort newest first
+            .Take(5);
+        Query.Select(x => new ReviewDTO
+        {
+            SenderUserFullName = x.SenderUser.FullName,
+            SenderUserProfilePictureUrl = x.SenderUser.ProfilePictureUrl,
+            Rating = x.Rating,
+            Content = x.Content
+        });
+    }
 }
 
 public class ReviewAdminProjectionSpec : Specification<Review, ReviewAdminDTO>

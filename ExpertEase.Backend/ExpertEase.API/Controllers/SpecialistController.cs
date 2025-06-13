@@ -12,10 +12,15 @@ namespace ExpertEase.API.Controllers;
 [Route("api/[controller]/[action]")]
 public class SpecialistController(IUserService userService, ISpecialistService specialistService) : AuthorizedController(userService)
 {
+    [Authorize(Roles = "Admin")]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<SpecialistDTO>>> GetById([FromRoute] Guid id)
     {
-        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialist(id));
+        var result = await GetCurrentUser();
+        
+        return result.Result != null ?
+            CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialist(id, result.Result)) :
+            CreateErrorMessageResult<SpecialistDTO>(result.Error);
     }
     
     [HttpGet]

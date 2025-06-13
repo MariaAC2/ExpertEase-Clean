@@ -2,6 +2,7 @@
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Authorization;
+using ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class MessageController(IUserService userService, IMessageService messageService): AuthorizedController(userService)
+public class MessageController(IUserService userService, IMessageService messageService, IConversationService conversationService): AuthorizedController(userService)
 {
     [Authorize]
     [HttpPost("{conversationId:guid}")]
@@ -17,8 +18,18 @@ public class MessageController(IUserService userService, IMessageService message
     {
         var currentUser = await GetCurrentUser();
         
+        var conversationItem = new FirestoreConversationItemAddDTO
+        {
+            Type = "message",
+            Data = new Dictionary<string, object>
+            {
+                { "content", message.Content },
+                { "senderId", currentUser.Result?.Id.ToString() ?? string.Empty },
+            }
+        };
+        
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await messageService.AddMessage(message, conversationId, currentUser.Result)) : 
+            CreateRequestResponseFromServiceResponse(await conversationService.AddConvElement(conversationItem, conversationId, currentUser.Result)) : 
             CreateErrorMessageResult(currentUser.Error);
     }
     

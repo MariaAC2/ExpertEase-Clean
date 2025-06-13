@@ -23,60 +23,84 @@
       </div>
 
       <div class="chat-messages">
-        <app-message-bubble *ngFor="let msg of selectedExchange.messages"
-          [message]="msg"
-          [currentUserId]="userId">
-        </app-message-bubble>
-        <ng-container *ngFor="let request of selectedExchange.requests">
-          <!-- Request message -->
-          <div [ngClass]="userRole === 'Client' ? 'message-right' : 'message-left'">
+        <ng-container *ngFor="let item of selectedExchange?.conversationItems">
+          <ng-container [ngSwitch]="item.type">
+
+            <!-- Message Bubble -->
+            <app-message-bubble
+              *ngSwitchCase="'message'"
+              [message]="asMessage(item)"
+              [currentUserId]="userId">
+            </app-message-bubble>
+
+            <!-- Request Message -->
             <app-request-message
-              [request]="request"
-              (requestAccepted)="acceptRequest(request.id)"
-              (requestRejected)="rejectRequest(request.id)"
-              (makeOffer)="openReplyForm($event)">
+              *ngSwitchCase="'request'"
+              [request]="asRequest(item)"
+              (requestAccepted)="acceptRequest(item.id)"
+              (requestRejected)="rejectRequest(item.id)">
             </app-request-message>
-            <div class="conversation-overlay" *ngIf="isReplyFormVisible && selectedRequestId === request.id">
-              <app-reply-form
-                [replyForm]="replyForm"
-                (formSubmit)="submitReply($event)"
-                (close)="closeReplyForm()">
-              </app-reply-form>
-            </div>
-          </div>
 
-          <ng-container *ngFor="let reply of request.replies">
-            <div [ngClass]="userRole === 'Client' ? 'message-left' : 'message-right'">
-              <app-reply-message
-                [reply]="reply"
-                [requestId]="request.id"
-                (replyAccepted)="acceptReply($event.requestId, $event.replyId)"
-                (replyRejected)="rejectReply($event.requestId, $event.replyId)">
-              </app-reply-message>
-            </div>
-
-            <ng-container *ngIf="hasActiveServiceTask(request)">
-              <div class="conversation-overlay">
-                <ng-container *ngIf="isReviewFormVisible; else showTaskOverlay">
-                  <app-review-form
-                    [reviewForm]="reviewForm"
-                    (formSubmit)="submitReview($event)"
-                    (close)="closeReviewForm()">
-                  </app-review-form>
-                </ng-container>
-
-                <ng-template #showTaskOverlay>
-<!--                  <app-service-message-->
-<!--                    [serviceTask]="getLastReplyWithServiceTask(request)?.serviceTask!"-->
-<!--                    [replyId]="getLastReplyWithServiceTask(request)?.id!"-->
-<!--                    (taskCompleted)="completeTask($event.replyId, $event.taskId)"-->
-<!--                    (taskCancelled)="cancelTask($event.replyId, $event.taskId)">-->
-<!--                  </app-service-message>-->
-                </ng-template>
-              </div>
-            </ng-container>
+<!--            &lt;!&ndash; Reply Message &ndash;&gt;-->
+<!--            <app-reply-message-->
+<!--              *ngSwitchCase="'reply'"-->
+<!--              [reply]="asReply(item)"-->
+<!--              (replyAccepted)="acceptReply(item.data.requestId, item.data.id)"-->
+<!--              (replyRejected)="rejectReply(item.data.requestId, item.data.id)">-->
+<!--            </app-reply-message>-->
           </ng-container>
         </ng-container>
+
+<!--        <ng-container *ngFor="let request of selectedExchange.requests">-->
+<!--          &lt;!&ndash; Request message &ndash;&gt;-->
+<!--          <div [ngClass]="userRole === 'Client' ? 'message-right' : 'message-left'">-->
+<!--            <app-request-message-->
+<!--              [request]="request"-->
+<!--              (requestAccepted)="acceptRequest(request.id)"-->
+<!--              (requestRejected)="rejectRequest(request.id)"-->
+<!--              (makeOffer)="openReplyForm($event)">-->
+<!--            </app-request-message>-->
+<!--            <div class="conversation-overlay" *ngIf="isReplyFormVisible && selectedRequestId === request.id">-->
+<!--              <app-reply-form-->
+<!--                [replyForm]="replyForm"-->
+<!--                (formSubmit)="submitReply($event)"-->
+<!--                (close)="closeReplyForm()">-->
+<!--              </app-reply-form>-->
+<!--            </div>-->
+<!--          </div>-->
+
+<!--          <ng-container *ngFor="let reply of selectedExchange.replies.filter(r => r.requestId === request.id)">-->
+<!--            <div [ngClass]="userRole === 'Client' ? 'message-left' : 'message-right'">-->
+<!--              <app-reply-message-->
+<!--                [reply]="reply"-->
+<!--                [requestId]="request.id"-->
+<!--                (replyAccepted)="acceptReply($event.requestId, $event.replyId)"-->
+<!--                (replyRejected)="rejectReply($event.requestId, $event.replyId)">-->
+<!--              </app-reply-message>-->
+<!--            </div>-->
+
+<!--            <ng-container *ngIf="hasActiveServiceTask(request)">-->
+<!--              <div class="conversation-overlay">-->
+<!--                <ng-container *ngIf="isReviewFormVisible; else showTaskOverlay">-->
+<!--                  <app-review-form-->
+<!--                    [reviewForm]="reviewForm"-->
+<!--                    (formSubmit)="submitReview($event)"-->
+<!--                    (close)="closeReviewForm()">-->
+<!--                  </app-review-form>-->
+<!--                </ng-container>-->
+
+<!--                <ng-template #showTaskOverlay>-->
+<!--&lt;!&ndash;                  <app-service-message&ndash;&gt;-->
+<!--&lt;!&ndash;                    [serviceTask]="getLastReplyWithServiceTask(request)?.serviceTask!"&ndash;&gt;-->
+<!--&lt;!&ndash;                    [replyId]="getLastReplyWithServiceTask(request)?.id!"&ndash;&gt;-->
+<!--&lt;!&ndash;                    (taskCompleted)="completeTask($event.replyId, $event.taskId)"&ndash;&gt;-->
+<!--&lt;!&ndash;                    (taskCancelled)="cancelTask($event.replyId, $event.taskId)">&ndash;&gt;-->
+<!--&lt;!&ndash;                  </app-service-message>&ndash;&gt;-->
+<!--                </ng-template>-->
+<!--              </div>-->
+<!--            </ng-container>-->
+<!--          </ng-container>-->
+<!--        </ng-container>-->
       </div>
 
       <div class="chat-input">

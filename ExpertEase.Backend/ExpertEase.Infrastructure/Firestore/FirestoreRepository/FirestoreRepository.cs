@@ -39,8 +39,6 @@ public class FirestoreRepository(FirestoreDb _firestoreDb) : IFirestoreRepositor
         entity.Id = doc.Id;
         return entity;
     }
-
-
     
     public async Task<List<T>> ListAsync<T>(string collection, Func<CollectionReference, Query> queryBuilder, CancellationToken cancellationToken = default) where T : FirestoreBaseEntityDTO
     {

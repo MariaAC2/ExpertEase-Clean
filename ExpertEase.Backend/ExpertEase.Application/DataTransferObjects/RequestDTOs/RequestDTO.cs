@@ -11,9 +11,7 @@ public class RequestDTO
     [Required]
     public Guid Id { get; set; }
     [Required]
-    public Guid SenderUserId { get; set; }
-    [Required]
-    public Guid ReceiverUserId { get; set; }
+    public Guid SenderId { get; set; }
     [Required]
     public DateTime RequestedStartDate { get; set; }
     [Required]
@@ -21,6 +19,4 @@ public class RequestDTO
     public ContactInfoDTO? SenderContactInfo { get; set; }
     [Required]
     public StatusEnum Status { get; set; } = StatusEnum.Pending;
-    
-    public List<ReplyDTO> Replies { get; set; } = new();
 }

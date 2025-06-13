@@ -30,6 +30,18 @@ public class UserService(
             ? ServiceResponse.CreateSuccessResponse(result)
             : ServiceResponse.CreateErrorResponse<UserDTO>(CommonErrors.UserNotFound);
     }
+    
+    public async Task<ServiceResponse<UserDetailsDTO>> GetUserDetails(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.GetAsync(new UserDetailsProjectionSpec(id), cancellationToken);
+        
+        if (result == null)
+            return ServiceResponse.CreateErrorResponse<UserDetailsDTO>(CommonErrors.UserNotFound);
+        
+        result.Reviews = await repository.ListAsync(new ReviewProjectionSpec(id), cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
 
     public async Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, Guid adminId,
         CancellationToken cancellationToken = default)

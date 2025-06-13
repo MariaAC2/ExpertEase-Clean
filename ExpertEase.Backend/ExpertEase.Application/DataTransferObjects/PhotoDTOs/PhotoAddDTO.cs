@@ -22,3 +22,10 @@ public class PortfolioPictureAddDTO
     public string ContentType { get; set; } = null!;
     public string FileName { get; set; } = null!;
 }
+
+// public class PortfolioUploadDTO
+// {
+//     public string Url { get; set; } = null!;
+//     public string FileName { get; set; } = null!;
+//     public string ContentType { get; set; } = null!;
+// }

@@ -14,82 +14,45 @@ using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
+using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
+using ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 using ExpertEase.Infrastructure.Repositories;
+using Google.Cloud.Firestore;
 
 namespace ExpertEase.Infrastructure.Services;
 
 public class ReplyService(IRepository<WebAppDatabaseContext> repository, 
     IServiceTaskService serviceTaskService,
-    IPaymentService paymentService) : IReplyService
+    IPaymentService paymentService,
+    IFirestoreRepository firestoreRepository,
+    IConversationService conversationService) : IReplyService
 {
-    public async Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Specialist)
-        {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Only specialists can create replies", ErrorCodes.CannotAdd));
-        }
-        
+        if (requestingUser?.Role != UserRoleEnum.Specialist)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only specialists can create replies", ErrorCodes.CannotAdd));
+
         var request = await repository.GetAsync(new RequestSpec(requestId), cancellationToken);
-        
-        if (request == null)
-        {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound));
-        }
+        if (request == null || request.Status is StatusEnum.Failed or StatusEnum.Completed)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Cannot reply to this request", ErrorCodes.CannotAdd));
 
         if (request.Status != StatusEnum.Accepted)
-        {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.BadRequest, "Cannot reply to an unaccepted request", ErrorCodes.CannotAdd));
-        }
-        
-        if (request.Status == StatusEnum.Failed || request.Status == StatusEnum.Completed)
-        {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot reply to a completed or failed request", ErrorCodes.CannotAdd));
-        }
-        
-        if (requestingUser != null && requestingUser.Id != request.ReceiverUserId)
-        {
-            return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Only the user that received the request can reply", ErrorCodes.CannotAdd));
-        }
-        
-        if (request.Replies.Any())
-        {
-            var lastReply = request.Replies
-                .OrderByDescending(r => r.CreatedAt)
-                .First();
-        
-            if (lastReply.Status != StatusEnum.Rejected)
-            {
-                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Cannot create reply if last reply was not rejected", ErrorCodes.CannotAdd));
-            }
-        }
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Request must be accepted before replying", ErrorCodes.CannotAdd));
+
+        if (requestingUser.Id != request.ReceiverUserId)
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Not the recipient of this request", ErrorCodes.CannotAdd));
 
         if (request.Replies.Count() > 5)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Exceeded 5 replies per request",
-                ErrorCodes.CannotAdd));
-        }
-        
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Exceeded reply limit", ErrorCodes.CannotAdd));
+
         if (reply.StartDate != null)
-        {
-            if (reply.StartDate.Value.Kind == DateTimeKind.Unspecified)
-            {
-                reply.StartDate = DateTime.SpecifyKind(reply.StartDate.Value, DateTimeKind.Utc);
-            }
-            else
-            {
-                reply.StartDate = reply.StartDate.Value.ToUniversalTime();
-            }
-        }
-        
-        if (reply.EndDate.Kind == DateTimeKind.Unspecified)
-        {
-            reply.EndDate = DateTime.SpecifyKind(reply.EndDate, DateTimeKind.Utc);
-        }
-        else
-        {
-            reply.EndDate = reply.EndDate.ToUniversalTime();
-        }
+            reply.StartDate = reply.StartDate.Value.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(reply.StartDate.Value, DateTimeKind.Utc)
+                : reply.StartDate.Value.ToUniversalTime();
+
+        reply.EndDate = reply.EndDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(reply.EndDate, DateTimeKind.Utc)
+            : reply.EndDate.ToUniversalTime();
 
         var newReply = new Reply
         {
@@ -100,29 +63,48 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             EndDate = reply.EndDate,
             Price = reply.Price
         };
-        
+
         if (request.Replies.Any())
         {
-            var lastReply = request.Replies
-                .OrderByDescending(r => r.CreatedAt)
-                .First();
-        
-            bool isDuplicate =
-                lastReply.StartDate == newReply.StartDate &&
-                lastReply.EndDate == newReply.EndDate &&
-                lastReply.Price == newReply.Price;
-        
-            if (isDuplicate)
-            {
-                return ServiceResponse.CreateErrorResponse(new(
-                    HttpStatusCode.Conflict,
-                    "Cannot add a reply identical to the last one.",
-                    ErrorCodes.EntityAlreadyExists));
-            }
+            var lastReply = request.Replies.OrderByDescending(r => r.CreatedAt).First();
+            if (lastReply.Status != StatusEnum.Rejected)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Cannot reply unless last reply was rejected", ErrorCodes.CannotAdd));
+
+            if (lastReply.StartDate == newReply.StartDate && lastReply.EndDate == newReply.EndDate && lastReply.Price == newReply.Price)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Conflict, "Duplicate reply", ErrorCodes.EntityAlreadyExists));
         }
-        
+
         request.Replies.Add(newReply);
         await repository.AddAsync(newReply, cancellationToken);
+
+        var conversationKey = $"{request.SenderUserId}_{request.ReceiverUserId}";
+        var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+            "conversations",
+            q => q.WhereEqualTo("Participants", conversationKey),
+            cancellationToken);
+
+        if (conversation != null)
+        {
+            var firestoreReply = new FirestoreConversationItemDTO
+            {
+                Id = Guid.NewGuid().ToString(),
+                ConversationId = conversation.Id,
+                SenderId = requestingUser.Id.ToString(),
+                CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow),
+                Type = "reply",
+                Data = new Dictionary<string, object>
+                {
+                    { "StartDate", Timestamp.FromDateTime(newReply.StartDate) },
+                    { "EndDate", Timestamp.FromDateTime(newReply.EndDate) },
+                    { "Price", newReply.Price },
+                    { "Status", "Pending" },
+                    { "RequestId", requestId.ToString() }
+                }
+            };
+
+            await firestoreRepository.AddAsync("conversationElements", firestoreReply, cancellationToken);
+        }
+
         return ServiceResponse.CreateSuccessResponse();
     }
 

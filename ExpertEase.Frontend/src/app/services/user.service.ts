@@ -3,8 +3,8 @@ import { Injectable } from '@angular/core';
 import {
   AdminUserUpdateDTO,
   PagedResponse,
-  RequestResponse,
-  UserAddDTO,
+  RequestResponse, SpecialistDTO,
+  UserAddDTO, UserDetailsDTO,
   UserDTO,
   UserUpdateDTO
 } from '../models/api.models';
@@ -14,9 +14,7 @@ import {AuthService, DecodedToken} from './auth.service';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly baseUrl = 'http://localhost:5241/api/User';
-
   constructor(private readonly http: HttpClient, private readonly authService: AuthService) {}
-
   getUser(userId: string) {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
@@ -32,7 +30,16 @@ export class UserService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<UserDTO>>(`${this.baseUrl}/Get`, {headers});
+    return this.http.get<RequestResponse<UserDTO>>(`${this.baseUrl}/GetProfile`, {headers});
+  }
+
+  getUserDetails(userId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.get<RequestResponse<UserDetailsDTO>>(`${this.baseUrl}/GetDetails/${userId}`, {headers});
   }
 
   getUsers(search: string | undefined, page: number, pageSize: number) {

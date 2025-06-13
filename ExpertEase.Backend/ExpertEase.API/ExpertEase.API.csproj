@@ -77,6 +77,10 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-ENV6XYEU.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-LNLUAD6T.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-32KHC3CQ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-75ANY6ZT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-VDIFSANO.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ONB4YPWE.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-TKF4PEMP.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

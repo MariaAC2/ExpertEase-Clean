@@ -16,11 +16,7 @@ public class ConversationDTO
     [Required]
     public string? UserProfilePictureUrl { get; set; } = null!;
     [Required]
-    public List<FirestoreRequestDTO> Requests { get; set; } = new();
-    [Required]
-    public List<FirestoreReplyDTO> Replies { get; set; } = new();
-    [Required]
-    public List<FirestoreMessageDTO> Messages { get; set; } = new();
+    public List<FirestoreConversationItemDTO> ConversationItems { get; set; } = new();
 }
 
 public class UserConversationDTO

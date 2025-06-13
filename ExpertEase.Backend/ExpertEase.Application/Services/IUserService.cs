@@ -10,6 +10,7 @@ public interface IUserService
 {
     Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default);
     Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, Guid adminId, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<UserDetailsDTO>> GetUserDetails(Guid id, CancellationToken cancellationToken = default);
 
     Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(Guid adminId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);

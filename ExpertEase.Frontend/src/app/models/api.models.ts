@@ -1,4 +1,6 @@
-﻿export interface RequestResponse<T> {
+﻿import { Timestamp } from 'firebase/firestore';
+
+export interface RequestResponse<T> {
   response?: T;
   errorMessage?: ErrorMessage;
 }
@@ -171,7 +173,6 @@ export interface MessageAddDTO {
 export interface MessageDTO {
     id: string;
     senderId: string;
-    receiverId: string;
     content: string;
     isRead: boolean;
     createdAt: Date;
@@ -201,6 +202,8 @@ export interface ReplyAddDTO {
 
 export interface ReplyDTO {
     id: string;
+    senderId: string
+    requestId: string;
     startDate: Date;
     endDate: Date;
     price: number;
@@ -225,13 +228,11 @@ export interface RequestAddDTO {
 
 export interface RequestDTO {
     id: string;
-    senderUserId: string;
-    receiverUserId: string;
+    senderId: string;
     requestedStartDate: Date;
     description: string;
     senderContactInfo?: ContactInfoDTO;
     status: StatusEnum;
-    replies?: ReplyDTO[];
 }
 
 export interface RequestUpdateDTO {
@@ -322,13 +323,13 @@ export interface BecomeSpecialistDTO {
     yearsExperience: number;
     description: string;
     categories?: string[] | undefined;
+    portfolio?: PortfolioPictureAddDTO[] | undefined; // URLs of portfolio images
 }
 
 export interface BecomeSpecialistResponseDTO {
   token: string;
   user: UserDTO;
 }
-
 export interface SpecialistProfileDTO {
     yearsExperience: number;
     description: string;
@@ -421,13 +422,37 @@ export interface UserDTO {
     specialist?: SpecialistProfileDTO;
 }
 
+export interface UserDetailsDTO {
+  fullName: string;
+  profilePictureUrl?: string;
+  rating: number;
+  reviews: ReviewDTO[];
+
+  // Specialist-only fields (optional / nullable)
+  email?: string;
+  phoneNumber?: string;
+  address?: string;
+  yearsExperience?: number;
+  description?: string;
+  portfolio?: string[];
+  categories?: string[];
+}
+
+export interface FirestoreConversationItemDTO {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  type: 'message' | 'request' | 'reply';
+  createdAt: Timestamp;
+  data: { [key: string]: any };
+}
+
 export interface ConversationDTO {
-    conversationId: string;
-    userId: string;
-    userFullName: string;
-    userProfilePictureUrl?: string;
-    requests: RequestDTO[];
-    messages: MessageDTO[];
+  conversationId: string;
+  userId: string;
+  userFullName: string;
+  userProfilePictureUrl?: string;
+  conversationItems: FirestoreConversationItemDTO[];
 }
 
 export interface UserConversationDTO {
@@ -479,11 +504,17 @@ export interface ReviewAddDTO {
 
 export interface ReviewDTO {
   id: string;
-  receiverUserId: string;
   senderUserFullName: string,
   senderUserProfilePictureUrl?: string;
   rating: number;
   content: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PortfolioPictureAddDTO
+{
+  fileStream: File;
+  contentType: string;
+  fileName: string;
 }

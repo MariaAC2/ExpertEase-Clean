@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {BecomeSpecialistDTO} from '../../models/api.models';
+import {BecomeSpecialistDTO, PortfolioPictureAddDTO} from '../../models/api.models';
 import {dtoToFormFields} from '../../models/form.models';
 import {Router} from '@angular/router';
 import {DynamicFormComponent} from '../../shared/dynamic-form/dynamic-form.component';
@@ -7,6 +7,7 @@ import {NgSwitch, NgSwitchCase} from '@angular/common';
 import {CategorySelectorComponent} from '../../shared/category-selector/category-selector.component';
 import {AuthService} from '../../services/auth.service';
 import {SpecialistProfileService} from '../../services/specialist-profile.service';
+import {PortfolioUploadComponent} from '../../shared/portfolio-upload/portfolio-upload.component';
 
 @Component({
   selector: 'app-become-specialist',
@@ -14,19 +15,23 @@ import {SpecialistProfileService} from '../../services/specialist-profile.servic
     DynamicFormComponent,
     NgSwitch,
     NgSwitchCase,
-    CategorySelectorComponent
+    CategorySelectorComponent,
+    PortfolioUploadComponent
   ],
   templateUrl: './become-specialist.component.html',
   styleUrl: './become-specialist.component.scss'
 })
 export class BecomeSpecialistComponent implements OnInit {
   step = 1;
+  portfolioImages: File[] = [];
+  imagePreviews: string[] = [];
   specialistData: Omit<BecomeSpecialistDTO, 'userId'> = {
     yearsExperience: 0,
     phoneNumber: '',
     address: '',
     description: '',
-    categories: []
+    categories: [],
+    portfolio: []
   };
 
   formData: { [key: string]: any } = {};
@@ -70,6 +75,15 @@ export class BecomeSpecialistComponent implements OnInit {
 
   updateCategories(categories: string[]) {
     this.specialistData.categories = categories;
+  }
+
+  handleStep2() {
+    this.step = 3;
+  }
+
+  updatePortfolio(portfolio: PortfolioPictureAddDTO[]) {
+    this.portfolioImages = portfolio.map(p => p.fileStream);
+    this.imagePreviews = portfolio.map(p => URL.createObjectURL(p.fileStream));
   }
 
   addEntity() {

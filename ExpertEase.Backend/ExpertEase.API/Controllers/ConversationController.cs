@@ -4,6 +4,7 @@ using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Authorization;
+using ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

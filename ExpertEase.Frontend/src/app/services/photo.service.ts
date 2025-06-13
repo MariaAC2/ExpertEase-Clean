@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {AuthService} from './auth.service';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {PortfolioPictureAddDTO} from '../models/api.models';
 
 @Injectable({
   providedIn: 'root'
@@ -31,15 +32,13 @@ export class PhotoService {
     return this.http.patch(`${this.baseUrl}/UpdateProfilePicture`, formData, { headers });
   }
 
-  addPortfolioPicture(file: File){
-    const formData = new FormData();
-    formData.append('file', file);
+  addPortfolioPicture(fileData: PortfolioPictureAddDTO) {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.post(`${this.baseUrl}/AddPortfolioPicture`, formData, {headers});
+    return this.http.post(`${this.baseUrl}/AddPortfolioPicture`, fileData, {headers});
   }
 
   deletePortfolioPicture(photoId: string){

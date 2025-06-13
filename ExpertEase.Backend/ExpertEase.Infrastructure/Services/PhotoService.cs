@@ -8,8 +8,8 @@ using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
-using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Firebase.FirestoreMappers;
+using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
@@ -119,8 +119,8 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository, IFirest
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only specialists can have portfolio pictures", ErrorCodes.CannotAdd));
         }
 
-        user.SpecialistProfile.Portfolio.Add(photoUrl);
-        await repository.UpdateAsync(user, cancellationToken);
+        // user.SpecialistProfile.Portfolio.Add(photoUrl);
+        // await repository.UpdateAsync(user, cancellationToken);
         return ServiceResponse.CreateSuccessResponse();
     }
 
@@ -174,12 +174,12 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository, IFirest
 
         await firestoreRepository.DeleteAsync<FirestorePhotoDTO>("photos", photoId, cancellationToken);
 
-        var user = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-        if (user?.SpecialistProfile?.Portfolio != null)
-        {
-            user.SpecialistProfile.Portfolio.Remove(photo.Url);
-            await repository.UpdateAsync(user, cancellationToken);
-        }
+        // var user = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+        // if (user?.SpecialistProfile?.Portfolio != null)
+        // {
+        //     user.SpecialistProfile.Portfolio.Remove(photo.Url);
+        //     await repository.UpdateAsync(user, cancellationToken);
+        // }
 
         return ServiceResponse.CreateSuccessResponse();
     }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ExpertEase.Application.DataTransferObjects.PhotoDTOs;
 
 namespace ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 
@@ -15,4 +16,5 @@ public class BecomeSpecialistDTO
     [Required]
     public string Description { get; set; } = null!;
     public List<Guid>? Categories { get; set; }
+    public List<PortfolioPictureAddDTO>? PortfolioPhotos { get; set; }
 }

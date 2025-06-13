@@ -44,8 +44,6 @@ export class HomeComponent implements OnInit{
     description: ''
   }
 
-  receiverUserId: string | undefined = '';
-
   dummySpecialists: SpecialistDTO[] = [
     {
       id: 'spec-001',

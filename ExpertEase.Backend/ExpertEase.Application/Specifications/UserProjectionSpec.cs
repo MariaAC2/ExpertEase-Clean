@@ -1,5 +1,6 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
+using ExpertEase.Application.DataTransferObjects.ReviewDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Domain.Entities;
@@ -124,5 +125,34 @@ public class AdminUserProjectionSpec: Specification<User, UserDTO>
             Query.Where(e =>
                 EF.Functions.ILike(e.FullName, searchExpr));
         }
+    }
+}
+
+public class UserDetailsProjectionSpec : Specification<User, UserDetailsDTO>
+{
+    public UserDetailsProjectionSpec(Guid userId)
+    {
+        Query
+            .Where(u => u.Id == userId)
+            .Include(u => u.ContactInfo)
+            .Include(u => u.SpecialistProfile!)
+                .ThenInclude(sp => sp.Categories);
+        Query.Select(u => new UserDetailsDTO
+            {
+                FullName = u.FullName,
+                ProfilePictureUrl = u.ProfilePictureUrl,
+                Rating = u.Rating,
+
+                // Include these only for specialists
+                Email = u.Role == UserRoleEnum.Specialist ? u.Email : null,
+                PhoneNumber = u.Role == UserRoleEnum.Specialist ? u.ContactInfo!.PhoneNumber : null,
+                Address = u.Role == UserRoleEnum.Specialist ? u.ContactInfo!.Address : null,
+                YearsExperience = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.YearsExperience : null,
+                Description = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Description : null,
+                // Portfolio = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Portfolio : null,
+                Categories = u.Role == UserRoleEnum.Specialist
+                    ? u.SpecialistProfile!.Categories.Select(c => c.Name).ToList()
+                    : null
+            });
     }
 }

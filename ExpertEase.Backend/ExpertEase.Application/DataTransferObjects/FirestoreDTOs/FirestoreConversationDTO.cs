@@ -11,11 +11,11 @@ public class FirestoreConversationDTO: FirestoreBaseEntityDTO
     [FirestoreProperty]
     public string Participants { get; set; } = null!;
     [FirestoreProperty]
-    public string? LastMessage { get; set; }
+    public string LastMessage { get; set; }
     [FirestoreProperty]
-    public Timestamp? LastMessageAt { get; set; }
+    public Timestamp LastMessageAt { get; set; }
     [FirestoreProperty]
-    public Dictionary<string, int>? UnreadCounts { get; set; }
+    public Dictionary<string, int> UnreadCounts { get; set; }
     [FirestoreProperty]
     public FirestoreUserConversationDTO ClientData { get; set; } = new FirestoreUserConversationDTO();
     [FirestoreProperty]

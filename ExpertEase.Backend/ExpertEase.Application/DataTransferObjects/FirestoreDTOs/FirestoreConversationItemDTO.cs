@@ -16,8 +16,11 @@ public class FirestoreConversationItemDTO : FirestoreBaseEntityDTO
     public string SenderId { get; set; } = null!;
 
     [FirestoreProperty]
-    public Timestamp CreatedAt { get; set; }
+    public Dictionary<string, object> Data { get; set; } = new();
+}
 
-    [FirestoreProperty]
+public class FirestoreConversationItemAddDTO
+{
+    public string Type { get; set; } = null!;
     public Dictionary<string, object> Data { get; set; } = new();
 }

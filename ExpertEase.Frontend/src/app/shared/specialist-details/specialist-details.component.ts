@@ -1,52 +1,75 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {SpecialistDTO} from '../../models/api.models';
+import {UserDetailsDTO} from '../../models/api.models';
 import {ActivatedRoute, Router} from '@angular/router';
-import {SpecialistService} from '../../services/specialist.service';
+import {UserService} from '../../services/user.service';
+import {DatePipe, NgForOf, NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-specialist-details',
-  imports: [],
+  imports: [
+    DatePipe,
+    NgIf,
+    NgForOf
+  ],
   templateUrl: './specialist-details.component.html',
   styleUrl: './specialist-details.component.scss'
 })
 export class SpecialistDetailsComponent implements OnInit {
-  specialist: SpecialistDTO | null = null;
-  specialistId: string = '';
+  userDetails: UserDetailsDTO | null = null;
+  userDetailsId: string = '';
 
-  dummySpecialist: SpecialistDTO = {
-    id: 'spec-003',
-    fullName: 'Victor Ionescu',
-    email: 'victor.ionescu@example.com',
-    phoneNumber: '0744123123',
-    address: 'Str. Libertății 88, Iași',
-    yearsExperience: 3,
-    description: 'Tânăr specialist în tehnologia informației, ofer servicii de consultanță și mentenanță software.',
-    createdAt: new Date('2023-01-15T14:45:00Z'),
-    updatedAt: new Date(),
-    rating: 4.5,
-    // categories: [
-    //   { id: 'cat-005', name: 'IT & Software' },
-    //   { id: 'cat-006', name: 'Consultanță tehnică' }
-    // ]
+  dummyUserDetails: UserDetailsDTO = {
+    fullName: 'Maria Popescu',
+    profilePictureUrl: 'assets/avatar.svg',
+    rating: 4,
+    reviews: [
+      {
+        id: '1',
+        content: 'Serviciu excelent!',
+        rating: 5,
+        senderUserFullName: 'Ion Vasile',
+        senderUserProfilePictureUrl: 'assets/avatar.svg',
+        createdAt: new Date('2024-06-01T10:00:00'),
+        updatedAt: new Date('2024-06-01T10:00:00'),
+      },
+      {
+        id: '2',
+        content: 'Foarte punctual și profesionist.',
+        rating: 4,
+        senderUserFullName: 'Andreea Dumitru',
+        senderUserProfilePictureUrl: '',
+        createdAt: new Date('2024-05-22T14:00:00'),
+        updatedAt: new Date('2024-05-22T14:00:00')
+      }
+    ],
+    // Specialist-only fields
+    email: 'maria.popescu@example.com',
+    phoneNumber: '0722123456',
+    address: 'Str. Libertății, nr. 15',
+    yearsExperience: 5,
+    description: 'Instalator autorizat cu experiență în proiecte rezidențiale.',
+    portfolio: ['Portofoliu1.jpg', 'Portofoliu2.jpg'],
+    categories: ['Instalații sanitare', 'Reparații']
   };
+
 
   constructor(
     private readonly activatedRoute: ActivatedRoute,
-    private readonly homeService: SpecialistService
+    private readonly homeService: UserService
   ) {}
 
   ngOnInit() {
-    this.specialistId = this.activatedRoute.snapshot.paramMap.get('id')!;
-    // this.specialist = this.dummySpecialist;
-    this.homeService.getSpecialist(this.specialistId).subscribe({
-      next: (res) => {
-        this.specialist = res.response ?? null;
-      },
-      error: (err) => {
-        console.error('Eroare la preluarea utilizatorului:', err);
-        alert('Nu s-au putut încărca detaliile utilizatorului.');
-      }
-    });
+    this.userDetailsId = this.activatedRoute.snapshot.paramMap.get('id')!;
+    this.userDetails = this.dummyUserDetails;
+  //   this.homeService.getUserDetails(this.userDetailsId).subscribe({
+  //     next: (res) => {
+  //       this.userDetails = res.response ?? null;
+  //     },
+  //     error: (err) => {
+  //       console.error('Eroare la preluarea utilizatorului:', err);
+  //       alert('Nu s-au putut încărca detaliile utilizatorului.');
+  //     }
+  //   });
   }
 
   onCloseDetails() {

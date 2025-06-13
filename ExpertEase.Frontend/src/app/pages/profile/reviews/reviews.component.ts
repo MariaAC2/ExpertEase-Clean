@@ -21,7 +21,6 @@ export class ReviewsComponent implements OnInit {
   dummyReviews: ReviewDTO[] = [
     {
       id: '1',
-      receiverUserId: 'user-123',
       senderUserFullName: 'Ana Popescu',
       senderUserProfilePictureUrl: 'https://randomuser.me/api/portraits/women/21.jpg',
       rating: 5,
@@ -31,7 +30,6 @@ export class ReviewsComponent implements OnInit {
     },
     {
       id: '2',
-      receiverUserId: 'user-456',
       senderUserFullName: 'Andrei Ionescu',
       senderUserProfilePictureUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
       rating: 4,
@@ -41,7 +39,6 @@ export class ReviewsComponent implements OnInit {
     },
     {
       id: '3',
-      receiverUserId: 'user-789',
       senderUserFullName: 'Mihai Georgescu',
       senderUserProfilePictureUrl: 'https://randomuser.me/api/portraits/men/45.jpg',
       rating: 3,
@@ -51,7 +48,6 @@ export class ReviewsComponent implements OnInit {
     },
     {
       id: '4',
-      receiverUserId: 'user-123',
       senderUserFullName: 'Elena Tudor',
       senderUserProfilePictureUrl: 'https://randomuser.me/api/portraits/women/55.jpg',
       rating: 5,
@@ -61,7 +57,6 @@ export class ReviewsComponent implements OnInit {
     },
     {
       id: '5',
-      receiverUserId: 'user-999',
       senderUserFullName: 'Radu Vasile',
       senderUserProfilePictureUrl: 'https://randomuser.me/api/portraits/men/61.jpg',
       rating: 2,
@@ -71,7 +66,6 @@ export class ReviewsComponent implements OnInit {
     },
     {
       id: '6',
-      receiverUserId: 'user-888',
       senderUserFullName: 'Ioana Marinescu',
       senderUserProfilePictureUrl: 'https://randomuser.me/api/portraits/women/88.jpg',
       rating: 4,
@@ -80,7 +74,6 @@ export class ReviewsComponent implements OnInit {
       updatedAt: new Date('2025-05-22T15:50:00')
     }
   ];
-
 
   constructor(private reviewService: ReviewService) {}
 

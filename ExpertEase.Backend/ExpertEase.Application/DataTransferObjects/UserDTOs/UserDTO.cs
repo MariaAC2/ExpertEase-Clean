@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ExpertEase.Application.DataTransferObjects.MessageDTOs;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
+using ExpertEase.Application.DataTransferObjects.ReviewDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
@@ -40,4 +41,27 @@ public class ContactInfoDTO
     public string PhoneNumber { get; set; } = null!;
     [Required]
     public string Address { get; set; } = null!;
+}
+
+public class UserDetailsDTO
+{
+    [Required]
+    public string FullName { get; set; } = null!;
+
+    public string? ProfilePictureUrl { get; set; }
+
+    [Required]
+    public int Rating { get; set; }
+
+    [Required]
+    public List<ReviewDTO> Reviews { get; set; } = [];
+
+    // Specialist-only fields (null if client)
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Address { get; set; }
+    public int? YearsExperience { get; set; }
+    public string? Description { get; set; }
+    public List<string>? Portfolio { get; set; }
+    public List<string>? Categories { get; set; }
 }

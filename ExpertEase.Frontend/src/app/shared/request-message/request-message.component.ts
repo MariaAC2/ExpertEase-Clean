@@ -3,6 +3,7 @@ import {RequestDTO, StatusEnum} from '../../models/api.models';
 import {DatePipe, LowerCasePipe, NgClass, NgIf} from '@angular/common';
 import {AuthService} from '../../services/auth.service';
 import {RequestService} from '../../services/request.service';
+import { Timestamp } from 'firebase/firestore';
 
 @Component({
   selector: 'app-request-message',
@@ -17,8 +18,7 @@ import {RequestService} from '../../services/request.service';
 export class RequestMessageComponent implements OnInit {
   @Input() request: RequestDTO = {
     id: '',
-    senderUserId: '',
-    receiverUserId: '',
+    senderId: '',
     requestedStartDate: new Date(),
     description: '',
     status: StatusEnum.Pending,
@@ -34,12 +34,13 @@ export class RequestMessageComponent implements OnInit {
   @Output() requestRejected = new EventEmitter<string>();
   @Output() makeOffer = new EventEmitter<string>();
   constructor(
-    private authService: AuthService,
-    private requestService: RequestService
+    private readonly authService: AuthService,
+    private readonly requestService: RequestService
   ) {}
 
   ngOnInit() {
     this.userRole = this.authService.getUserRole(); // 'Client' or 'Specialist'
+    console.log(this.request);
   }
 
   acceptRequest() {

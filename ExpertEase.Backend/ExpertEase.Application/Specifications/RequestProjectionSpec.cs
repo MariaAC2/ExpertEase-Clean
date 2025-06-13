@@ -16,8 +16,6 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
-            SenderUserId = e.SenderUserId,
-            ReceiverUserId = e.ReceiverUserId,
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
@@ -29,14 +27,6 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
                         Address = e.Address
                     }
                     : null,
-            Replies = e.Replies.Select(r => new ReplyDTO
-            {
-                Id = r.Id,
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
-                Price = r.Price,
-                Status = r.Status,
-            }).ToList()
         });
 
         if (orderByCreatedAt)
@@ -76,8 +66,6 @@ public class RequestConversationProjectionSpec : Specification<Request, RequestD
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
-            SenderUserId = e.SenderUserId,
-            ReceiverUserId = e.ReceiverUserId,
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
@@ -89,14 +77,6 @@ public class RequestConversationProjectionSpec : Specification<Request, RequestD
                         Address = e.Address
                     }
                     : null,
-            Replies = e.Replies.Select(r => new ReplyDTO
-            {
-                Id = r.Id,
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
-                Price = r.Price,
-                Status = r.Status,
-            }).ToList(),
         });
 
         if (orderByCreatedAt)
@@ -114,8 +94,6 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
-            SenderUserId = e.SenderUserId,
-            ReceiverUserId = e.ReceiverUserId,
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
@@ -127,14 +105,6 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
                         Address = e.Address
                     }
                     : null,
-            Replies = e.Replies.Select(r => new ReplyDTO
-            {
-                Id = r.Id,
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
-                Price = r.Price,
-                Status = r.Status,
-            }).ToList(),
         });
 
         if (orderByCreatedAt)
@@ -174,8 +144,6 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
         Query.Select(e => new RequestDTO
         {
             Id = e.Id,
-            SenderUserId = e.SenderUserId,
-            ReceiverUserId = e.ReceiverUserId,
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
@@ -187,14 +155,6 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
                         Address = e.Address
                     }
                     : null,
-            Replies = e.Replies.Select(r => new ReplyDTO
-            {
-                Id = r.Id,
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
-                Price = r.Price,
-                Status = r.Status,
-            }).ToList(),
         });
 
         if (orderByCreatedAt)

@@ -1,10 +1,8 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {
-  ConversationDTO,
+  ConversationDTO, FirestoreConversationItemDTO, MessageDTO, ReplyDTO, RequestDTO,
   JobStatusEnum, MessageAddDTO,
   ReplyAddDTO,
-  ReplyDTO,
-  RequestDTO,
   ReviewAddDTO,
   ServiceTaskDTO,
   StatusEnum,
@@ -149,26 +147,26 @@ export class MessagesComponent implements OnInit, OnDestroy {
         console.error('Eroare la încărcarea convorbirilor:', err);
       }
     });
-
-    this.signalRService.connect(this.userId?.toString());
-
-    this.signalRService.onNewMessage((payload: { senderId: string, receiverId: string }) => {
-      console.log('New message received:', payload);
-
-      // Check if the currently selected exchange is the sender or receiver
-      const isRelatedToCurrentChat =
-        this.selectedExchange &&
-        (this.selectedExchange.userId === payload.senderId || this.selectedExchange.userId === payload.receiverId);
-
-      if (isRelatedToCurrentChat) {
-        // Reload only this exchange
-        const otherUserId = this.selectedExchange!.userId === this.userId ? payload.senderId : payload.receiverId;
-        this.loadExchange(otherUserId);
-      } else {
-        // Optionally, set a flag to show notification in inbox
-        console.log('Message is for another conversation');
-      }
-    });
+    //
+    // this.signalRService.connect(this.userId?.toString());
+    //
+    // this.signalRService.onNewMessage((payload: { senderId: string, receiverId: string }) => {
+    //   console.log('New message received:', payload);
+    //
+    //   // Check if the currently selected exchange is the sender or receiver
+    //   const isRelatedToCurrentChat =
+    //     this.selectedExchange &&
+    //     (this.selectedExchange.userId === payload.senderId || this.selectedExchange.userId === payload.receiverId);
+    //
+    //   if (isRelatedToCurrentChat) {
+    //     // Reload only this exchange
+    //     const otherUserId = this.selectedExchange!.userId === this.userId ? payload.senderId : payload.receiverId;
+    //     this.loadExchange(otherUserId);
+    //   } else {
+    //     // Optionally, set a flag to show notification in inbox
+    //     console.log('Message is for another conversation');
+    //   }
+    // });
 
     // this.userId = 'spec456';
     // this.exchanges = this.dummy_exchanges;
@@ -176,10 +174,104 @@ export class MessagesComponent implements OnInit, OnDestroy {
     //
   }
 
+  get messages() {
+    return this.selectedExchange?.conversationItems
+      .filter(item => item.type === 'message');
+  }
+
+  get requests() {
+    return this.selectedExchange?.conversationItems
+      .filter(item => item.type === 'request');
+  }
+
+  get replies() {
+    return this.selectedExchange?.conversationItems
+      .filter(item => item.type === 'reply');
+  }
+
+  deserializeItem(item: FirestoreConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
+    const data = item.data;
+
+    switch (item.type) {
+      case 'message':
+        return {
+          id: item.id,
+          senderId: data['senderId'],
+          content: data['content'],
+          createdAt: new Date(data['createdAt']),
+          isRead: data['isRead'] ?? false
+        } as MessageDTO;
+
+      case 'request':
+        return {
+          id: item.id,
+          senderId: data['senderId'],
+          requestedStartDate: new Date(data['requestedStartDate']),
+          phoneNumber: data['phoneNumber'],
+          address: data['address'],
+          description: data['description'],
+          status: data['status']
+        } as RequestDTO;
+
+      case 'reply':
+        return {
+          id: item.id,
+          requestId: data['requestId'],
+          senderId: data['senderId'],
+          startDate: new Date(data['startDate']),
+          endDate: new Date(data['endDate']),
+          price: data['price'],
+          status: data['status']
+        } as ReplyDTO;
+
+      default:
+        return null;
+    }
+  }
+
+  asMessage(item: FirestoreConversationItemDTO): MessageDTO {
+    const data = item.data;
+    return {
+      id: item.id,
+      senderId: data['senderId'],
+      content: data['content'],
+      createdAt: new Date(data['createdAt']),
+      isRead: data['isRead'] ?? false
+    } as MessageDTO;
+  }
+
+  asRequest(item: FirestoreConversationItemDTO): RequestDTO {
+    const data = item.data;
+    return {
+      id: item.id,
+      senderId: data['senderId'],
+      requestedStartDate: new Date(data['requestedStartDate']),
+      phoneNumber: data['phoneNumber'],
+      address: data['address'],
+      description: data['description'],
+      status: data['status']
+    } as RequestDTO;
+  }
+
+  asReply(item: FirestoreConversationItemDTO): ReplyDTO {
+    const data = item.data;
+    return {
+      id: item.id,
+      requestId: data['requestId'],
+      senderId: data['senderId'],
+      startDate: new Date(data['startDate']),
+      endDate: new Date(data['endDate']),
+      price: data['price'],
+      status: data['status']
+    } as ReplyDTO;
+  }
+
   loadExchange(senderUserId: string | undefined): void {
     console.log('Loading exchange for user:', senderUserId);
     this.exchangeService.getExchange(senderUserId).subscribe({
       next: (res) => {
+        console.log('Exchange loaded:', res.response);
+
         this.selectedExchange = res.response;
       },
       error: (err) => {
@@ -215,10 +307,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.requestService.acceptRequest(requestId).subscribe({
       next: () => {
         console.log('Cererea a fost acceptată');
-        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-        if (request) {
           this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
-        }
       },
       error: (err) => {
         console.error('Eroare la acceptare:', err);
@@ -230,10 +319,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.requestService.rejectRequest(requestId).subscribe({
       next: () => {
         console.log('Cererea a fost respinsă');
-        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-        if (request) {
-          this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
-        }
+        this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
       },
       error: (err) => {
         console.error('Eroare la respingere:', err);
@@ -271,85 +357,85 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
   }
 
-  acceptReply(requestId: string, replyId: string): void {
-    this.replyService.acceptReply(replyId).subscribe({
-      next: () => {
-        console.log('Reply accepted');
-        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-        if (request) {
-          const currentUserId = this.authService.getUserId();
-          const otherUserId = request.senderUserId === currentUserId
-            ? request.receiverUserId
-            : request.senderUserId;
+  // acceptReply(requestId: string, replyId: string): void {
+  //   this.replyService.acceptReply(replyId).subscribe({
+  //     next: () => {
+  //       console.log('Reply accepted');
+  //       const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+  //       if (request) {
+  //         const currentUserId = this.authService.getUserId();
+  //         const otherUserId = request.senderUserId === currentUserId
+  //           ? request.receiverUserId
+  //           : request.senderUserId;
+  //
+  //         if (otherUserId) {
+  //           this.loadExchange(this.selectedExchange?.userId);
+  //         }
+  //       }
+  //     },
+  //     error: (err) => console.error('Error accepting reply:', err)
+  //   });
+  // }
+  //
+  // rejectReply(requestId: string, replyId: string): void {
+  //   this.replyService.rejectReply(replyId).subscribe({
+  //     next: () => {
+  //       console.log('Reply rejected');
+  //       const request = this.selectedExchange?.requests.find(r => r.id === requestId);
+  //       if (request) {
+  //         const currentUserId = this.authService.getUserId();
+  //         const otherUserId = request.senderUserId === currentUserId
+  //           ? request.receiverUserId
+  //           : request.senderUserId;
+  //
+  //         if (otherUserId) {
+  //           this.loadExchange(this.selectedExchange?.userId);
+  //         }
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Error rejecting reply:', err);
+  //     }
+  //   });
+  // }
 
-          if (otherUserId) {
-            this.loadExchange(this.selectedExchange?.userId);
-          }
-        }
-      },
-      error: (err) => console.error('Error accepting reply:', err)
-    });
-  }
-
-  rejectReply(requestId: string, replyId: string): void {
-    this.replyService.rejectReply(replyId).subscribe({
-      next: () => {
-        console.log('Reply rejected');
-        const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-        if (request) {
-          const currentUserId = this.authService.getUserId();
-          const otherUserId = request.senderUserId === currentUserId
-            ? request.receiverUserId
-            : request.senderUserId;
-
-          if (otherUserId) {
-            this.loadExchange(this.selectedExchange?.userId);
-          }
-        }
-      },
-      error: (err) => {
-        console.error('Error rejecting reply:', err);
-      }
-    });
-  }
-
-  hasActiveServiceTask(request: RequestDTO): boolean {
-    const replies = request.replies ?? [];
-    const lastReply = replies[replies.length - 1];
-    return !!lastReply?.serviceTask && lastReply.serviceTask.status !== 'Completed';
-  }
-
-  getLastReplyWithServiceTask(request: RequestDTO): ReplyDTO | undefined {
-    const replies = request.replies ?? [];
-    const lastReply = replies[replies.length - 1];
-    return lastReply?.serviceTask ? lastReply : undefined;
-  }
-
-  completeTask(replyId: string, taskId: string) {
-    this.taskService.completeServiceTask(taskId).subscribe({
-      next: () => {
-        console.log('Task marked as completed');
-        this.selectedTaskId = taskId;
-
-        // Try to find the task locally
-        const request = this.selectedExchange?.requests.find(req =>
-          req.replies?.some(r => r.id === replyId)
-        );
-
-        const reply = request?.replies?.find(r => r.id === replyId);
-        const task = reply?.serviceTask;
-
-        if (task) {
-          this.showReviewForm(task);
-        } else {
-          console.warn("Task not found in local data");
-        }
-      },
-      error: (err) => {
-        console.error('Error completing task:', err);
-      }
-    });
-  }
+  // hasActiveServiceTask(request: RequestDTO): boolean {
+  //   const replies = request.replies ?? [];
+  //   const lastReply = replies[replies.length - 1];
+  //   return !!lastReply?.serviceTask && lastReply.serviceTask.status !== 'Completed';
+  // }
+  //
+  // getLastReplyWithServiceTask(request: RequestDTO): ReplyDTO | undefined {
+  //   const replies = request.replies ?? [];
+  //   const lastReply = replies[replies.length - 1];
+  //   return lastReply?.serviceTask ? lastReply : undefined;
+  // }
+  //
+  // completeTask(replyId: string, taskId: string) {
+  //   this.taskService.completeServiceTask(taskId).subscribe({
+  //     next: () => {
+  //       console.log('Task marked as completed');
+  //       this.selectedTaskId = taskId;
+  //
+  //       // Try to find the task locally
+  //       const request = this.selectedExchange?.requests.find(req =>
+  //         req.replies?.some(r => r.id === replyId)
+  //       );
+  //
+  //       const reply = request?.replies?.find(r => r.id === replyId);
+  //       const task = reply?.serviceTask;
+  //
+  //       if (task) {
+  //         this.showReviewForm(task);
+  //       } else {
+  //         console.warn("Task not found in local data");
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Error completing task:', err);
+  //     }
+  //   });
+  // }
 
   showReviewForm(task: ServiceTaskDTO): void {
     const currentUserId = this.authService.getUserId();

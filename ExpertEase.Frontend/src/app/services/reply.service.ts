@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
-import {PagedResponse, ReplyAddDTO, ReplyDTO, ReplyUpdateDTO, RequestResponse} from '../models/api.models';
+import {PagedResponse, ReplyAddDTO, ReplyUpdateDTO} from '../models/api.models';
 import {AuthService} from './auth.service';
 
 @Injectable({
