@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {ReplyDTO, StatusEnum} from '../../models/api.models';
 import {AuthService} from '../../services/auth.service';
 import {CurrencyPipe, DatePipe, NgClass, NgIf} from '@angular/common';
@@ -14,7 +14,7 @@ import {CurrencyPipe, DatePipe, NgClass, NgIf} from '@angular/common';
   templateUrl: './reply-message.component.html',
   styleUrl: './reply-message.component.scss'
 })
-export class ReplyMessageComponent {
+export class ReplyMessageComponent implements OnInit {
   @Input() reply: ReplyDTO = {
       id: '',
       senderId: '',
@@ -34,6 +34,10 @@ export class ReplyMessageComponent {
   constructor(
     private readonly authService: AuthService,
   ) {}
+
+  ngOnInit(): void {
+    this.userRole = this.authService.getUserRole();
+  }
 
   acceptReply() {
     this.replyAccepted.emit({ requestId: this.requestId, replyId: this.reply.id });

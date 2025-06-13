@@ -94,8 +94,8 @@
               *ngSwitchCase="'reply'"
               [reply]="asTypedReply(itemWrapper)"
               [currentUserId]="userId"
-              (replyAccepted)="acceptReply(itemWrapper.item.data['requestId'], itemWrapper.item['id'])"
-              (replyRejected)="rejectReply(itemWrapper.item.data['requestId'], itemWrapper.item['id'])">
+              (replyAccepted)="acceptReply(itemWrapper.item['id'])"
+              (replyRejected)="rejectReply(itemWrapper.item['id'])">
             </app-reply-message>
 
             <!-- Error handling for unknown types -->

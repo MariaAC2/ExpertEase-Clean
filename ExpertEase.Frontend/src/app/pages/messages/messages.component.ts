@@ -16,8 +16,6 @@ import {RequestMessageComponent} from '../../shared/request-message/request-mess
 import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
 import {
   AsyncPipe,
-  DatePipe,
-  JsonPipe,
   NgClass,
   NgForOf,
   NgIf,
@@ -54,7 +52,6 @@ interface TypeGuards {
     AsyncPipe,
     SlicePipe,
     ReplyMessageComponent,
-    NgClass
   ],
   styleUrl: './messages.component.scss'
 })
@@ -65,7 +62,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private readonly conversationListPagination = { page: 1, pageSize: 20 };
   private readonly messagesPagination = { page: 1, pageSize: 50 };
 
-  private readonly USE_MOCK_DATA = true;
+  private readonly USE_MOCK_DATA = false;
 
   // Reactive state
   private readonly exchangesSubject = new BehaviorSubject<UserConversationDTO[]>([]);
@@ -108,15 +105,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.userId = "user_client_123";
-    // this.userId = this.authService.getUserId();
+    // this.userId = "user_client_123";
+    this.userId = this.authService.getUserId();
     this.loadExchanges();
   }
-
-  /**
-   * Load paginated conversation list
-   */
-
 
   loadExchanges(loadMore = false): void {
     if (!loadMore) {
@@ -423,7 +415,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   /**
    * Accept reply - called by your reply-message component
    */
-  acceptReply(requestId: string, replyId: string): void {
+  acceptReply(replyId: string): void {
     this.replyService.acceptReply(replyId)
       .pipe(
         tap(() => {
@@ -443,7 +435,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   /**
    * Reject reply - called by your reply-message component
    */
-  rejectReply(requestId: string, replyId: string): void {
+  rejectReply(replyId: string): void {
     this.replyService.rejectReply(replyId)
       .pipe(
         tap(() => {

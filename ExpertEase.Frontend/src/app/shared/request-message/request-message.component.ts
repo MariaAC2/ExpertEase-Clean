@@ -15,7 +15,7 @@ import { Timestamp } from 'firebase/firestore';
   templateUrl: './request-message.component.html',
   styleUrl: './request-message.component.scss'
 })
-export class RequestMessageComponent{
+export class RequestMessageComponent implements OnInit {
   @Input() request: RequestDTO = {
     id: '',
     senderId: '',
@@ -38,6 +38,11 @@ export class RequestMessageComponent{
   constructor(
     private readonly authService: AuthService,
   ) {}
+
+  ngOnInit(): void {
+    this.userRole = this.authService.getUserRole();
+    console.log(this.request);
+  }
 
   acceptRequest() {
     this.requestAccepted.emit(this.request.id);
