@@ -84,6 +84,7 @@
             <app-request-message
               *ngSwitchCase="'request'"
               [request]="asTypedRequest(itemWrapper)"
+              [currentUserId]="userId"
               (requestAccepted)="acceptRequest(itemWrapper.item['id'])"
               (requestRejected)="rejectRequest(itemWrapper.item['id'])">
             </app-request-message>
@@ -92,6 +93,7 @@
             <app-reply-message
               *ngSwitchCase="'reply'"
               [reply]="asTypedReply(itemWrapper)"
+              [currentUserId]="userId"
               (replyAccepted)="acceptReply(itemWrapper.item.data['requestId'], itemWrapper.item['id'])"
               (replyRejected)="rejectReply(itemWrapper.item.data['requestId'], itemWrapper.item['id'])">
             </app-reply-message>

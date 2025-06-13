@@ -15,34 +15,35 @@ import {CurrencyPipe, DatePipe, NgClass, NgIf} from '@angular/common';
   styleUrl: './reply-message.component.scss'
 })
 export class ReplyMessageComponent {
-    @Input() reply: ReplyDTO = {
-        id: '',
-        senderId: '',
-        startDate: new Date(),
-        endDate: new Date(),
-        price: 0,
-        status: StatusEnum.Pending,
-        requestId: '',
-    }
-    userRole: string | null = '';
-    @Input() requestId: string = '';
+  @Input() reply: ReplyDTO = {
+      id: '',
+      senderId: '',
+      startDate: new Date(),
+      endDate: new Date(),
+      price: 0,
+      status: StatusEnum.Pending,
+      requestId: '',
+  }
+  userRole: string | null = '';
+  @Input() requestId: string = '';
+  @Input() currentUserId: string | null | undefined; // Add this input
 
-    @Output() replyAccepted = new EventEmitter<{ requestId: string; replyId: string }>();
-    @Output() replyRejected = new EventEmitter<{ requestId: string; replyId: string }>();
+  @Output() replyAccepted = new EventEmitter<{ requestId: string; replyId: string }>();
+  @Output() replyRejected = new EventEmitter<{ requestId: string; replyId: string }>();
 
-    constructor(
-      private authService: AuthService,
-    ) {}
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
 
-    ngOnInit() {
-      this.userRole = this.authService.getUserRole(); // 'Client' or 'Specialist'
-    }
+  acceptReply() {
+    this.replyAccepted.emit({ requestId: this.requestId, replyId: this.reply.id });
+  }
 
-    acceptReply() {
-      this.replyAccepted.emit({ requestId: this.requestId, replyId: this.reply.id });
-    }
+  rejectReply() {
+    this.replyRejected.emit({ requestId: this.requestId, replyId: this.reply.id });
+  }
 
-    rejectReply() {
-      this.replyRejected.emit({ requestId: this.requestId, replyId: this.reply.id });
-    }
+  get isOwnMessage(): boolean {
+    return this.reply.senderId === this.currentUserId;
+  }
 }

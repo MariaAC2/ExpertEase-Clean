@@ -15,7 +15,7 @@ import { Timestamp } from 'firebase/firestore';
   templateUrl: './request-message.component.html',
   styleUrl: './request-message.component.scss'
 })
-export class RequestMessageComponent implements OnInit {
+export class RequestMessageComponent{
   @Input() request: RequestDTO = {
     id: '',
     senderId: '',
@@ -28,6 +28,8 @@ export class RequestMessageComponent implements OnInit {
     }
   };
 
+  @Input() currentUserId: string | null | undefined; // Add this input
+
   userRole: string | null = '';
 
   @Output() requestAccepted = new EventEmitter<string>();
@@ -35,13 +37,7 @@ export class RequestMessageComponent implements OnInit {
   @Output() makeOffer = new EventEmitter<string>();
   constructor(
     private readonly authService: AuthService,
-    private readonly requestService: RequestService
   ) {}
-
-  ngOnInit() {
-    this.userRole = this.authService.getUserRole(); // 'Client' or 'Specialist'
-    console.log(this.request);
-  }
 
   acceptRequest() {
     this.requestAccepted.emit(this.request.id);
@@ -57,5 +53,9 @@ export class RequestMessageComponent implements OnInit {
 
   triggerOffer() {
     this.makeOffer.emit(this.request.id);
+  }
+
+  get isOwnMessage(): boolean {
+    return this.request.senderId === this.currentUserId;
   }
 }

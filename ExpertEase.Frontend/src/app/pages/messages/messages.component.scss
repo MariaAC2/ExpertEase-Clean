@@ -23,7 +23,6 @@
   height: 600px;
 }
 
-// Sidebar - keeping your original style
 .sidebar {
   width: 25%;
   border-right: 3px solid black;
@@ -34,12 +33,6 @@
 .sidebar-header {
   border-bottom: 3px solid black;
   padding: 12px;
-  font-weight: bold;
-}
-
-.conversation-list {
-  flex: 1;
-  overflow-y: auto;
 }
 
 .conversation {
@@ -58,57 +51,18 @@
   &.active {
     background-color: #a695ff;
   }
-
-  img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-  }
-
-  .conversation-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    .conversation-name {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .conversation-preview {
-      font-size: 0.8rem;
-      color: #666;
-    }
-  }
-
-  .unread-badge {
-    background: #ff4444;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: bold;
-  }
 }
 
-// Chat area - your original style
+.conversation img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
 .chat-area {
   width: 75%;
   display: flex;
   flex-direction: column;
-
-  &.empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #888;
-    font-style: italic;
-  }
 }
 
 .chat-header {
@@ -118,15 +72,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
 
-  button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
+.chat-header button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .chat-messages {
@@ -134,107 +88,60 @@
   padding: 1rem;
   overflow-y: auto;
   position: relative;
+
+  // 🔄 UPDATED: Ensure all conversation items have full width for positioning
+  app-message-bubble,
+  app-request-message,
+  app-reply-message {
+    display: block;
+    width: 100%;
+  }
+
+  // 🔄 UPDATED: Remove conflicting positioning from container
+  ng-container {
+    display: contents; // This makes ng-container transparent for layout
+  }
 }
 
-// Your original input style
 .chat-input {
   border-top: 2px solid black;
   display: flex;
   align-items: center;
   padding: 0.5rem;
   gap: 0.5rem;
-
-  input[type="text"] {
-    flex: 1;
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: none;
-    font-family: 'Roboto Mono', monospace;
-
-    &:disabled {
-      background: #f5f5f5;
-      opacity: 0.6;
-    }
-  }
-
-  button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .send-btn {
-    background-color: #c9b7ff;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-
-    &:hover:not(:disabled) {
-      background-color: #b8a6ff;
-    }
-  }
 }
 
-// Load more buttons - styled to match your theme
-.load-more-btn {
-  background-color: #c9b7ff;
-  border: 2px solid black;
-  padding: 8px 16px;
-  margin: 1rem;
-  cursor: pointer;
-  font-family: 'Roboto Mono', monospace;
+.chat-input input[type="text"] {
+  flex: 1;
+  padding: 0.5rem;
   border-radius: 6px;
-  width: calc(100% - 2rem);
-
-  &:hover:not(:disabled) {
-    background-color: #b8a6ff;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  &.top {
-    margin-bottom: 0.5rem;
-  }
+  border: none;
+  font-family: 'Roboto Mono', monospace;
 }
 
-// Loading and empty states
-.loading-indicator, .empty-messages, .messages-loading {
-  text-align: center;
-  padding: 1rem;
-  font-style: italic;
-  color: #666;
-
-  p {
-    margin: 0;
-  }
+.chat-input button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
-// Error message styling
-.error-message {
-  text-align: center;
-  margin: 10px;
-
-  p {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #f5c6cb;
-    margin: 0;
-  }
+.chat-input .send-btn {
+  background-color: #c9b7ff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
 }
 
-// Keep existing styles for your components working
+.contact-link {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 0.9rem;
+}
+
+// 🔄 KEEP: These are still used by your message-bubble component
 .message-left {
   display: flex;
   justify-content: flex-start;
@@ -245,21 +152,6 @@
   display: flex;
   justify-content: flex-end;
   margin: 10px;
-}
-
-.conversation-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  box-shadow: 0 0 12px rgba(0,0,0,0.2);
 }
 
 .action-buttons {
@@ -297,4 +189,33 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
   }
+}
+
+.conversation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+}
+
+.no-conversations {
+  padding: 1rem;
+  color: #888;
+  font-style: italic;
+}
+
+.chat-area.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-style: italic;
 }

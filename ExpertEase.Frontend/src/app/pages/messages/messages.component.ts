@@ -14,12 +14,23 @@ import {MessageService} from '../../services/message.service';
 import {RequestService} from '../../services/request.service';
 import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
 import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
-import {AsyncPipe, DatePipe, JsonPipe, NgForOf, NgIf, NgSwitch, NgSwitchCase, SlicePipe} from '@angular/common';
+import {
+  AsyncPipe,
+  DatePipe,
+  JsonPipe,
+  NgClass,
+  NgForOf,
+  NgIf,
+  NgSwitch,
+  NgSwitchCase,
+  SlicePipe
+} from '@angular/common';
 import {RouterLink} from '@angular/router';
 import {FormsModule} from '@angular/forms';
 import {BehaviorSubject, Subject, takeUntil, tap} from 'rxjs';
 import {ReplyService} from '../../services/reply.service';
 import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.component';
+import {MockExchangeService} from '../../services/mock-exchange.service';
 
 // Enhanced type guards for runtime validation
 interface TypeGuards {
@@ -42,23 +53,26 @@ interface TypeGuards {
     FormsModule,
     AsyncPipe,
     SlicePipe,
-    ReplyMessageComponent
+    ReplyMessageComponent,
+    NgClass
   ],
   styleUrl: './messages.component.scss'
 })
 export class MessagesComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   // Pagination state
-  private conversationListPagination = { page: 1, pageSize: 20 };
-  private messagesPagination = { page: 1, pageSize: 50 };
+  private readonly conversationListPagination = { page: 1, pageSize: 20 };
+  private readonly messagesPagination = { page: 1, pageSize: 50 };
+
+  private readonly USE_MOCK_DATA = true;
 
   // Reactive state
-  private exchangesSubject = new BehaviorSubject<UserConversationDTO[]>([]);
-  private conversationItemsSubject = new BehaviorSubject<FirestoreConversationItemDTO[]>([]);
-  private selectedUserSubject = new BehaviorSubject<string | null>(null);
-  private loadingSubject = new BehaviorSubject<boolean>(false);
-  private selectedUserInfoSubject = new BehaviorSubject<{userId: string, fullName: string, profilePictureUrl?: string} | null>(null);
+  private readonly exchangesSubject = new BehaviorSubject<UserConversationDTO[]>([]);
+  private readonly conversationItemsSubject = new BehaviorSubject<FirestoreConversationItemDTO[]>([]);
+  private readonly selectedUserSubject = new BehaviorSubject<string | null>(null);
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+  private readonly selectedUserInfoSubject = new BehaviorSubject<{userId: string, fullName: string, profilePictureUrl?: string} | null>(null);
 
   // Public observables
   exchanges$ = this.exchangesSubject.asObservable();
@@ -89,17 +103,21 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private readonly requestService: RequestService,
     private readonly replyService: ReplyService, // Add this if you have reply service
     private readonly authService: AuthService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly mockExchangeService: MockExchangeService
   ) {}
 
   ngOnInit() {
-    this.userId = this.authService.getUserId();
+    this.userId = "user_client_123";
+    // this.userId = this.authService.getUserId();
     this.loadExchanges();
   }
 
   /**
    * Load paginated conversation list
    */
+
+
   loadExchanges(loadMore = false): void {
     if (!loadMore) {
       this.conversationListPagination.page = 1;
@@ -108,7 +126,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     this.loadingSubject.next(true);
 
-    this.exchangeService.getExchanges(this.conversationListPagination)
+    const service = this.USE_MOCK_DATA ? this.mockExchangeService : this.exchangeService;
+
+    service.getExchanges(this.conversationListPagination)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -169,10 +189,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.conversationItemsSubject.next([]);
     }
 
+    const service = this.USE_MOCK_DATA ? this.mockExchangeService : this.exchangeService;
+
     this.selectedUserSubject.next(userId);
     this.loadingSubject.next(true);
 
-    this.exchangeService.getExchange(userId, this.messagesPagination)
+    service.getExchange(userId, this.messagesPagination)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -449,5 +471,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  getMessagePosition(itemWrapper: {
+    item: FirestoreConversationItemDTO;
+    typed: MessageDTO | RequestDTO | ReplyDTO | null;
+    type: "message" | "request" | "reply" | "unknown"
+  }) {
+    const senderId = itemWrapper.item.senderId ?? itemWrapper.item["senderId"];
+    return senderId === this.userId ? 'message-right' : 'message-left';
   }
 }

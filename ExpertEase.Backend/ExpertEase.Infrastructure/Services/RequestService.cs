@@ -96,7 +96,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
 
         var firestoreRequest = new FirestoreConversationItemDTO
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = requestEntity.Id.ToString(),
             ConversationId = conversation.Id,
             SenderId = sender.Id.ToString(),
             CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow),
@@ -141,33 +141,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
     public async Task<ServiceResponse<int>> GetRequestCount(CancellationToken cancellationToken = default) => 
         ServiceResponse.CreateSuccessResponse(await repository.GetCountAsync<Request>(cancellationToken));
 
-    public async Task<ServiceResponse> UpdateRequest(RequestUpdateDTO request, UserDTO? requestingUser = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Client && 
-            (request.Description != null || request.PhoneNumber != null || request.Address != null || request.RequestedStartDate != null))
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Non users cannot update request info", ErrorCodes.CannotUpdate));
-        }
-        
-        var entity = await repository.GetAsync(new RequestSpec(request.Id), cancellationToken);
-
-        if (entity == null)
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound));
-        }
-        
-        entity.RequestedStartDate = request.RequestedStartDate ?? entity.RequestedStartDate;
-        entity.PhoneNumber = request.PhoneNumber ?? entity.PhoneNumber;
-        entity.Address = request.Address ?? entity.Address;
-        entity.Description = request.Description ?? entity.Description;
-        
-        await repository.UpdateAsync(entity, cancellationToken);
-        
-        return ServiceResponse.CreateSuccessResponse();
-    }
-    
-        public async Task<ServiceResponse> UpdateRequestStatus(StatusUpdateDTO request, UserDTO? requestingUser = null,
+    public async Task<ServiceResponse> UpdateRequestStatus(StatusUpdateDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser is { Role: UserRoleEnum.Client } && request.Status != StatusEnum.Cancelled)
@@ -187,16 +161,116 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Request is already processed", ErrorCodes.CannotUpdate));
         }
         
+        // Update PostgreSQL
         entity.Status = request.Status;
-
         if (entity.Status == StatusEnum.Rejected)
         {
             entity.RejectedAt = DateTime.UtcNow;
         }
         
         await repository.UpdateAsync(entity, cancellationToken);
+
+        // 🆕 Update Firestore conversation item
+        await UpdateFirestoreRequestStatus(entity.Id, request.Status, cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
+    }
+
+    public async Task<ServiceResponse> UpdateRequest(RequestUpdateDTO request, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Client && 
+            (request.Description != null || request.PhoneNumber != null || request.Address != null || request.RequestedStartDate != null))
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Non users cannot update request info", ErrorCodes.CannotUpdate));
+        }
+        
+        var entity = await repository.GetAsync(new RequestSpec(request.Id), cancellationToken);
+
+        if (entity == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound));
+        }
+        
+        // Update PostgreSQL
+        entity.RequestedStartDate = request.RequestedStartDate ?? entity.RequestedStartDate;
+        entity.PhoneNumber = request.PhoneNumber ?? entity.PhoneNumber;
+        entity.Address = request.Address ?? entity.Address;
+        entity.Description = request.Description ?? entity.Description;
+        
+        await repository.UpdateAsync(entity, cancellationToken);
+
+        // 🆕 Update Firestore conversation item data
+        await UpdateFirestoreRequestData(entity, cancellationToken);
+        
+        return ServiceResponse.CreateSuccessResponse();
+    }
+        
+    /// <summary>
+    /// Update the status of a request in Firestore conversation elements
+    /// </summary>
+    private async Task UpdateFirestoreRequestStatus(Guid requestId, StatusEnum newStatus, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Find the Firestore conversation item using the PostgreSQL request ID
+            var firestoreItem = await firestoreRepository.GetAsync<FirestoreConversationItemDTO>(
+                "conversationElements", 
+                requestId.ToString(), 
+                cancellationToken);
+
+            if (firestoreItem != null)
+            {
+                // Update the status in the data dictionary
+                firestoreItem.Data["Status"] = newStatus.ToString();
+                
+                // Update the Firestore document
+                await firestoreRepository.UpdateAsync("conversationElements", firestoreItem, cancellationToken);
+            }
+            else
+            {
+                // Log warning if Firestore item not found
+                Console.WriteLine($"Warning: Firestore conversation item not found for request ID {requestId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't fail the main operation
+            Console.WriteLine($"Error updating Firestore request status: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Update request data fields in Firestore conversation elements
+    /// </summary>
+    private async Task UpdateFirestoreRequestData(Request entity, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var firestoreItem = await firestoreRepository.GetAsync<FirestoreConversationItemDTO>(
+                "conversationElements", 
+                entity.Id.ToString(), 
+                cancellationToken);
+
+            if (firestoreItem != null)
+            {
+                // Update the data fields
+                firestoreItem.Data["RequestedStartDate"] = Timestamp.FromDateTime(entity.RequestedStartDate);
+                firestoreItem.Data["PhoneNumber"] = entity.PhoneNumber;
+                firestoreItem.Data["Address"] = entity.Address;
+                firestoreItem.Data["Description"] = entity.Description;
+                
+                await firestoreRepository.UpdateAsync("conversationElements", firestoreItem, cancellationToken);
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Firestore conversation item not found for request ID {entity.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating Firestore request data: {ex.Message}");
+        }
     }
 
     public async Task<ServiceResponse> DeleteRequest(Guid id, UserDTO? requestingUser = null,

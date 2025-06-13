@@ -83,27 +83,25 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             q => q.WhereEqualTo("Participants", conversationKey),
             cancellationToken);
 
-        if (conversation != null)
+        if (conversation == null) return ServiceResponse.CreateErrorResponse(new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
+        var firestoreReply = new FirestoreConversationItemDTO
         {
-            var firestoreReply = new FirestoreConversationItemDTO
+            Id = newReply.Id.ToString(),
+            ConversationId = conversation.Id,
+            SenderId = requestingUser.Id.ToString(),
+            CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow),
+            Type = "reply",
+            Data = new Dictionary<string, object>
             {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversation.Id,
-                SenderId = requestingUser.Id.ToString(),
-                CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow),
-                Type = "reply",
-                Data = new Dictionary<string, object>
-                {
-                    { "StartDate", Timestamp.FromDateTime(newReply.StartDate) },
-                    { "EndDate", Timestamp.FromDateTime(newReply.EndDate) },
-                    { "Price", newReply.Price },
-                    { "Status", "Pending" },
-                    { "RequestId", requestId.ToString() }
-                }
-            };
+                { "StartDate", Timestamp.FromDateTime(newReply.StartDate) },
+                { "EndDate", Timestamp.FromDateTime(newReply.EndDate) },
+                { "Price", newReply.Price },
+                { "Status", "Pending" },
+                { "RequestId", requestId.ToString() }
+            }
+        };
 
-            await firestoreRepository.AddAsync("conversationElements", firestoreReply, cancellationToken);
-        }
+        await firestoreRepository.AddAsync("conversationElements", firestoreReply, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -152,103 +150,121 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
                 "Only pending replies can be updated", ErrorCodes.CannotUpdate));
         }
 
-        if (reply.Status is StatusEnum.Cancelled)
+        switch (reply.Status)
         {
-            entity.Status = StatusEnum.Cancelled;
-            await repository.UpdateAsync(entity, cancellationToken);
-        }
-        if (reply.Status is StatusEnum.Rejected)
-        {
-            entity.Status = StatusEnum.Rejected;
-            await repository.UpdateAsync(entity, cancellationToken);
-            var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+            // Handle different status updates
+            case StatusEnum.Cancelled:
+                entity.Status = StatusEnum.Cancelled;
+                await repository.UpdateAsync(entity, cancellationToken);
             
-            if (request == null)
-                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-            
-            var activeReplies = request.Replies
-                .Where(r => r.Status != StatusEnum.Cancelled)
-                .ToList();
-
-            if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
-            request.Status = StatusEnum.Failed;
-            await repository.UpdateAsync(request, cancellationToken);
-        } else if (reply.Status is StatusEnum.Accepted)
-        {
-            entity.Status = StatusEnum.Accepted;
-            await repository.UpdateAsync(entity, cancellationToken);
-            var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
-                            
-            if (request == null)
-                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-            
-            var activeReplies = request.Replies
-                .Where(r => r.Status != StatusEnum.Cancelled)
-                .ToList();
-
-            if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
-            request.Status = StatusEnum.Completed;
-            await repository.UpdateAsync(request, cancellationToken);
-            await using var transaction = await repository.DbContext.Database.BeginTransactionAsync(cancellationToken);
-            try
+                // 🆕 Update Firestore
+                await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Cancelled, cancellationToken);
+                break;
+            case StatusEnum.Rejected:
             {
-                var serviceTask = new ServiceTaskAddDTO
-                {
-                    UserId = request.SenderUserId,
-                    SpecialistId = request.ReceiverUserId,
-                    ReplyId = entity.Id,
-                    StartDate = entity.StartDate,
-                    EndDate = entity.EndDate,
-                    Description = request.Description,
-                    Address = request.Address,
-                    Price = entity.Price
-                };
-                var service = await serviceTaskService.AddServiceTask(serviceTask, cancellationToken);
-                if (service.Error != null)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    return ServiceResponse.CreateErrorResponse(service.Error);
-                }
-                    
-                var specialistAccountId = await repository.GetAsync(new StripeAccountIdProjectionSpec(request.ReceiverUserId), cancellationToken);
-                if (string.IsNullOrEmpty(specialistAccountId))
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Specialist has no connected Stripe account", ErrorCodes.Invalid));
-                }
+                entity.Status = StatusEnum.Rejected;
+                await repository.UpdateAsync(entity, cancellationToken);
+            
+                // 🆕 Update Firestore
+                await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Rejected, cancellationToken);
+            
+                var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+            
+                if (request == null)
+                    return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
+            
+                var activeReplies = request.Replies
+                    .Where(r => r.Status != StatusEnum.Cancelled)
+                    .ToList();
 
-                if (service.Result != null)
+                if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
+                request.Status = StatusEnum.Failed;
+                await repository.UpdateAsync(request, cancellationToken);
+                break;
+            }
+            case StatusEnum.Accepted:
+            {
+                entity.Status = StatusEnum.Accepted;
+                await repository.UpdateAsync(entity, cancellationToken);
+            
+                // 🆕 Update Firestore
+                await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Accepted, cancellationToken);
+            
+                var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+                            
+                if (request == null)
+                    return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
+            
+                var activeReplies = request.Replies
+                    .Where(r => r.Status != StatusEnum.Cancelled)
+                    .ToList();
+
+                if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
+                request.Status = StatusEnum.Completed;
+                await repository.UpdateAsync(request, cancellationToken);
+            
+                await using var transaction = await repository.DbContext.Database.BeginTransactionAsync(cancellationToken);
+                try
                 {
-                    var payment = new PaymentAddDTO
+                    var serviceTask = new ServiceTaskAddDTO
                     {
-                        ServiceTaskId = service.Result.Id,
-                        StripeAccountId = specialistAccountId,
-                        Amount = serviceTask.Price,
+                        UserId = request.SenderUserId,
+                        SpecialistId = request.ReceiverUserId,
+                        ReplyId = entity.Id,
+                        StartDate = entity.StartDate,
+                        EndDate = entity.EndDate,
+                        Description = request.Description,
+                        Address = request.Address,
+                        Price = entity.Price
                     };
-                    
-                    var paymentResponse = await paymentService.AddPayment(payment, cancellationToken);
-                    
-                    if (paymentResponse.Error != null)
+                    var service = await serviceTaskService.AddServiceTask(serviceTask, cancellationToken);
+                    if (service.Error != null)
                     {
                         await transaction.RollbackAsync(cancellationToken);
-                        return ServiceResponse.CreateErrorResponse(paymentResponse.Error);
+                        return ServiceResponse.CreateErrorResponse(service.Error);
                     }
-                }
-
-                await transaction.CommitAsync(cancellationToken);
                     
-                return ServiceResponse.CreateSuccessResponse();
+                    var specialistAccountId = await repository.GetAsync(new StripeAccountIdProjectionSpec(request.ReceiverUserId), cancellationToken);
+                    if (string.IsNullOrEmpty(specialistAccountId))
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Specialist has no connected Stripe account", ErrorCodes.Invalid));
+                    }
+
+                    if (service.Result != null)
+                    {
+                        var payment = new PaymentAddDTO
+                        {
+                            ServiceTaskId = service.Result.Id,
+                            StripeAccountId = specialistAccountId,
+                            Amount = serviceTask.Price,
+                        };
+                    
+                        var paymentResponse = await paymentService.AddPayment(payment, cancellationToken);
+                    
+                        if (paymentResponse.Error != null)
+                        {
+                            await transaction.RollbackAsync(cancellationToken);
+                            return ServiceResponse.CreateErrorResponse(paymentResponse.Error);
+                        }
+                    }
+
+                    await transaction.CommitAsync(cancellationToken);
+                    
+                    return ServiceResponse.CreateSuccessResponse();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, $"Transaction failed: {ex.Message}", ErrorCodes.TransactionFailed));
+                }
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, $"Transaction failed: {ex.Message}", ErrorCodes.TransactionFailed));
-            }
-        }
-        else
-        {
-            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-                "Other types of status codes not permitted", ErrorCodes.CannotUpdate));
+            case StatusEnum.Pending:
+            case StatusEnum.Completed:
+            case StatusEnum.Failed:
+            default:
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                    "Other types of status codes not permitted", ErrorCodes.CannotUpdate));
         }
         return ServiceResponse.CreateSuccessResponse();
     }
@@ -261,7 +277,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
                 "Cannot add replies without being authenticated", ErrorCodes.CannotUpdate));
         }
-    
+
         if (requestingUser.Role != UserRoleEnum.Specialist)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
@@ -275,19 +291,83 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
                 "Reply not found", ErrorCodes.EntityNotFound));
         }
-    
+
         if (entity.Status is not StatusEnum.Pending)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
                 "Only pending replies can be updated", ErrorCodes.CannotUpdate));
         }
         
+        // Update PostgreSQL
         entity.StartDate = reply.StartDate ?? entity.StartDate;
         entity.EndDate = reply.EndDate ?? entity.EndDate;
         entity.Price = reply.Price ?? entity.Price;
         
         await repository.UpdateAsync(entity, cancellationToken);
+
+        // 🆕 Update Firestore conversation item data
+        await UpdateFirestoreReplyData(entity, cancellationToken);
+        
         return ServiceResponse.CreateSuccessResponse();
+    }
+
+    /// <summary>
+    /// Update the status of a reply in Firestore conversation elements
+    /// </summary>
+    private async Task UpdateFirestoreReplyStatus(Guid replyId, StatusEnum newStatus, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var firestoreItem = await firestoreRepository.GetAsync<FirestoreConversationItemDTO>(
+                "conversationElements", 
+                replyId.ToString(), 
+                cancellationToken);
+
+            if (firestoreItem != null)
+            {
+                firestoreItem.Data["Status"] = newStatus.ToString();
+                await firestoreRepository.UpdateAsync("conversationElements", firestoreItem, cancellationToken);
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Firestore conversation item not found for reply ID {replyId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating Firestore reply status: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Update reply data fields in Firestore conversation elements
+    /// </summary>
+    private async Task UpdateFirestoreReplyData(Reply entity, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var firestoreItem = await firestoreRepository.GetAsync<FirestoreConversationItemDTO>(
+                "conversationElements", 
+                entity.Id.ToString(), 
+                cancellationToken);
+
+            if (firestoreItem != null)
+            {
+                firestoreItem.Data["StartDate"] = Timestamp.FromDateTime(entity.StartDate);
+                firestoreItem.Data["EndDate"] = Timestamp.FromDateTime(entity.EndDate);
+                firestoreItem.Data["Price"] = entity.Price;
+                
+                await firestoreRepository.UpdateAsync("conversationElements", firestoreItem, cancellationToken);
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Firestore conversation item not found for reply ID {entity.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating Firestore reply data: {ex.Message}");
+        }
     }
     
     public async Task<ServiceResponse> DeleteReply(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)

@@ -15,8 +15,8 @@
     </li>
 
     <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
-<!--    <li>-->
-    <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">
+    <li>
+<!--    <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">-->
       <a routerLink="/messages" routerLinkActive="active">Mesajele tale</a>
     </li>
 
