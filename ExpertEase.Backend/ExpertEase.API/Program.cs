@@ -27,7 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton(provider =>
 {
-    var credential = GoogleCredential.FromFile("expertease-1b005-firebase-adminsdk-fbsvc-f14acd0d61.json");
+    var credential = GoogleCredential.FromFile("SecretKey/expertease-1b005-firebase-adminsdk-fbsvc-21941fd086.json");
     var firestoreBuilder = new FirestoreClientBuilder
     {
         Credential = credential
