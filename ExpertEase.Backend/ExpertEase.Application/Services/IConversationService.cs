@@ -12,10 +12,19 @@ public interface IConversationService
     Task AddConversation(Conversation conversation, CancellationToken cancellationToken = default);
     Task UpdateConversationRequestId(Guid conversationId, Guid requestId,
         CancellationToken cancellationToken = default);
-    Task<ServiceResponse<ConversationDTO>> GetConversationByUsers(Guid currentUserId, Guid senderUserId, CancellationToken cancellationToken = default);
-    Task<ServiceResponse<List<UserConversationDTO>>> GetConversationsByUsers(Guid currentUserId, CancellationToken cancellationToken);
 
-    Task<ServiceResponse> AddConvElement(FirestoreConversationItemAddDTO firestoreMessage, Guid conversationId,
+    Task<ServiceResponse<PagedResponse<FirestoreConversationItemDTO>>> GetConversationByUsers(
+        Guid currentUserId,
+        Guid userId,
+        PaginationQueryParams pagination,
+        CancellationToken cancellationToken = default);
+
+    Task<ServiceResponse<PagedResponse<UserConversationDTO>>> GetConversationsByUsers(
+        Guid currentUserId,
+        PaginationQueryParams pagination,
+        CancellationToken cancellationToken = default);
+
+    Task<ServiceResponse> AddConversationItem(FirestoreConversationItemAddDTO firestoreMessage, Guid conversationId,
         UserDTO? requestingUser, CancellationToken cancellationToken = default);
 
 }

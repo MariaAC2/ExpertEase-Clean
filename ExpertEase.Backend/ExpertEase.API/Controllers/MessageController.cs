@@ -29,7 +29,7 @@ public class MessageController(IUserService userService, IMessageService message
         };
         
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await conversationService.AddConvElement(conversationItem, conversationId, currentUser.Result)) : 
+            CreateRequestResponseFromServiceResponse(await conversationService.AddConversationItem(conversationItem, conversationId, currentUser.Result)) : 
             CreateErrorMessageResult(currentUser.Error);
     }
     

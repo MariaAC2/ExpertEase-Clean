@@ -16,21 +16,21 @@ public class ConversationController(IUserService userService, IConversationServi
 {
     [Authorize]
     [HttpGet("{senderId:guid}")]
-    public async Task<ActionResult<RequestResponse<ConversationDTO>>> GetById([FromRoute] Guid senderId)
+    public async Task<ActionResult<RequestResponse<PagedResponse<FirestoreConversationItemDTO>>>> GetById([FromQuery]PaginationQueryParams pagination, [FromRoute] Guid senderId)
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationByUsers(currentUser.Result.Id, senderId)) : 
-            CreateErrorMessageResult<ConversationDTO>(currentUser.Error);
+            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationByUsers(currentUser.Result.Id, senderId, pagination)) : 
+            CreateErrorMessageResult<PagedResponse<FirestoreConversationItemDTO>>(currentUser.Error);
     }
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<List<UserConversationDTO>>>> GetPage()
+    public async Task<ActionResult<RequestResponse<PagedResponse<UserConversationDTO>>>> GetPage([FromQuery]PaginationQueryParams pagination)
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationsByUsers(currentUser.Result.Id, CancellationToken.None)) : 
-            CreateErrorMessageResult<List<UserConversationDTO>>(currentUser.Error);
+            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationsByUsers(currentUser.Result.Id, pagination)) : 
+            CreateErrorMessageResult<PagedResponse<UserConversationDTO>>(currentUser.Error);
     }
 }

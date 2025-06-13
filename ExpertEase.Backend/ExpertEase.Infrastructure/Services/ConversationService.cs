@@ -17,14 +17,18 @@ using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 using ExpertEase.Infrastructure.Repositories;
 using Google.Cloud.Firestore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ConversationService(IRepository<WebAppDatabaseContext> repository, 
-    IFirestoreRepository firestoreRepository, 
-    IMessageService messageService,
+public class ConversationService(
+    IRepository<WebAppDatabaseContext> repository,
+    IFirestoreRepository firestoreRepository,
     IMessageUpdateQueue messageUpdateQueue,
-    IConversationNotifier notifier): IConversationService
+    IConversationNotifier notifier,
+    IMemoryCache cache,
+    ILogger<ConversationService> logger): IConversationService
 {
     public async Task AddConversation(Conversation conversation, CancellationToken cancellationToken = default)
     {
@@ -39,7 +43,7 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository,
 
         await firestoreRepository.AddAsync("conversations", firestoreDto, cancellationToken);
     }
-    public async Task<ServiceResponse> AddConvElement(
+    public async Task<ServiceResponse> AddConversationItem(
         FirestoreConversationItemAddDTO firestoreMessage,
         Guid conversationId,
         UserDTO? requestingUser,
@@ -153,21 +157,37 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository,
         dto.RequestId = requestId.ToString();
         await firestoreRepository.UpdateAsync("conversations", dto, cancellationToken);
     }
-    public async Task<ServiceResponse<ConversationDTO>> GetConversationByUsers(
+    public async Task<ServiceResponse<PagedResponse<FirestoreConversationItemDTO>>> GetConversationByUsers(
         Guid currentUserId,
         Guid userId,
+        PaginationQueryParams pagination,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
+        
+        // Validate pagination parameters
+        if (pagination.Page < 1) pagination.Page = 1;
+        if (pagination.PageSize < 1 || pagination.PageSize > 100) 
+            pagination.PageSize = 50;
+
+        var cacheKey = $"conversation_items_{currentUserId}_{userId}_p{pagination.Page}_s{pagination.PageSize}";
+
+        // 1. Try cache first
+        if (cache.TryGetValue(cacheKey, out PagedResponse<FirestoreConversationItemDTO> cachedResult))
+        {
+            logger.LogInformation("Cache hit for conversation items {CacheKey}", cacheKey);
+            return ServiceResponse.CreateSuccessResponse(cachedResult);
+        }
 
         var user = await repository.GetAsync(new UserSpec(currentUserId), cancellationToken);
         if (user is { Role: UserRoleEnum.Admin })
-            return ServiceResponse.CreateErrorResponse<ConversationDTO>(CommonErrors.NotAllowed);
+            return ServiceResponse.CreateErrorResponse<PagedResponse<FirestoreConversationItemDTO>>(CommonErrors.NotAllowed);
 
         var conversationKey = user.Role == UserRoleEnum.Client
             ? $"{currentUserId}_{userId}"
             : $"{userId}_{currentUserId}";
 
+        // 2. Get conversation metadata
         var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
             "conversations",
             q => q.WhereEqualTo("Participants", conversationKey),
@@ -175,81 +195,123 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository,
 
         if (conversation == null)
         {
-            return ServiceResponse.CreateErrorResponse<ConversationDTO>(
+            return ServiceResponse.CreateErrorResponse<PagedResponse<FirestoreConversationItemDTO>>(
                 new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
         }
 
         var conversationId = Guid.Parse(conversation.Id);
 
-        // ✅ Get all items in order
+        // 3. Get total count for pagination (cached separately for performance)
+        var totalCountCacheKey = $"conversation_total_{conversationId}";
+        if (!cache.TryGetValue(totalCountCacheKey, out int totalCount))
+        {
+            // Note: Firestore doesn't have efficient count queries, so we estimate or use a separate counter
+            // For now, we'll use a reasonable estimation based on current page results
+            var countQuery = await firestoreRepository.ListAsync<FirestoreConversationItemDTO>(
+                "conversationElements",
+                q => q.WhereEqualTo("ConversationId", conversationId.ToString())
+                      .Limit(1000), // Limit for performance, adjust based on your needs
+                cancellationToken);
+            
+            totalCount = countQuery.Count;
+            cache.Set(totalCountCacheKey, totalCount, TimeSpan.FromMinutes(5));
+        }
+
+        // 4. Calculate pagination
+        var skip = (pagination.Page - 1) * pagination.PageSize;
+
+        // 5. Get paginated conversation elements
         var elements = await firestoreRepository.ListAsync<FirestoreConversationItemDTO>(
             "conversationElements",
-            q => q.WhereEqualTo("ConversationId", conversationId.ToString()).OrderBy("CreatedAt"),
+            q => q.WhereEqualTo("ConversationId", conversationId.ToString())
+                  .OrderByDescending("CreatedAt") // Most recent first
+                  .Offset(skip)
+                  .Limit(pagination.PageSize),
             cancellationToken);
 
-        // ✅ Process unread messages
-        var unreadMessages = elements
-            .Where(e =>
-                e.Type == "message" &&
-                e.Data.TryGetValue("IsRead", out var isRead) &&
-                isRead is bool and false &&
-                e.SenderId != currentUserId.ToString())
-            .ToList();
+        // 6. Process unread messages (background task)
+        _ = ProcessUnreadMessagesAsync(elements, currentUserId, conversation, cancellationToken);
 
-        foreach (var message in unreadMessages)
-        {
-            messageUpdateQueue.Enqueue(message.Id);
-        }
+        // 7. Create PagedResponse
+        var pagedResult = new PagedResponse<FirestoreConversationItemDTO>(
+            page: pagination.Page,
+            pageSize: pagination.PageSize,
+            totalCount: totalCount,
+            data: elements.OrderBy(e => e.CreatedAt).ToList() // Chronological order for display
+        );
 
-        if (conversation.UnreadCounts != null &&
-            conversation.UnreadCounts.TryGetValue(currentUserId.ToString(), out var unreadCount) &&
-            unreadCount > 0)
-        {
-            conversation.UnreadCounts[currentUserId.ToString()] = 0;
-            await firestoreRepository.UpdateAsync("conversations", conversation, cancellationToken);
-        }
-
-        // ✅ Extract other user info
-        var isClient = conversation.ClientData.UserId == currentUserId.ToString();
-        var other = isClient ? conversation.SpecialistData : conversation.ClientData;
-
-        var result = new ConversationDTO
-        {
-            ConversationId = conversationId,
-            UserId = Guid.Parse(other.UserId),
-            UserFullName = other.UserFullName,
-            UserProfilePictureUrl = other.UserProfilePictureUrl,
-            ConversationItems = elements
-        };
+        // 8. Cache result
+        var cacheExpiry = pagination.Page == 1 
+            ? TimeSpan.FromMinutes(1)  // Recent messages cache shorter
+            : TimeSpan.FromMinutes(5); // Older messages cache longer
+            
+        cache.Set(cacheKey, pagedResult, cacheExpiry);
 
         stopwatch.Stop();
-        Console.WriteLine($"Execution Time: {stopwatch.ElapsedMilliseconds} ms");
+        logger.LogInformation("Conversation items loaded in {ElapsedMs}ms (page {Page}/{TotalPages}, {ItemCount} items)", 
+            stopwatch.ElapsedMilliseconds, 
+            pagination.Page, 
+            Math.Ceiling((double)totalCount / pagination.PageSize),
+            elements.Count);
 
-        return ServiceResponse.CreateSuccessResponse(result);
+        return ServiceResponse.CreateSuccessResponse(pagedResult);
     }
 
-    
-    public async Task<ServiceResponse<List<UserConversationDTO>>> GetConversationsByUsers(Guid currentUserId, CancellationToken cancellationToken)
+    public async Task<ServiceResponse<PagedResponse<UserConversationDTO>>> GetConversationsByUsers(
+        Guid currentUserId, 
+        PaginationQueryParams pagination,
+        CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
+        
+        // Validate pagination
+        if (pagination.Page < 1) pagination.Page = 1;
+        if (pagination.PageSize < 1 || pagination.PageSize > 50) 
+            pagination.PageSize = 20;
+
+        var cacheKey = $"user_conversations_{currentUserId}_p{pagination.Page}_s{pagination.PageSize}";
+        
+        if (cache.TryGetValue(cacheKey, out PagedResponse<UserConversationDTO> cachedConversations))
+        {
+            logger.LogInformation("Cache hit for user conversations {CacheKey}", cacheKey);
+            return ServiceResponse.CreateSuccessResponse(cachedConversations);
+        }
+
         var user = await repository.GetAsync(new UserSpec(currentUserId), cancellationToken);
         
         if (user.Role == UserRoleEnum.Admin)
         {
-            return ServiceResponse.CreateErrorResponse<List<UserConversationDTO>>(CommonErrors.NotAllowed);
+            return ServiceResponse.CreateErrorResponse<PagedResponse<UserConversationDTO>>(CommonErrors.NotAllowed);
         }
-        
-        var userIdString = currentUserId.ToString();
 
+        // Get total count of conversations for this user
+        var totalCountCacheKey = $"user_conversations_total_{currentUserId}";
+        if (!cache.TryGetValue(totalCountCacheKey, out int totalCount))
+        {
+            var allConversations = await firestoreRepository.ListAsync<FirestoreConversationDTO>(
+                "conversations",
+                collection => collection
+                    .WhereArrayContains("ParticipantIds", currentUserId.ToString())
+                    .Limit(500), // Reasonable limit for counting
+                cancellationToken);
+            
+            totalCount = allConversations.Count;
+            cache.Set(totalCountCacheKey, totalCount, TimeSpan.FromMinutes(5));
+        }
+
+        var skip = (pagination.Page - 1) * pagination.PageSize;
+
+        // Get paginated conversations
         var conversations = await firestoreRepository.ListAsync<FirestoreConversationDTO>(
             "conversations",
             collection => collection
                 .WhereArrayContains("ParticipantIds", currentUserId.ToString())
                 .OrderByDescending("LastMessageAt")
-                .Limit(20),
+                .Offset(skip)
+                .Limit(pagination.PageSize),
             cancellationToken);
 
-        var result = conversations.Select(c =>
+        var conversationDTOs = conversations.Select(c =>
         {
             var isClient = c.ClientData.UserId == currentUserId.ToString();
             var other = isClient ? c.SpecialistData : c.ClientData;
@@ -258,12 +320,157 @@ public class ConversationService(IRepository<WebAppDatabaseContext> repository,
             {
                 UserId = other.UserId,
                 UserFullName = other.UserFullName,
-                UserProfilePictureUrl = other.UserProfilePictureUrl
+                UserProfilePictureUrl = other.UserProfilePictureUrl,
+                LastMessage = c.LastMessage,
+                LastMessageAt = c.LastMessageAt.ToDateTime(),
+                UnreadCount = c.UnreadCounts?.GetValueOrDefault(currentUserId.ToString(), 0) ?? 0
             };
         }).ToList();
+
+        var pagedResult = new PagedResponse<UserConversationDTO>(
+            page: pagination.Page,
+            pageSize: pagination.PageSize,
+            totalCount: totalCount,
+            data: conversationDTOs
+        );
+
+        // Cache result
+        cache.Set(cacheKey, pagedResult, TimeSpan.FromMinutes(2));
         
         stopwatch.Stop();
-        Console.WriteLine($"Execution Time: {stopwatch.ElapsedMilliseconds} ms");
-        return ServiceResponse.CreateSuccessResponse(result);
+        logger.LogInformation("User conversations loaded in {ElapsedMs}ms (page {Page}/{TotalPages}, {Count} conversations)", 
+            stopwatch.ElapsedMilliseconds, 
+            pagination.Page,
+            Math.Ceiling((double)totalCount / pagination.PageSize),
+            conversationDTOs.Count);
+            
+        return ServiceResponse.CreateSuccessResponse(pagedResult);
+    }
+
+    // Background processing method
+    private async Task ProcessUnreadMessagesAsync(
+        List<FirestoreConversationItemDTO> elements,
+        Guid currentUserId,
+        FirestoreConversationDTO conversation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Process unread messages
+            var unreadMessages = elements
+                .Where(e => e.Type == "message" &&
+                           e.Data.TryGetValue("IsRead", out var isRead) &&
+                           isRead is bool and false &&
+                           e.SenderId != currentUserId.ToString())
+                .ToList();
+
+            foreach (var message in unreadMessages)
+            {
+                messageUpdateQueue.Enqueue(message.Id);
+            }
+
+            // Update conversation unread count
+            if (conversation.UnreadCounts?.TryGetValue(currentUserId.ToString(), out var unreadCount) == true && 
+                unreadCount > 0)
+            {
+                conversation.UnreadCounts[currentUserId.ToString()] = 0;
+                await firestoreRepository.UpdateAsync("conversations", conversation, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error processing unread messages for user {UserId}", currentUserId);
+        }
+    }
+
+    // Keep legacy method for backward compatibility
+    public async Task<ServiceResponse<ConversationDTO>> GetConversationByUsersLegacy(
+        Guid currentUserId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        // Use the new paginated method with default pagination
+        var paginationParams = new PaginationQueryParams { Page = 1, PageSize = 50 };
+        var pagedResult = await GetConversationByUsers(currentUserId, userId, paginationParams, cancellationToken);
+        
+        if (!pagedResult.IsOk)
+        {
+            return ServiceResponse.CreateErrorResponse<ConversationDTO>(pagedResult.Error);
+        }
+
+        // Convert PagedResponse back to ConversationDTO for legacy compatibility
+        var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+            "conversations",
+            q => q.WhereEqualTo("Participants", $"{currentUserId}_{userId}"),
+            cancellationToken);
+
+        if (conversation == null) 
+        {
+            return ServiceResponse.CreateErrorResponse<ConversationDTO>(
+                new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
+        }
+
+        var isClient = conversation.ClientData.UserId == currentUserId.ToString();
+        var other = isClient ? conversation.SpecialistData : conversation.ClientData;
+
+        var legacyResult = new ConversationDTO
+        {
+            ConversationId = Guid.Parse(conversation.Id),
+            UserId = Guid.Parse(other.UserId),
+            UserFullName = other.UserFullName,
+            UserProfilePictureUrl = other.UserProfilePictureUrl,
+            ConversationItems = pagedResult.Result.Data
+        };
+
+        return ServiceResponse.CreateSuccessResponse(legacyResult);
+    }
+
+    public async Task<ServiceResponse> AddConvElement(
+        FirestoreConversationItemAddDTO firestoreMessage,
+        Guid conversationId,
+        UserDTO? requestingUser,
+        CancellationToken cancellationToken = default)
+    {
+        // Your existing implementation...
+        var result = await AddConversationItem(firestoreMessage, conversationId, requestingUser, cancellationToken);
+        
+        if (result.IsOk)
+        {
+            // Invalidate all relevant caches including total counts
+            var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+                "conversations", conversationId.ToString(), cancellationToken);
+                
+            if (conversation != null)
+            {
+                InvalidateConversationCaches(conversationId, conversation.ParticipantIds);
+            }
+        }
+        
+        return result;
+    }
+
+    private void InvalidateConversationCaches(Guid conversationId, List<string> participantIds)
+    {
+        foreach (var participantId in participantIds)
+        {
+            // Remove total count caches
+            cache.Remove($"conversation_total_{conversationId}");
+            cache.Remove($"user_conversations_total_{participantId}");
+            
+            // Remove paginated caches
+            for (int page = 1; page <= 20; page++)
+            {
+                for (int pageSize = 10; pageSize <= 100; pageSize += 10)
+                {
+                    cache.Remove($"user_conversations_{participantId}_p{page}_s{pageSize}");
+                    
+                    var otherParticipants = participantIds.Where(id => id != participantId);
+                    foreach (var otherId in otherParticipants)
+                    {
+                        cache.Remove($"conversation_items_{participantId}_{otherId}_p{page}_s{pageSize}");
+                    }
+                }
+            }
+        }
     }
 }

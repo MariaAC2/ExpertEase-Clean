@@ -18,8 +18,6 @@ using Microsoft.IdentityModel.Tokens;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Firestore.V1;
-using Microsoft.AspNetCore.SignalR;
-using Stripe;
 using ReviewService = ExpertEase.Infrastructure.Services.ReviewService;
 using StripeConfiguration = Stripe.StripeConfiguration;
 
@@ -84,6 +82,8 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IConversationNotifier, ConversationNotifier>();
 builder.Services.AddSingleton<IMessageUpdateQueue, MessageUpdateWorker>();
+builder.Services.AddMemoryCache();
+
 
 builder.Services.AddHostedService<InitializerWorker>()
     .AddHostedService<MessageUpdateWorker>();

@@ -1,14 +1,12 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, OnDestroy, OnInit, TrackByFunction} from '@angular/core';
 import { Timestamp } from 'firebase/firestore';
 import {
-  ConversationDTO,
   FirestoreConversationItemDTO,
   MessageDTO,
   ReplyDTO,
   RequestDTO,
   StatusEnum,
   UserConversationDTO,
-  MessageAddDTO
 } from '../../models/api.models';
 import {AuthService} from '../../services/auth.service';
 import {ExchangeService} from '../../services/exchange.service';
@@ -16,9 +14,12 @@ import {MessageService} from '../../services/message.service';
 import {RequestService} from '../../services/request.service';
 import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
 import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
-import {JsonPipe, NgForOf, NgIf, NgSwitch, NgSwitchCase} from '@angular/common';
+import {AsyncPipe, DatePipe, JsonPipe, NgForOf, NgIf, NgSwitch, NgSwitchCase, SlicePipe} from '@angular/common';
 import {RouterLink} from '@angular/router';
 import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, Subject, takeUntil, tap} from 'rxjs';
+import {ReplyService} from '../../services/reply.service';
+import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.component';
 
 // Enhanced type guards for runtime validation
 interface TypeGuards {
@@ -38,54 +39,57 @@ interface TypeGuards {
     RouterLink,
     NgIf,
     NgSwitchCase,
-    JsonPipe,
-    FormsModule
+    FormsModule,
+    AsyncPipe,
+    SlicePipe,
+    ReplyMessageComponent
   ],
   styleUrl: './messages.component.scss'
 })
 export class MessagesComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  // Pagination state
+  private conversationListPagination = { page: 1, pageSize: 20 };
+  private messagesPagination = { page: 1, pageSize: 50 };
+
+  // Reactive state
+  private exchangesSubject = new BehaviorSubject<UserConversationDTO[]>([]);
+  private conversationItemsSubject = new BehaviorSubject<FirestoreConversationItemDTO[]>([]);
+  private selectedUserSubject = new BehaviorSubject<string | null>(null);
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  private selectedUserInfoSubject = new BehaviorSubject<{userId: string, fullName: string, profilePictureUrl?: string} | null>(null);
+
+  // Public observables
+  exchanges$ = this.exchangesSubject.asObservable();
+  conversationItems$ = this.conversationItemsSubject.asObservable();
+  selectedUser$ = this.selectedUserSubject.asObservable();
+  selectedUserInfo$ = this.selectedUserInfoSubject.asObservable();
+  loading$ = this.loadingSubject.asObservable();
+
+  // Pagination metadata
+  conversationListMeta: { totalCount: number; hasMore: boolean } = { totalCount: 0, hasMore: false };
+  messagesMeta: { totalCount: number; hasMore: boolean } = { totalCount: 0, hasMore: false };
+
+  // UI state
   messageContent: string = '';
-  userId: string | null | undefined;
-  exchanges: UserConversationDTO[] = [];
-  selectedExchange: ConversationDTO | undefined | null;
+  userId: string | null = null;
 
-  // Type guards for runtime validation
-  private typeGuards: TypeGuards = {
-    isMessage: (data: any): data is MessageDTO => {
-      return data &&
-        typeof data.id === 'string' &&
-        typeof data.senderId === 'string' &&
-        typeof data.content === 'string' &&
-        typeof data.isRead === 'boolean' &&
-        data.createdAt instanceof Date;
-    },
-
-    isRequest: (data: any): data is RequestDTO => {
-      return data &&
-        typeof data.id === 'string' &&
-        typeof data.senderId === 'string' &&
-        typeof data.description === 'string' &&
-        data.requestedStartDate instanceof Date &&
-        Object.values(StatusEnum).includes(data.status);
-    },
-
-    isReply: (data: any): data is ReplyDTO => {
-      return data &&
-        typeof data.id === 'string' &&
-        typeof data.senderId === 'string' &&
-        typeof data.requestId === 'string' &&
-        typeof data.price === 'number' &&
-        data.startDate instanceof Date &&
-        data.endDate instanceof Date &&
-        Object.values(StatusEnum).includes(data.status);
-    }
-  };
+  // TrackBy functions for performance
+  trackByConversation: TrackByFunction<UserConversationDTO> = (index, item) => item.userId;
+  trackByConversationItem: TrackByFunction<{
+    item: FirestoreConversationItemDTO;
+    typed: MessageDTO | RequestDTO | ReplyDTO | null;
+    type: 'message' | 'request' | 'reply' | 'unknown';
+  }> = (index, itemWrapper) => itemWrapper.item.id;
 
   constructor(
-    private readonly authService: AuthService,
     private readonly exchangeService: ExchangeService,
     private readonly messageService: MessageService,
-    private readonly requestService: RequestService
+    private readonly requestService: RequestService,
+    private readonly replyService: ReplyService, // Add this if you have reply service
+    private readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -94,29 +98,144 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Safe timestamp conversion utility
+   * Load paginated conversation list
    */
-  private convertTimestamp(timestamp: any): Date {
-    if (timestamp instanceof Date) return timestamp;
-    if (timestamp && typeof timestamp.toDate === 'function') {
-      return timestamp.toDate();
+  loadExchanges(loadMore = false): void {
+    if (!loadMore) {
+      this.conversationListPagination.page = 1;
+      this.exchangesSubject.next([]);
     }
-    if (timestamp && typeof timestamp.seconds === 'number') {
-      return new Date(timestamp.seconds * 1000);
-    }
-    if (typeof timestamp === 'string') {
-      return new Date(timestamp);
-    }
-    console.warn('Unknown timestamp format:', timestamp);
-    return new Date();
+
+    this.loadingSubject.next(true);
+
+    this.exchangeService.getExchanges(this.conversationListPagination)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.response) {
+            const pagedData = response.response;
+            const currentExchanges = loadMore ? this.exchangesSubject.value : [];
+            const newExchanges = [...currentExchanges, ...(pagedData.data || [])];
+
+            this.exchangesSubject.next(newExchanges);
+            this.conversationListMeta = {
+              totalCount: pagedData.totalCount,
+              hasMore: newExchanges.length < pagedData.totalCount
+            };
+
+            if (!loadMore && Array.isArray(pagedData.data) && pagedData.data.length > 0) {
+              this.selectConversation(pagedData.data[0]);
+            }
+          }
+          this.loadingSubject.next(false);
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Error loading conversations:', err);
+          this.loadingSubject.next(false);
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   /**
-   * Enhanced deserialization with proper validation and error handling
+   * Load more conversations (infinite scroll)
    */
-  deserializeItem(item: FirestoreConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
+  loadMoreExchanges(): void {
+    if (this.conversationListMeta.hasMore && !this.loadingSubject.value) {
+      this.conversationListPagination.page++;
+      this.loadExchanges(true);
+    }
+  }
+
+  /**
+   * Select a conversation and load its messages
+   */
+  selectConversation(conversation: UserConversationDTO): void {
+    this.selectedUserInfoSubject.next({
+      userId: conversation.userId,
+      fullName: conversation.userFullName,
+      profilePictureUrl: conversation.userProfilePictureUrl
+    });
+    this.loadConversationMessages(conversation.userId);
+  }
+
+  /**
+   * Load paginated conversation messages
+   */
+  loadConversationMessages(userId: string, loadMore = false): void {
+    if (!loadMore) {
+      this.messagesPagination.page = 1;
+      this.conversationItemsSubject.next([]);
+    }
+
+    this.selectedUserSubject.next(userId);
+    this.loadingSubject.next(true);
+
+    this.exchangeService.getExchange(userId, this.messagesPagination)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.response) {
+            const pagedData = response.response;
+            const currentItems = loadMore ? this.conversationItemsSubject.value : [];
+
+            const newItems = loadMore
+              ? [...(pagedData.data || []), ...currentItems]
+              : [...currentItems, ...(pagedData.data || [])];
+
+            this.conversationItemsSubject.next(newItems);
+            this.messagesMeta = {
+              totalCount: pagedData.totalCount,
+              hasMore: newItems.length < pagedData.totalCount
+            };
+          }
+          this.loadingSubject.next(false);
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Error loading conversation messages:', err);
+          this.loadingSubject.next(false);
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  /**
+   * Load more messages (infinite scroll)
+   */
+  loadMoreMessages(): void {
+    const selectedUser = this.selectedUserSubject.value;
+    if (selectedUser && this.messagesMeta.hasMore && !this.loadingSubject.value) {
+      this.messagesPagination.page++;
+      this.loadConversationMessages(selectedUser, true);
+    }
+  }
+
+  /**
+   * Get typed conversation items for template
+   */
+  getTypedConversationItems(): Array<{
+    item: FirestoreConversationItemDTO;
+    typed: MessageDTO | RequestDTO | ReplyDTO | null;
+    type: 'message' | 'request' | 'reply' | 'unknown';
+  }> {
+    const items = this.conversationItemsSubject.value;
+    if (!items) return [];
+
+    return items.map(item => {
+      const typed = this.deserializeItem(item);
+      const type = typed ? item.type as ('message' | 'request' | 'reply') : 'unknown';
+
+      return { item, typed, type };
+    });
+  }
+
+  /**
+   * Deserialize conversation item
+   */
+  private deserializeItem(item: FirestoreConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
     if (!item || !item.data || !item.type) {
-      console.error('Invalid conversation item structure:', item);
       return null;
     }
 
@@ -129,36 +248,24 @@ export class MessagesComponent implements OnInit, OnDestroy {
     try {
       switch (item.type.toLowerCase()) {
         case 'message':
-          const messageData = {
+          return {
             ...baseFields,
             content: data['Content'] || data['content'] || '',
             createdAt: this.convertTimestamp(data['CreatedAt'] || data['createdAt'] || item.createdAt),
             isRead: Boolean(data['IsRead'] ?? data['isRead'] ?? false)
           } as MessageDTO;
 
-          if (this.typeGuards.isMessage(messageData)) {
-            return messageData;
-          }
-          break;
-
         case 'request':
-          const requestData = {
+          return {
             ...baseFields,
-            requestedStartDate: this.convertTimestamp(
-              data['RequestedStartDate'] || data['requestedStartDate']
-            ),
+            requestedStartDate: this.convertTimestamp(data['RequestedStartDate'] || data['requestedStartDate']),
             description: data['Description'] || data['description'] || '',
             status: data['Status'] || data['status'] || StatusEnum.Pending,
             senderContactInfo: data['SenderContactInfo'] || data['senderContactInfo']
           } as RequestDTO;
 
-          if (this.typeGuards.isRequest(requestData)) {
-            return requestData;
-          }
-          break;
-
         case 'reply':
-          const replyData = {
+          return {
             ...baseFields,
             requestId: data['RequestId'] || data['requestId'] || '',
             startDate: this.convertTimestamp(data['StartDate'] || data['startDate']),
@@ -168,119 +275,34 @@ export class MessagesComponent implements OnInit, OnDestroy {
             serviceTask: data['ServiceTask'] || data['serviceTask']
           } as ReplyDTO;
 
-          if (this.typeGuards.isReply(replyData)) {
-            return replyData;
-          }
-          break;
-
         default:
-          console.warn('Unknown conversation item type:', item.type);
           return null;
       }
     } catch (error) {
       console.error('Error deserializing conversation item:', error, item);
       return null;
     }
-
-    console.error('Failed type validation for item:', item.type, data);
-    return null;
   }
 
   /**
-   * Safe casting methods with fallback to deserialization
+   * Safe timestamp conversion
    */
-  asMessage(item: FirestoreConversationItemDTO): MessageDTO {
-    const deserialized = this.deserializeItem(item);
-    if (deserialized && this.typeGuards.isMessage(deserialized)) {
-      return deserialized;
+  private convertTimestamp(timestamp: any): Date {
+    if (timestamp instanceof Date) return timestamp;
+    if (timestamp && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate();
     }
-
-    // Fallback with basic validation
-    console.warn('Using fallback message deserialization for item:', item.id);
-    return {
-      id: item.id,
-      senderId: item.senderId,
-      content: item.data['Content'] || item.data['content'] || '[Invalid message]',
-      createdAt: this.convertTimestamp(item.createdAt),
-      isRead: Boolean(item.data['IsRead'] ?? item.data['isRead'] ?? false)
-    } as MessageDTO;
-  }
-
-  asRequest(item: FirestoreConversationItemDTO): RequestDTO {
-    const deserialized = this.deserializeItem(item);
-    if (deserialized && this.typeGuards.isRequest(deserialized)) {
-      return deserialized;
+    if (timestamp && typeof timestamp.seconds === 'number') {
+      return new Date(timestamp.seconds * 1000);
     }
-
-    console.warn('Using fallback request deserialization for item:', item.id);
-    return {
-      id: item.id,
-      senderId: item.senderId,
-      requestedStartDate: this.convertTimestamp(item.data['RequestedStartDate'] || item.data['requestedStartDate']),
-      description: item.data['Description'] || item.data['description'] || '[Invalid request]',
-      status: item.data['Status'] || item.data['status'] || StatusEnum.Pending
-    } as RequestDTO;
-  }
-
-  asReply(item: FirestoreConversationItemDTO): ReplyDTO {
-    const deserialized = this.deserializeItem(item);
-    if (deserialized && this.typeGuards.isReply(deserialized)) {
-      return deserialized;
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp);
     }
-
-    console.warn('Using fallback reply deserialization for item:', item.id);
-    return {
-      id: item.id,
-      senderId: item.senderId,
-      requestId: item.data['RequestId'] || item.data['requestId'] || '',
-      startDate: this.convertTimestamp(item.data['StartDate'] || item.data['startDate']),
-      endDate: this.convertTimestamp(item.data['EndDate'] || item.data['endDate']),
-      price: Number(item.data['Price'] || item.data['price'] || 0),
-      status: item.data['Status'] || item.data['status'] || StatusEnum.Pending
-    } as ReplyDTO;
+    return new Date();
   }
 
   /**
-   * Get properly typed conversation items
-   */
-  getTypedConversationItems(): Array<{
-    item: FirestoreConversationItemDTO;
-    typed: MessageDTO | RequestDTO | ReplyDTO | null;
-    type: 'message' | 'request' | 'reply' | 'unknown';
-  }> {
-    if (!this.selectedExchange?.conversationItems) return [];
-
-    return this.selectedExchange.conversationItems.map(item => {
-      const typed = this.deserializeItem(item);
-      const type = typed ? item.type as ('message' | 'request' | 'reply') : 'unknown';
-
-      return { item, typed, type };
-    });
-  }
-
-  /**
-   * Type-safe getters for specific item types
-   */
-  getMessages(): MessageDTO[] {
-    return this.getTypedConversationItems()
-      .filter(item => item.type === 'message' && item.typed)
-      .map(item => item.typed as MessageDTO);
-  }
-
-  getRequests(): RequestDTO[] {
-    return this.getTypedConversationItems()
-      .filter(item => item.type === 'request' && item.typed)
-      .map(item => item.typed as RequestDTO);
-  }
-
-  getReplies(): ReplyDTO[] {
-    return this.getTypedConversationItems()
-      .filter(item => item.type === 'reply' && item.typed)
-      .map(item => item.typed as ReplyDTO);
-  }
-
-  /**
-   * Safe type casting methods for template use
+   * Type casting methods for template
    */
   asTypedMessage(itemWrapper: any): MessageDTO {
     return itemWrapper.typed as MessageDTO;
@@ -294,97 +316,138 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return itemWrapper.typed as ReplyDTO;
   }
 
-  loadExchanges(): void {
-    this.exchangeService.getExchanges().subscribe({
-      next: (res) => {
-        this.exchanges = res.response ?? [];
-        console.log('Conversations loaded:', this.exchanges);
-
-        if (this.exchanges.length > 0) {
-          const lastUser = this.exchanges[this.exchanges.length - 1];
-          this.loadExchange(lastUser.userId);
-        }
-      },
-      error: (err) => {
-        console.error('Error loading conversations:', err);
-      }
-    });
-  }
-
-  loadExchange(senderUserId: string | undefined): void {
-    if (!senderUserId) return;
-
-    console.log('Loading exchange for user:', senderUserId);
-    this.exchangeService.getExchange(senderUserId).subscribe({
-      next: (res) => {
-        console.log('Exchange loaded:', res.response);
-        this.selectedExchange = res.response;
-
-        // Validate conversation items
-        if (this.selectedExchange?.conversationItems) {
-          const typedItems = this.getTypedConversationItems();
-          const invalidItems = typedItems.filter(item => item.type === 'unknown');
-
-          if (invalidItems.length > 0) {
-            console.warn(`Found ${invalidItems.length} invalid conversation items:`, invalidItems);
-          }
-        }
-      },
-      error: (err) => {
-        console.error('Failed to reload exchange', err);
-      }
-    });
-  }
-
+  /**
+   * Send message with optimistic update
+   */
   sendMessage(content: string): void {
-    if (!content.trim() || !this.selectedExchange) {
-      console.error('Cannot send empty message or no exchange selected');
-      return;
-    }
+    const selectedUser = this.selectedUserSubject.value;
+    if (!content.trim() || !selectedUser) return;
 
-    const message: MessageAddDTO = { content: content.trim() };
-
-    this.messageService.sendMessage(this.selectedExchange.conversationId, message).subscribe({
-      next: (res) => {
-        console.log('Message sent successfully:', res);
-        this.loadExchange(this.selectedExchange?.userId);
-        this.messageContent = '';
-      },
-      error: (err) => {
-        console.error('Error sending message:', err);
+    // Optimistic update
+    const tempMessage = {
+      id: `temp_${Date.now()}`,
+      conversationId: 'temp',
+      senderId: this.userId!,
+      type: 'message' as const,
+      createdAt: Timestamp.fromDate(new Date()),
+      data: {
+        Content: content.trim(),
+        SenderId: this.userId!,
+        CreatedAt: new Date(),
+        IsRead: false
       }
-    });
+    };
+
+    const currentItems = this.conversationItemsSubject.value;
+    this.conversationItemsSubject.next([...currentItems, tempMessage]);
+    this.messageContent = '';
+    this.cdr.markForCheck();
+
+    // Send actual message
+    this.messageService.sendMessage(selectedUser, { content: content.trim() })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loadConversationMessages(selectedUser);
+        },
+        error: (err) => {
+          console.error('Error sending message:', err);
+          this.conversationItemsSubject.next(currentItems);
+          this.cdr.markForCheck();
+        }
+      });
   }
 
+  /**
+   * Accept request - called by your request-message component
+   */
   acceptRequest(requestId: string): void {
-    this.requestService.acceptRequest(requestId).subscribe({
-      next: () => {
-        console.log('Request accepted');
-        this.loadExchange(this.selectedExchange?.userId);
-      },
-      error: (err) => {
-        console.error('Error accepting request:', err);
-      }
-    });
+    this.requestService.acceptRequest(requestId)
+      .pipe(
+        tap(() => {
+          const selectedUser = this.selectedUserSubject.value;
+          if (selectedUser) {
+            this.loadConversationMessages(selectedUser);
+          }
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => console.log('Request accepted'),
+        error: (err) => console.error('Error accepting request:', err)
+      });
   }
 
+  /**
+   * Reject request - called by your request-message component
+   */
   rejectRequest(requestId: string): void {
-    this.requestService.rejectRequest(requestId).subscribe({
-      next: () => {
-        console.log('Request rejected');
-        this.loadExchange(this.selectedExchange?.userId);
-      },
-      error: (err) => {
-        console.error('Error rejecting request:', err);
-      }
-    });
+    this.requestService.rejectRequest(requestId)
+      .pipe(
+        tap(() => {
+          const selectedUser = this.selectedUserSubject.value;
+          if (selectedUser) {
+            this.loadConversationMessages(selectedUser);
+          }
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => console.log('Request rejected'),
+        error: (err) => console.error('Error rejecting request:', err)
+      });
+  }
+
+  /**
+   * Accept reply - called by your reply-message component
+   */
+  acceptReply(requestId: string, replyId: string): void {
+    this.replyService.acceptReply(replyId)
+      .pipe(
+        tap(() => {
+          const selectedUser = this.selectedUserSubject.value;
+          if (selectedUser) {
+            this.loadConversationMessages(selectedUser);
+          }
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => console.log('Reply accepted'),
+        error: (err) => console.error('Error accepting reply:', err)
+      });
+  }
+
+  /**
+   * Reject reply - called by your reply-message component
+   */
+  rejectReply(requestId: string, replyId: string): void {
+    this.replyService.rejectReply(replyId)
+      .pipe(
+        tap(() => {
+          const selectedUser = this.selectedUserSubject.value;
+          if (selectedUser) {
+            this.loadConversationMessages(selectedUser);
+          }
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => console.log('Reply rejected'),
+        error: (err) => console.error('Error rejecting reply:', err)
+      });
+  }
+
+  /**
+   * Open media picker - your existing method
+   */
+  openMediaPicker(): void {
+    console.log('Open media picker');
+    // Your existing implementation
   }
 
   ngOnDestroy(): void {
-    // Cleanup logic here
-  }
-
-  openMediaPicker() {
-
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

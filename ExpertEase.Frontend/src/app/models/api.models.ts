@@ -459,6 +459,9 @@ export interface UserConversationDTO {
   userId: string;
   userFullName: string;
   userProfilePictureUrl?: string;
+  lastMessage: string;
+  lastMessageAt: Date;
+  unreadCount: number;
 }
 
 export interface UserRegisterDTO {
@@ -517,4 +520,18 @@ export interface PortfolioPictureAddDTO
   fileStream: File;
   contentType: string;
   fileName: string;
+}
+
+export interface MapMarker {
+  position: google.maps.LatLngLiteral;
+  title: string;
+  specialist: UserDTO;
+  info?: {
+    name: string;
+    description: string;
+    rating: number;
+    categories: string[];
+    profilePicture?: string;
+    distance?: number;
+  };
 }
