@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ExpertEase.Application.DataTransferObjects.MessageDTOs;
+using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.RequestDTOs;
+using ExpertEase.Domain.Entities;
 
-namespace ExpertEase.Application.DataTransferObjects.UserDTOs;
+namespace ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 
 public class ConversationDTO
 {
@@ -14,9 +16,11 @@ public class ConversationDTO
     [Required]
     public string? UserProfilePictureUrl { get; set; } = null!;
     [Required]
-    public List<RequestDTO> Requests { get; set; } = new List<RequestDTO>();
+    public List<FirestoreRequestDTO> Requests { get; set; } = new();
     [Required]
-    public List<MessageDTO> Messages { get; set; } = new List<MessageDTO>();
+    public List<FirestoreReplyDTO> Replies { get; set; } = new();
+    [Required]
+    public List<FirestoreMessageDTO> Messages { get; set; } = new();
 }
 
 public class UserConversationDTO
