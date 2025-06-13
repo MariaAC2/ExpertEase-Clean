@@ -1,0 +1,47 @@
+* [33mfb4181c[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Final removal of Firebase key from HEAD
+* [33m90afae1[m Moments before adding request/reply into the firebase for conversation retrieving
+* [33ma7dfb5f[m Frontend: created static pages for about us, contact us, terms and conditions, privacy agreement; Backend: add conversation in firestore database
+* [33mcaee6c1[m Deleted all instances of transaction and account (for now)
+* [33mad9b653[m Revert "In the thick of it"
+* [33mc977e95[m In the thick of it
+* [33m2473d63[m Moments before disaster (delete all account and transaction logic)
+* [33m88c5bfb[m Added review page and settings page(not complete; not integrated)
+* [33m373b00a[m Added profile picture (the backend for adding and getting picture works; the frontend does not have portfolio settings)
+* [33mf77b721[m Changed logic in order to optimize conversation retrieving(it still needs more optimization)
+* [33m46f19cc[m Created messages sending feature (tested)
+* [33mc36b9d8[m Controller refactoring final version (needs to be connected to frontend)
+* [33m9900162[m Controller refactoring (needs testing)
+* [33m0f70829[m Created categories for specialist to add frontend (not tested with backend)
+* [33m2bb0faf[m I did a lot of things but I forgot what I did exactly
+* [33m65adfc5[m Added review functionality and it works (the register doesn't redirect page tho)
+* [33mbd29b7a[m Added messages, requests and replies with backend
+* [33m1a7d8f6[m Database complete (mai am de creat frontend si conectat cu backend)
+* [33mae3a319[m Created a lot more stuff - saving without testing
+* [33m93e5292[m Admin users and admin specialists pages complete with search, pagination and all endpoints
+* [33m03422f3[m Added only interfaces (services will be manually created); Changed register.ts and login.ts to have dto's and checked if it works
+* [33md85ca43[m Edited backend for creating better swagger
+* [33m3be4e04[m Created admin dashboard and table content for users and specialists(not tested); created admin entry for replies (it was missing from backend)
+* [33m4b3593f[m Created admin main page
+* [33mec435bf[m Login and register tested + Edited those pages + Edited nav bar
+* [33mcc6ce5f[m Added login to frontend (not tested)
+* [33m95f67b2[m Final touches to backend
+* [33m14716f4[m Tested majority functionality; admin endpoints not really
+* [33m3ab1f6d[m Created categories table with functionality for admin and specialist (not tested)
+* [33m04f15d8[m Modified transactions in order to create summary and send email and general refactoring
+* [33m536b155[m Added reply functionality and edited transaction (not tested)
+* [33m8620c16[m Created Request functionality (not all endpoints tested)
+* [33meb962ab[m Implemented transactions (I tested some endpoints but not all)
+* [33m830fad1[m Created specialist controller, general refactoring and mail trap
+* [33mee8c76b[m Added account functionality (without transactions)
+* [33m4c920d9[m Implemented become_specialist and add_account for user
+* [33m730c5dd[m Added account to user
+* [33madca3b5[m Added Account entity
+* [33mfa573b9[m Completed part of database
+* [33m3192451[m Updated specialist database and relationship to user
+* [33m65dc653[m Attempt at authorization with role
+* [33mb526a01[m Authorization works (finally)
+* [33m51f172a[m Latest push: 3.04
+* [33m2e1991d[m Added Response class for errors and general refactoring
+* [33m22e7db5[m Modified User class and added home page
+* [33m8d73d44[m Added angular part of project
+* [33ma643470[m Initial commit
