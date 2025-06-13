@@ -1,142 +1,304 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Timestamp } from 'firebase/firestore';
 import {
-  ConversationDTO, FirestoreConversationItemDTO, MessageDTO, ReplyDTO, RequestDTO,
-  JobStatusEnum, MessageAddDTO,
-  ReplyAddDTO,
-  ReviewAddDTO,
-  ServiceTaskDTO,
+  ConversationDTO,
+  FirestoreConversationItemDTO,
+  MessageDTO,
+  ReplyDTO,
+  RequestDTO,
   StatusEnum,
   UserConversationDTO,
-  UserRoleEnum
+  MessageAddDTO
 } from '../../models/api.models';
-import {CommonModule} from '@angular/common';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {AuthService} from '../../services/auth.service';
 import {ExchangeService} from '../../services/exchange.service';
-import {Router, RouterLink} from '@angular/router';
-import {ReplyService} from '../../services/reply.service';
-import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
-import {ReplyFormComponent} from '../../shared/reply-form/reply-form.component';
-import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.component';
-import {ServiceMessageComponent} from '../../shared/service-message/service-message.component';
-import {TaskService} from '../../services/task.service';
-import {ReviewService} from '../../services/review.service';
-import {ReviewFormComponent} from '../../shared/review-form/review-form.component';
-import {RequestService} from '../../services/request.service';
-import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
 import {MessageService} from '../../services/message.service';
-import {SignalRService} from '../../services/signalr.service';
+import {RequestService} from '../../services/request.service';
+import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
+import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
+import {JsonPipe, NgForOf, NgIf, NgSwitch, NgSwitchCase} from '@angular/common';
+import {RouterLink} from '@angular/router';
+import {FormsModule} from '@angular/forms';
+
+// Enhanced type guards for runtime validation
+interface TypeGuards {
+  isMessage(data: any): data is MessageDTO;
+  isRequest(data: any): data is RequestDTO;
+  isReply(data: any): data is ReplyDTO;
+}
 
 @Component({
   selector: 'app-messages',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReactiveFormsModule, RequestMessageComponent, ReplyFormComponent, ReplyMessageComponent, ReviewFormComponent, RouterLink, MessageBubbleComponent],
   templateUrl: './messages.component.html',
+  imports: [
+    RequestMessageComponent,
+    MessageBubbleComponent,
+    NgSwitch,
+    NgForOf,
+    RouterLink,
+    NgIf,
+    NgSwitchCase,
+    JsonPipe,
+    FormsModule
+  ],
   styleUrl: './messages.component.scss'
 })
 export class MessagesComponent implements OnInit, OnDestroy {
   messageContent: string = '';
-  request: RequestDTO | undefined;
-  userRole: string | null | undefined;
   userId: string | null | undefined;
-  isReplyFormVisible: boolean = false;
-  isReviewFormVisible: boolean = false;
-  replyForm: {
-    requestId: string;
-    startDate: Date;
-    endDate: Date;
-    price: number;
-  } = {
-    requestId: '',
-    startDate: new Date(),
-    endDate: new Date(),
-    price: 0
-  }
-
-  reviewForm: {
-    receiverUserId: string;
-    rating: number;
-    content: string;
-  } = {
-    receiverUserId: '',
-    rating: 5,
-    content: '',
-  }
-  selectedRequestId: string | undefined | null;
   exchanges: UserConversationDTO[] = [];
   selectedExchange: ConversationDTO | undefined | null;
-  selectedTaskId: string | undefined;
 
-  // dummy_exchanges: ConversationDTO[] = [
-  //   { id: 'spec456', fullName: 'Ana Popescu' },
-  //   { id: '2', fullName: 'Ion Vasile' },
-  //   { id: '3', fullName: 'Elena Georgescu' }
-  // ];
-  //
-  // dummy_selectedExchange: UserConversationDTO = {
-  //   id: 'spec456',
-  //   fullName: 'Ana Popescu',
-  //   requests: [
-  //     {
-  //       id: 'req1',
-  //       senderUserId: 'user123',
-  //       receiverUserId: 'spec456',
-  //       requestedStartDate: new Date('2025-06-01T10:00:00'),
-  //       description: 'Instalare aer condiționat',
-  //       status: StatusEnum.Accepted,
-  //       senderContactInfo: {
-  //         phoneNumber: '0722123456',
-  //         address: 'Str. Libertății, nr. 15'
-  //       },
-  //       replies: []
-  //     },
-  //     {
-  //       id: 'req2',
-  //       senderUserId: 'user123',
-  //       receiverUserId: 'spec456',
-  //       requestedStartDate: new Date('2025-06-05T14:30:00'),
-  //       description: 'Montare televizor pe perete',
-  //       status: StatusEnum.Pending,
-  //       replies: []
-  //     }
-  //   ],
-  //   messages: [
-  //     {
-  //       id: 'msg1',
-  //       senderId: 'user123',
-  //       receiverId: 'spec456',
-  //       content: 'Bună ziua, puteți veni săptămâna viitoare?',
-  //       createdAt: new Date('2025-05-31T12:00:00'),
-  //       isRead: true
-  //     },
-  //     {
-  //       id: 'msg2',
-  //       senderId: 'spec456',
-  //       receiverId: 'user123',
-  //       content: 'Sigur, marți este ok pentru mine.',
-  //       createdAt: new Date('2025-05-31T13:15:00'),
-  //       isRead: false
-  //     }
-  //   ]
-  // };
+  // Type guards for runtime validation
+  private typeGuards: TypeGuards = {
+    isMessage: (data: any): data is MessageDTO => {
+      return data &&
+        typeof data.id === 'string' &&
+        typeof data.senderId === 'string' &&
+        typeof data.content === 'string' &&
+        typeof data.isRead === 'boolean' &&
+        data.createdAt instanceof Date;
+    },
 
-  constructor(private readonly authService: AuthService,
-              private readonly requestService: RequestService,
-              private readonly replyService: ReplyService,
-              private readonly exchangeService: ExchangeService,
-              private readonly messageService: MessageService,
-              private readonly taskService: TaskService,
-              private readonly reviewService: ReviewService,
-              private readonly route: Router,
-              private signalRService: SignalRService) {}
+    isRequest: (data: any): data is RequestDTO => {
+      return data &&
+        typeof data.id === 'string' &&
+        typeof data.senderId === 'string' &&
+        typeof data.description === 'string' &&
+        data.requestedStartDate instanceof Date &&
+        Object.values(StatusEnum).includes(data.status);
+    },
+
+    isReply: (data: any): data is ReplyDTO => {
+      return data &&
+        typeof data.id === 'string' &&
+        typeof data.senderId === 'string' &&
+        typeof data.requestId === 'string' &&
+        typeof data.price === 'number' &&
+        data.startDate instanceof Date &&
+        data.endDate instanceof Date &&
+        Object.values(StatusEnum).includes(data.status);
+    }
+  };
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly exchangeService: ExchangeService,
+    private readonly messageService: MessageService,
+    private readonly requestService: RequestService
+  ) {}
 
   ngOnInit() {
-    this.userRole = this.authService.getUserRole();
     this.userId = this.authService.getUserId();
+    this.loadExchanges();
+  }
 
+  /**
+   * Safe timestamp conversion utility
+   */
+  private convertTimestamp(timestamp: any): Date {
+    if (timestamp instanceof Date) return timestamp;
+    if (timestamp && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate();
+    }
+    if (timestamp && typeof timestamp.seconds === 'number') {
+      return new Date(timestamp.seconds * 1000);
+    }
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp);
+    }
+    console.warn('Unknown timestamp format:', timestamp);
+    return new Date();
+  }
+
+  /**
+   * Enhanced deserialization with proper validation and error handling
+   */
+  deserializeItem(item: FirestoreConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
+    if (!item || !item.data || !item.type) {
+      console.error('Invalid conversation item structure:', item);
+      return null;
+    }
+
+    const data = item.data;
+    const baseFields = {
+      id: item.id,
+      senderId: item.senderId || data['SenderId'] || data['senderId']
+    };
+
+    try {
+      switch (item.type.toLowerCase()) {
+        case 'message':
+          const messageData = {
+            ...baseFields,
+            content: data['Content'] || data['content'] || '',
+            createdAt: this.convertTimestamp(data['CreatedAt'] || data['createdAt'] || item.createdAt),
+            isRead: Boolean(data['IsRead'] ?? data['isRead'] ?? false)
+          } as MessageDTO;
+
+          if (this.typeGuards.isMessage(messageData)) {
+            return messageData;
+          }
+          break;
+
+        case 'request':
+          const requestData = {
+            ...baseFields,
+            requestedStartDate: this.convertTimestamp(
+              data['RequestedStartDate'] || data['requestedStartDate']
+            ),
+            description: data['Description'] || data['description'] || '',
+            status: data['Status'] || data['status'] || StatusEnum.Pending,
+            senderContactInfo: data['SenderContactInfo'] || data['senderContactInfo']
+          } as RequestDTO;
+
+          if (this.typeGuards.isRequest(requestData)) {
+            return requestData;
+          }
+          break;
+
+        case 'reply':
+          const replyData = {
+            ...baseFields,
+            requestId: data['RequestId'] || data['requestId'] || '',
+            startDate: this.convertTimestamp(data['StartDate'] || data['startDate']),
+            endDate: this.convertTimestamp(data['EndDate'] || data['endDate']),
+            price: Number(data['Price'] || data['price'] || 0),
+            status: data['Status'] || data['status'] || StatusEnum.Pending,
+            serviceTask: data['ServiceTask'] || data['serviceTask']
+          } as ReplyDTO;
+
+          if (this.typeGuards.isReply(replyData)) {
+            return replyData;
+          }
+          break;
+
+        default:
+          console.warn('Unknown conversation item type:', item.type);
+          return null;
+      }
+    } catch (error) {
+      console.error('Error deserializing conversation item:', error, item);
+      return null;
+    }
+
+    console.error('Failed type validation for item:', item.type, data);
+    return null;
+  }
+
+  /**
+   * Safe casting methods with fallback to deserialization
+   */
+  asMessage(item: FirestoreConversationItemDTO): MessageDTO {
+    const deserialized = this.deserializeItem(item);
+    if (deserialized && this.typeGuards.isMessage(deserialized)) {
+      return deserialized;
+    }
+
+    // Fallback with basic validation
+    console.warn('Using fallback message deserialization for item:', item.id);
+    return {
+      id: item.id,
+      senderId: item.senderId,
+      content: item.data['Content'] || item.data['content'] || '[Invalid message]',
+      createdAt: this.convertTimestamp(item.createdAt),
+      isRead: Boolean(item.data['IsRead'] ?? item.data['isRead'] ?? false)
+    } as MessageDTO;
+  }
+
+  asRequest(item: FirestoreConversationItemDTO): RequestDTO {
+    const deserialized = this.deserializeItem(item);
+    if (deserialized && this.typeGuards.isRequest(deserialized)) {
+      return deserialized;
+    }
+
+    console.warn('Using fallback request deserialization for item:', item.id);
+    return {
+      id: item.id,
+      senderId: item.senderId,
+      requestedStartDate: this.convertTimestamp(item.data['RequestedStartDate'] || item.data['requestedStartDate']),
+      description: item.data['Description'] || item.data['description'] || '[Invalid request]',
+      status: item.data['Status'] || item.data['status'] || StatusEnum.Pending
+    } as RequestDTO;
+  }
+
+  asReply(item: FirestoreConversationItemDTO): ReplyDTO {
+    const deserialized = this.deserializeItem(item);
+    if (deserialized && this.typeGuards.isReply(deserialized)) {
+      return deserialized;
+    }
+
+    console.warn('Using fallback reply deserialization for item:', item.id);
+    return {
+      id: item.id,
+      senderId: item.senderId,
+      requestId: item.data['RequestId'] || item.data['requestId'] || '',
+      startDate: this.convertTimestamp(item.data['StartDate'] || item.data['startDate']),
+      endDate: this.convertTimestamp(item.data['EndDate'] || item.data['endDate']),
+      price: Number(item.data['Price'] || item.data['price'] || 0),
+      status: item.data['Status'] || item.data['status'] || StatusEnum.Pending
+    } as ReplyDTO;
+  }
+
+  /**
+   * Get properly typed conversation items
+   */
+  getTypedConversationItems(): Array<{
+    item: FirestoreConversationItemDTO;
+    typed: MessageDTO | RequestDTO | ReplyDTO | null;
+    type: 'message' | 'request' | 'reply' | 'unknown';
+  }> {
+    if (!this.selectedExchange?.conversationItems) return [];
+
+    return this.selectedExchange.conversationItems.map(item => {
+      const typed = this.deserializeItem(item);
+      const type = typed ? item.type as ('message' | 'request' | 'reply') : 'unknown';
+
+      return { item, typed, type };
+    });
+  }
+
+  /**
+   * Type-safe getters for specific item types
+   */
+  getMessages(): MessageDTO[] {
+    return this.getTypedConversationItems()
+      .filter(item => item.type === 'message' && item.typed)
+      .map(item => item.typed as MessageDTO);
+  }
+
+  getRequests(): RequestDTO[] {
+    return this.getTypedConversationItems()
+      .filter(item => item.type === 'request' && item.typed)
+      .map(item => item.typed as RequestDTO);
+  }
+
+  getReplies(): ReplyDTO[] {
+    return this.getTypedConversationItems()
+      .filter(item => item.type === 'reply' && item.typed)
+      .map(item => item.typed as ReplyDTO);
+  }
+
+  /**
+   * Safe type casting methods for template use
+   */
+  asTypedMessage(itemWrapper: any): MessageDTO {
+    return itemWrapper.typed as MessageDTO;
+  }
+
+  asTypedRequest(itemWrapper: any): RequestDTO {
+    return itemWrapper.typed as RequestDTO;
+  }
+
+  asTypedReply(itemWrapper: any): ReplyDTO {
+    return itemWrapper.typed as ReplyDTO;
+  }
+
+  loadExchanges(): void {
     this.exchangeService.getExchanges().subscribe({
       next: (res) => {
         this.exchanges = res.response ?? [];
-        console.log('Convorbiri încărcate:', this.exchanges);
+        console.log('Conversations loaded:', this.exchanges);
 
         if (this.exchanges.length > 0) {
           const lastUser = this.exchanges[this.exchanges.length - 1];
@@ -144,135 +306,29 @@ export class MessagesComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Eroare la încărcarea convorbirilor:', err);
+        console.error('Error loading conversations:', err);
       }
     });
-    //
-    // this.signalRService.connect(this.userId?.toString());
-    //
-    // this.signalRService.onNewMessage((payload: { senderId: string, receiverId: string }) => {
-    //   console.log('New message received:', payload);
-    //
-    //   // Check if the currently selected exchange is the sender or receiver
-    //   const isRelatedToCurrentChat =
-    //     this.selectedExchange &&
-    //     (this.selectedExchange.userId === payload.senderId || this.selectedExchange.userId === payload.receiverId);
-    //
-    //   if (isRelatedToCurrentChat) {
-    //     // Reload only this exchange
-    //     const otherUserId = this.selectedExchange!.userId === this.userId ? payload.senderId : payload.receiverId;
-    //     this.loadExchange(otherUserId);
-    //   } else {
-    //     // Optionally, set a flag to show notification in inbox
-    //     console.log('Message is for another conversation');
-    //   }
-    // });
-
-    // this.userId = 'spec456';
-    // this.exchanges = this.dummy_exchanges;
-    // this.selectedExchange = this.dummy_selectedExchange;
-    //
-  }
-
-  get messages() {
-    return this.selectedExchange?.conversationItems
-      .filter(item => item.type === 'message');
-  }
-
-  get requests() {
-    return this.selectedExchange?.conversationItems
-      .filter(item => item.type === 'request');
-  }
-
-  get replies() {
-    return this.selectedExchange?.conversationItems
-      .filter(item => item.type === 'reply');
-  }
-
-  deserializeItem(item: FirestoreConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
-    const data = item.data;
-
-    switch (item.type) {
-      case 'message':
-        return {
-          id: item.id,
-          senderId: data['senderId'],
-          content: data['content'],
-          createdAt: new Date(data['createdAt']),
-          isRead: data['isRead'] ?? false
-        } as MessageDTO;
-
-      case 'request':
-        return {
-          id: item.id,
-          senderId: data['senderId'],
-          requestedStartDate: new Date(data['requestedStartDate']),
-          phoneNumber: data['phoneNumber'],
-          address: data['address'],
-          description: data['description'],
-          status: data['status']
-        } as RequestDTO;
-
-      case 'reply':
-        return {
-          id: item.id,
-          requestId: data['requestId'],
-          senderId: data['senderId'],
-          startDate: new Date(data['startDate']),
-          endDate: new Date(data['endDate']),
-          price: data['price'],
-          status: data['status']
-        } as ReplyDTO;
-
-      default:
-        return null;
-    }
-  }
-
-  asMessage(item: FirestoreConversationItemDTO): MessageDTO {
-    const data = item.data;
-    return {
-      id: item.id,
-      senderId: data['senderId'],
-      content: data['content'],
-      createdAt: new Date(data['createdAt']),
-      isRead: data['isRead'] ?? false
-    } as MessageDTO;
-  }
-
-  asRequest(item: FirestoreConversationItemDTO): RequestDTO {
-    const data = item.data;
-    return {
-      id: item.id,
-      senderId: data['senderId'],
-      requestedStartDate: new Date(data['requestedStartDate']),
-      phoneNumber: data['phoneNumber'],
-      address: data['address'],
-      description: data['description'],
-      status: data['status']
-    } as RequestDTO;
-  }
-
-  asReply(item: FirestoreConversationItemDTO): ReplyDTO {
-    const data = item.data;
-    return {
-      id: item.id,
-      requestId: data['requestId'],
-      senderId: data['senderId'],
-      startDate: new Date(data['startDate']),
-      endDate: new Date(data['endDate']),
-      price: data['price'],
-      status: data['status']
-    } as ReplyDTO;
   }
 
   loadExchange(senderUserId: string | undefined): void {
+    if (!senderUserId) return;
+
     console.log('Loading exchange for user:', senderUserId);
     this.exchangeService.getExchange(senderUserId).subscribe({
       next: (res) => {
         console.log('Exchange loaded:', res.response);
-
         this.selectedExchange = res.response;
+
+        // Validate conversation items
+        if (this.selectedExchange?.conversationItems) {
+          const typedItems = this.getTypedConversationItems();
+          const invalidItems = typedItems.filter(item => item.type === 'unknown');
+
+          if (invalidItems.length > 0) {
+            console.warn(`Found ${invalidItems.length} invalid conversation items:`, invalidItems);
+          }
+        }
       },
       error: (err) => {
         console.error('Failed to reload exchange', err);
@@ -280,241 +336,55 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
   }
 
-  sendMessage(content: string) {
-    console.log("Sending message:", content);
-    if (!this.selectedExchange) {
-      console.error('No exchange selected');
+  sendMessage(content: string): void {
+    if (!content.trim() || !this.selectedExchange) {
+      console.error('Cannot send empty message or no exchange selected');
       return;
     }
 
-    const message: MessageAddDTO = {
-      content: content
-    };
+    const message: MessageAddDTO = { content: content.trim() };
 
-    this.messageService.sendMessage(this.selectedExchange?.conversationId, message).subscribe({
+    this.messageService.sendMessage(this.selectedExchange.conversationId, message).subscribe({
       next: (res) => {
-        console.log('Mesaj trimis cu succes:', res);
+        console.log('Message sent successfully:', res);
         this.loadExchange(this.selectedExchange?.userId);
         this.messageContent = '';
       },
       error: (err) => {
-        console.error('Eroare la trimiterea mesajului:', err);
+        console.error('Error sending message:', err);
       }
     });
   }
 
-  acceptRequest(requestId: string) {
+  acceptRequest(requestId: string): void {
     this.requestService.acceptRequest(requestId).subscribe({
       next: () => {
-        console.log('Cererea a fost acceptată');
-          this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
+        console.log('Request accepted');
+        this.loadExchange(this.selectedExchange?.userId);
       },
       error: (err) => {
-        console.error('Eroare la acceptare:', err);
+        console.error('Error accepting request:', err);
       }
     });
   }
 
-  rejectRequest(requestId: string) {
+  rejectRequest(requestId: string): void {
     this.requestService.rejectRequest(requestId).subscribe({
       next: () => {
-        console.log('Cererea a fost respinsă');
-        this.loadExchange(this.selectedExchange?.userId); // Refresh exchange
+        console.log('Request rejected');
+        this.loadExchange(this.selectedExchange?.userId);
       },
       error: (err) => {
-        console.error('Eroare la respingere:', err);
+        console.error('Error rejecting request:', err);
       }
     });
-  }
-
-  openReplyForm(requestId: string) {
-    this.selectedRequestId = requestId;
-    this.isReplyFormVisible = true;
-  }
-
-  closeReplyForm() {
-    this.isReplyFormVisible = false;
-  }
-
-  submitReply(replyData: { [key: string]: any }) {
-    if (!this.selectedRequestId) return;
-
-    if (!this.selectedRequestId) {
-      console.error('No requestId found to submit reply.');
-      return;
-    }
-
-    const replyDataToSend : ReplyAddDTO = replyData as ReplyAddDTO;
-    this.replyService.addReply(this.selectedRequestId, replyDataToSend).subscribe({
-      next: () => {
-        console.log('Reply submitted successfully!');
-        this.closeReplyForm();
-        // Refresh messages if needed
-      },
-      error: (err: any) => {
-        console.error('Eroare la trimiterea ofertei:', err);
-      }
-    });
-  }
-
-  // acceptReply(requestId: string, replyId: string): void {
-  //   this.replyService.acceptReply(replyId).subscribe({
-  //     next: () => {
-  //       console.log('Reply accepted');
-  //       const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-  //       if (request) {
-  //         const currentUserId = this.authService.getUserId();
-  //         const otherUserId = request.senderUserId === currentUserId
-  //           ? request.receiverUserId
-  //           : request.senderUserId;
-  //
-  //         if (otherUserId) {
-  //           this.loadExchange(this.selectedExchange?.userId);
-  //         }
-  //       }
-  //     },
-  //     error: (err) => console.error('Error accepting reply:', err)
-  //   });
-  // }
-  //
-  // rejectReply(requestId: string, replyId: string): void {
-  //   this.replyService.rejectReply(replyId).subscribe({
-  //     next: () => {
-  //       console.log('Reply rejected');
-  //       const request = this.selectedExchange?.requests.find(r => r.id === requestId);
-  //       if (request) {
-  //         const currentUserId = this.authService.getUserId();
-  //         const otherUserId = request.senderUserId === currentUserId
-  //           ? request.receiverUserId
-  //           : request.senderUserId;
-  //
-  //         if (otherUserId) {
-  //           this.loadExchange(this.selectedExchange?.userId);
-  //         }
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Error rejecting reply:', err);
-  //     }
-  //   });
-  // }
-
-  // hasActiveServiceTask(request: RequestDTO): boolean {
-  //   const replies = request.replies ?? [];
-  //   const lastReply = replies[replies.length - 1];
-  //   return !!lastReply?.serviceTask && lastReply.serviceTask.status !== 'Completed';
-  // }
-  //
-  // getLastReplyWithServiceTask(request: RequestDTO): ReplyDTO | undefined {
-  //   const replies = request.replies ?? [];
-  //   const lastReply = replies[replies.length - 1];
-  //   return lastReply?.serviceTask ? lastReply : undefined;
-  // }
-  //
-  // completeTask(replyId: string, taskId: string) {
-  //   this.taskService.completeServiceTask(taskId).subscribe({
-  //     next: () => {
-  //       console.log('Task marked as completed');
-  //       this.selectedTaskId = taskId;
-  //
-  //       // Try to find the task locally
-  //       const request = this.selectedExchange?.requests.find(req =>
-  //         req.replies?.some(r => r.id === replyId)
-  //       );
-  //
-  //       const reply = request?.replies?.find(r => r.id === replyId);
-  //       const task = reply?.serviceTask;
-  //
-  //       if (task) {
-  //         this.showReviewForm(task);
-  //       } else {
-  //         console.warn("Task not found in local data");
-  //       }
-  //     },
-  //     error: (err) => {
-  //       console.error('Error completing task:', err);
-  //     }
-  //   });
-  // }
-
-  showReviewForm(task: ServiceTaskDTO): void {
-    const currentUserId = this.authService.getUserId();
-
-    const isUserInvolved = currentUserId === task.userId || currentUserId === task.specialistId;
-    const isCompleted = task.status === JobStatusEnum.Completed;
-
-    if (isUserInvolved && isCompleted) {
-      // Optional: also check if a review has already been left by this user for this task
-      this.prepareReviewForm(task);
-    }
-  }
-
-
-  submitReview(replyData: { [key: string]: any }) {
-    console.log(this.selectedTaskId);
-    if (!this.selectedTaskId) {
-      console.error('No requestId found to submit reply.');
-      return;
-    }
-
-    console.log(replyData);
-
-    const replyDataToSend : ReviewAddDTO = replyData as ReviewAddDTO;
-    this.reviewService.addReview(this.selectedTaskId, replyDataToSend).subscribe({
-      next: () => {
-        console.log('Reply submitted successfully!');
-        this.closeReplyForm();
-        // Refresh messages if needed
-      },
-      error: (err) => {
-        console.error('Eroare la trimiterea ofertei:', err);
-      }
-    });
-  }
-
-  closeReviewForm(): void {
-    this.isReviewFormVisible = false;
-    this.reviewForm = {
-      receiverUserId: '',
-      rating: 5,
-      content: '',
-    }
-  }
-
-  prepareReviewForm(task: ServiceTaskDTO): void {
-    const currentUserId = this.authService.getUserId();
-
-    const recipientId = currentUserId === task.userId
-      ? task.specialistId
-      : task.userId;
-
-    this.reviewForm = {
-      receiverUserId: recipientId,
-      rating: 0,
-      content: '',
-    };
-
-    this.isReviewFormVisible = true;
-  }
-
-  cancelTask(replyId: string, taskId: string) {
-    this.taskService.cancelServiceTask(taskId).subscribe({
-      next: () => {
-        console.log('Cererea a fost acceptată');
-      },
-      error: (err) => {
-        console.error('Eroare la acceptare:', err);
-      }
-    });
-  }
-
-  openMediaPicker() {
-    // Implement media picker logic here
-    console.log('Open media picker');
-    this.route.navigate(['/service-payment']);
   }
 
   ngOnDestroy(): void {
-    this.signalRService.disconnect();
+    // Cleanup logic here
+  }
+
+  openMediaPicker() {
+
   }
 }

@@ -23,84 +23,49 @@
       </div>
 
       <div class="chat-messages">
-        <ng-container *ngFor="let item of selectedExchange?.conversationItems">
-          <ng-container [ngSwitch]="item.type">
+        <!-- Use the new typed conversation items method -->
+        <ng-container *ngFor="let itemWrapper of getTypedConversationItems()">
+          <ng-container [ngSwitch]="itemWrapper.type">
 
-            <!-- Message Bubble -->
+            <!-- Valid Message Bubble -->
             <app-message-bubble
               *ngSwitchCase="'message'"
-              [message]="asMessage(item)"
+              [message]="asTypedMessage(itemWrapper)"
               [currentUserId]="userId">
             </app-message-bubble>
 
-            <!-- Request Message -->
+            <!-- Valid Request Message -->
             <app-request-message
               *ngSwitchCase="'request'"
-              [request]="asRequest(item)"
-              (requestAccepted)="acceptRequest(item.id)"
-              (requestRejected)="rejectRequest(item.id)">
+              [request]="asTypedRequest(itemWrapper)"
+              (requestAccepted)="acceptRequest(itemWrapper.item.id)"
+              (requestRejected)="rejectRequest(itemWrapper.item.id)">
             </app-request-message>
 
-<!--            &lt;!&ndash; Reply Message &ndash;&gt;-->
+            <!-- Valid Reply Message -->
 <!--            <app-reply-message-->
 <!--              *ngSwitchCase="'reply'"-->
-<!--              [reply]="asReply(item)"-->
-<!--              (replyAccepted)="acceptReply(item.data.requestId, item.data.id)"-->
-<!--              (replyRejected)="rejectReply(item.data.requestId, item.data.id)">-->
+<!--              [reply]="asTypedReply(itemWrapper)"-->
+<!--              (replyAccepted)="acceptReply(itemWrapper.item.data.requestId, itemWrapper.item.data.id)"-->
+<!--              (replyRejected)="rejectReply(itemWrapper.item.data.requestId, itemWrapper.item.data.id)">-->
 <!--            </app-reply-message>-->
+
+            <!-- Error handling for unknown/invalid items -->
+            <div *ngSwitchCase="'unknown'" class="error-message">
+              <p>⚠️ Invalid conversation item (ID: {{ itemWrapper.item.id }})</p>
+              <details>
+                <summary>Debug Info</summary>
+                <pre>{{ itemWrapper.item | json }}</pre>
+              </details>
+            </div>
+
           </ng-container>
         </ng-container>
 
-<!--        <ng-container *ngFor="let request of selectedExchange.requests">-->
-<!--          &lt;!&ndash; Request message &ndash;&gt;-->
-<!--          <div [ngClass]="userRole === 'Client' ? 'message-right' : 'message-left'">-->
-<!--            <app-request-message-->
-<!--              [request]="request"-->
-<!--              (requestAccepted)="acceptRequest(request.id)"-->
-<!--              (requestRejected)="rejectRequest(request.id)"-->
-<!--              (makeOffer)="openReplyForm($event)">-->
-<!--            </app-request-message>-->
-<!--            <div class="conversation-overlay" *ngIf="isReplyFormVisible && selectedRequestId === request.id">-->
-<!--              <app-reply-form-->
-<!--                [replyForm]="replyForm"-->
-<!--                (formSubmit)="submitReply($event)"-->
-<!--                (close)="closeReplyForm()">-->
-<!--              </app-reply-form>-->
-<!--            </div>-->
-<!--          </div>-->
-
-<!--          <ng-container *ngFor="let reply of selectedExchange.replies.filter(r => r.requestId === request.id)">-->
-<!--            <div [ngClass]="userRole === 'Client' ? 'message-left' : 'message-right'">-->
-<!--              <app-reply-message-->
-<!--                [reply]="reply"-->
-<!--                [requestId]="request.id"-->
-<!--                (replyAccepted)="acceptReply($event.requestId, $event.replyId)"-->
-<!--                (replyRejected)="rejectReply($event.requestId, $event.replyId)">-->
-<!--              </app-reply-message>-->
-<!--            </div>-->
-
-<!--            <ng-container *ngIf="hasActiveServiceTask(request)">-->
-<!--              <div class="conversation-overlay">-->
-<!--                <ng-container *ngIf="isReviewFormVisible; else showTaskOverlay">-->
-<!--                  <app-review-form-->
-<!--                    [reviewForm]="reviewForm"-->
-<!--                    (formSubmit)="submitReview($event)"-->
-<!--                    (close)="closeReviewForm()">-->
-<!--                  </app-review-form>-->
-<!--                </ng-container>-->
-
-<!--                <ng-template #showTaskOverlay>-->
-<!--&lt;!&ndash;                  <app-service-message&ndash;&gt;-->
-<!--&lt;!&ndash;                    [serviceTask]="getLastReplyWithServiceTask(request)?.serviceTask!"&ndash;&gt;-->
-<!--&lt;!&ndash;                    [replyId]="getLastReplyWithServiceTask(request)?.id!"&ndash;&gt;-->
-<!--&lt;!&ndash;                    (taskCompleted)="completeTask($event.replyId, $event.taskId)"&ndash;&gt;-->
-<!--&lt;!&ndash;                    (taskCancelled)="cancelTask($event.replyId, $event.taskId)">&ndash;&gt;-->
-<!--&lt;!&ndash;                  </app-service-message>&ndash;&gt;-->
-<!--                </ng-template>-->
-<!--              </div>-->
-<!--            </ng-container>-->
-<!--          </ng-container>-->
-<!--        </ng-container>-->
+        <!-- Empty state -->
+        <div *ngIf="!selectedExchange?.conversationItems?.length" class="empty-conversation">
+          <p>No messages yet. Start the conversation!</p>
+        </div>
       </div>
 
       <div class="chat-input">
@@ -113,9 +78,15 @@
           [(ngModel)]="messageContent"
           (keydown.enter)="sendMessage(messageContent)"
         />
-        <button class="send-btn" (click)="sendMessage(messageContent)">→</button>
+        <button
+          class="send-btn"
+          (click)="sendMessage(messageContent)"
+          [disabled]="!messageContent.trim()">
+          →
+        </button>
       </div>
     </div>
+
     <ng-template #noSelection>
       <div class="chat-area empty">
         <p>Nu există conversații disponibile.</p>
@@ -123,12 +94,3 @@
     </ng-template>
   </div>
 </div>
-
-<!--<div class="overlay" *ngIf="isReplyFormVisible">-->
-<!--  <app-reply-form-->
-<!--    [replyForm]="replyForm"-->
-<!--    (formSubmit)="submitReply($event)"-->
-<!--    (close)="closeReplyForm()">-->
-<!--  </app-reply-form>-->
-<!--</div>-->
-
