@@ -275,12 +275,54 @@ export interface UserPaymentDetailsDTO {
     phoneNumber: string;
 }
 
+export interface PaymentIntentCreateDTO {
+  serviceTaskId: string; // Guid
+  amount: number;
+  currency?: string; // default: "ron"
+  description: string;
+  metadata?: Record<string, string>;
+}
+
+export interface PaymentIntentResponseDTO {
+  clientSecret: string;
+  paymentIntentId: string;
+}
+
+export interface PaymentConfirmationDTO {
+  paymentIntentId: string;
+  serviceTaskId: string;
+  amount: number;
+  paymentMethod: string;
+}
+
+export interface PaymentHistoryDTO {
+  id: string;
+  serviceTaskId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paidAt?: string; // ISO Date string or null
+  serviceDescription: string;
+  serviceAddress: string;
+  specialistName: string;
+  clientName: string;
+}
+
 export interface PaymentDetailsDTO {
-    serviceTaskId: string;
-    amount: number;
-    paymentMethod: string;
-    status: StatusEnum;
-    createdAt: Date;
+  id: string;
+  serviceTaskId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paidAt?: string;
+  createdAt: string;
+  stripePaymentIntentId?: string;
+  serviceDescription: string;
+  serviceAddress: string;
+  serviceStartDate: Date;
+  serviceEndDate: Date;
+  specialistName: string;
+  clientName: string;
 }
 
 export interface ServiceTaskUpdateDTO {
@@ -476,6 +518,17 @@ export enum UserRoleEnum {
     Specialist = "Specialist",
     Client = "Client",
 }
+
+export enum PaymentStatusEnum {
+  Pending = 'Pending',
+  Processing = 'Processing',
+  Completed = 'Completed',
+  Failed = 'Failed',
+  Cancelled = 'Cancelled',
+  Refunded = 'Refunded',
+  PartiallyRefunded = 'PartiallyRefunded'
+}
+
 
 export interface UserTransactionDTO {
     id: string;

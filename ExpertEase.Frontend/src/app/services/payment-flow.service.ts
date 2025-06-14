@@ -13,7 +13,7 @@ export interface PaymentFlowState {
   isActive: boolean;
   serviceDetails: ServicePaymentDetailsDTO | null;
   userDetails: UserPaymentDetailsDTO | null;
-  specialistDetails: SpecialistDTO | null;
+  specialistDetails: UserPaymentDetailsDTO | null;
   replyId: string | null;
   conversationId: string | null;
 }
@@ -41,7 +41,7 @@ export class PaymentFlowService {
     replyItem: FirestoreConversationItemDTO,
     originalRequest: FirestoreConversationItemDTO,
     userDetails: UserPaymentDetailsDTO,
-    specialistDetails: SpecialistDTO,
+    specialistDetails: UserPaymentDetailsDTO,
     conversationId: string
   ): void {
     const replyData = replyItem.data;

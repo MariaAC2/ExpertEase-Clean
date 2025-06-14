@@ -10,7 +10,7 @@
       <!-- Service Description -->
       <section class="payment-section">
         <h3>Descriere</h3>
-        <p>{{ serviceDetails.description }}</p>
+        <p>{{ serviceDetails?.description }}</p>
       </section>
 
       <!-- Specialist Details -->
@@ -19,15 +19,15 @@
         <div class="details-grid">
           <div class="detail-item">
             <span class="label">Nume:</span>
-            <span class="value">{{ specialistDetails.fullName }}</span>
+            <span class="value">{{ specialistDetails?.userFullName }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Adresă email:</span>
-            <span class="value">{{ specialistDetails.email }}</span>
+            <span class="value">{{ specialistDetails?.email }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Număr de telefon:</span>
-            <span class="value">{{ specialistDetails.phoneNumber }}</span>
+            <span class="value">{{ specialistDetails?.phoneNumber }}</span>
           </div>
         </div>
       </section>
@@ -38,16 +38,16 @@
         <div class="details-grid">
           <div class="detail-item">
             <span class="label">Adresa serviciului:</span>
-            <span class="value">{{ serviceDetails.address }}</span>
+            <span class="value">{{ serviceDetails?.address }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Data:</span>
-            <span class="value">{{ serviceDetails.startDate | date:'dd MMMM yyyy' }}</span>
+            <span class="value">{{ serviceDetails?.startDate | date:'dd MMMM yyyy' }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Ora:</span>
             <span class="value">
-              {{ serviceDetails.startDate | date:'HH:mm' }} - {{ serviceDetails.endDate | date:'HH:mm' }}
+              {{ serviceDetails?.startDate | date:'HH:mm' }} - {{ serviceDetails?.endDate | date:'HH:mm' }}
             </span>
           </div>
         </div>
@@ -59,11 +59,11 @@
         <div class="details-grid">
           <div class="detail-item">
             <span class="label">Număr de telefon:</span>
-            <span class="value">{{ userDetails.phoneNumber }}</span>
+            <span class="value">{{ userDetails?.phoneNumber }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Adresă email:</span>
-            <span class="value">{{ userDetails.email }}</span>
+            <span class="value">{{ userDetails?.email }}</span>
           </div>
         </div>
       </section>
@@ -98,7 +98,7 @@
         <div class="price-breakdown">
           <div class="price-item">
             <span class="price-label">Prețul serviciului:</span>
-            <span class="price-value">{{ serviceDetails.price | currency:'RON':'symbol':'1.2-2' }}</span>
+            <span class="price-value">{{ serviceDetails?.price | currency:'RON':'symbol':'1.2-2' }}</span>
           </div>
           <div class="price-item">
             <span class="price-label">Taxă de protecție pentru client:</span>

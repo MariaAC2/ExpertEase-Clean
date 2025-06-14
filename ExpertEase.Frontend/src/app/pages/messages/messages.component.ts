@@ -1,10 +1,10 @@
 import {ChangeDetectorRef, Component, OnDestroy, OnInit, TrackByFunction} from '@angular/core';
 import { Timestamp } from 'firebase/firestore';
 import {
-  FirestoreConversationItemDTO,
-  MessageDTO,
+  FirestoreConversationItemDTO, JobStatusEnum,
+  MessageDTO, PaymentDetailsDTO,
   ReplyDTO,
-  RequestDTO,
+  RequestDTO, ServiceTaskDTO,
   StatusEnum,
   UserConversationDTO, UserDTO,
 } from '../../models/api.models';
@@ -31,6 +31,7 @@ import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.co
 import {MockExchangeService} from '../../services/mock-exchange.service';
 import {UserService} from '../../services/user.service';
 import {PaymentFlowService} from '../../services/payment-flow.service';
+import {ServiceMessageComponent} from '../../shared/service-message/service-message.component';
 
 // Enhanced type guards for runtime validation
 interface TypeGuards {
@@ -54,6 +55,7 @@ interface TypeGuards {
     AsyncPipe,
     SlicePipe,
     ReplyMessageComponent,
+    ServiceMessageComponent,
   ],
   styleUrl: './messages.component.scss'
 })
@@ -98,6 +100,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private currentUserDetails: UserDTO | undefined;
   isServiceConfirmationVisible: boolean = false;
   chatOverlayVisible: boolean = false;
+  currentPaymentDetails: PaymentDetailsDTO | undefined;
+  currentServiceTask: ServiceTaskDTO | undefined;
+  showPaymentFlow: boolean = false;
 
   constructor(
     private readonly exchangeService: ExchangeService,
@@ -245,6 +250,16 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
   }
 
+  private subscribeToPaymentFlow(): void {
+    this.paymentFlowService.paymentFlow$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(state => {
+        this.showPaymentFlow = state.isActive;
+        this.cdr.markForCheck();
+      });
+  }
+
+  // Update the existing subscribeToPaymentCompletion method
   private subscribeToPaymentCompletion(): void {
     this.paymentFlowService.paymentCompleted$
       .pipe(takeUntil(this.destroy$))
@@ -255,13 +270,67 @@ export class MessagesComponent implements OnInit, OnDestroy {
       });
   }
 
-  private handlePaymentCompletion(paymentDetails: any): void {
+  // Update the existing handlePaymentCompletion method
+  private handlePaymentCompletion(paymentDetails: PaymentDetailsDTO): void {
     console.log('Payment completed in messages:', paymentDetails);
+
+    // Store payment details for the service message
+    this.currentPaymentDetails = paymentDetails;
+
+    // Create service task from payment details and add to conversation
+    + this.createServiceTaskFromPayment(paymentDetails);
+
+    // Show overlay and freeze chat
     this.showServiceConfirmation();
-    const selectedUser = this.selectedUserSubject.value;
+
+    // Send email notification (you can implement this)
+    this.sendPaymentCompletionEmail(paymentDetails);
+
+    // Reload conversations to reflect new status
     this.loadExchanges(false);
   }
 
+  private createServiceTaskFromPayment(paymentDetails: PaymentDetailsDTO): void {
+    const paymentFlowState = this.paymentFlowService.getCurrentState();
+
+    if (!paymentFlowState.serviceDetails || !paymentFlowState.specialistDetails || !paymentFlowState.userDetails) {
+      console.error('Missing service details for task creation');
+      return;
+    }
+
+    // Create ServiceTaskDTO from payment and flow state
+    this.currentServiceTask = {
+      id: paymentDetails.serviceTaskId,
+      replyId: paymentFlowState.replyId || '',
+      userId: paymentFlowState.userDetails.userId,
+      specialistId: paymentFlowState.specialistDetails.userId,
+      specialistFullName: paymentFlowState.specialistDetails.userFullName,
+      startDate: paymentFlowState.serviceDetails.startDate,
+      endDate: paymentFlowState.serviceDetails.endDate,
+      description: paymentFlowState.serviceDetails.description,
+      address: paymentFlowState.serviceDetails.address,
+      price: paymentFlowState.serviceDetails.price,
+      status: JobStatusEnum.Confirmed,
+      completedAt: new Date(),
+      cancelledAt: new Date()
+    };
+
+    this.cdr.markForCheck();
+  }
+
+  // Add email notification method
+  private sendPaymentCompletionEmail(paymentDetails: PaymentDetailsDTO): void {
+    // TODO: Implement email service call
+    console.log('Sending payment completion email for:', paymentDetails);
+
+    // Example implementation:
+    // this.emailService.sendPaymentConfirmation(paymentDetails).subscribe({
+    //   next: () => console.log('Email sent successfully'),
+    //   error: (err) => console.error('Failed to send email:', err)
+    // });
+  }
+
+  // Update the existing showServiceConfirmation method
   private showServiceConfirmation(): void {
     this.isServiceConfirmationVisible = true;
     this.chatOverlayVisible = true;
@@ -269,9 +338,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     // Auto-hide overlay after 5 seconds
     setTimeout(() => {
       this.hideServiceConfirmation();
-    }, 5000);
+      }, 10000);
   }
 
+  // Update the existing hideServiceConfirmation method
   hideServiceConfirmation(): void {
     this.isServiceConfirmationVisible = false;
     this.chatOverlayVisible = false;
@@ -516,12 +586,47 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  getMessagePosition(itemWrapper: {
-    item: FirestoreConversationItemDTO;
-    typed: MessageDTO | RequestDTO | ReplyDTO | null;
-    type: "message" | "request" | "reply" | "unknown"
-  }) {
-    const senderId = itemWrapper.item.senderId ?? itemWrapper.item["senderId"];
-    return senderId === this.userId ? 'message-right' : 'message-left';
+  onServiceTaskCompleted(event: { replyId: string; taskId: string }): void {
+    console.log('Service task completed:', event);
+
+    // Update the current service task status
+    if (this.currentServiceTask) {
+      this.currentServiceTask.status = JobStatusEnum.Completed;
+      this.currentServiceTask.completedAt = new Date();
+    }
+
+    // TODO: Call backend service to mark task as completed
+    // this.serviceTaskService.completeTask(event.taskId).subscribe({
+    //   next: () => {
+    //     console.log('Task marked as completed on backend');
+    //     // Send completion email
+    //     // this.emailService.sendServiceCompletionNotification(event.taskId);
+    //   },
+    //   error: (err) => console.error('Error completing task:', err)
+    // });
+
+    this.cdr.markForCheck();
+  }
+
+  onServiceTaskCancelled(event: { replyId: string; taskId: string }): void {
+    console.log('Service task cancelled:', event);
+
+    // Update the current service task status
+    if (this.currentServiceTask) {
+      this.currentServiceTask.status = JobStatusEnum.Cancelled;
+      this.currentServiceTask.cancelledAt = new Date();
+    }
+
+    // TODO: Call backend service to cancel task
+    // this.serviceTaskService.cancelTask(event.taskId).subscribe({
+    //   next: () => {
+    //     console.log('Task cancelled on backend');
+    //     // Send cancellation email
+    //     // this.emailService.sendServiceCancellationNotification(event.taskId);
+    //   },
+    //   error: (err) => console.error('Error cancelling task:', err)
+    // });
+
+    this.cdr.markForCheck();
   }
 }

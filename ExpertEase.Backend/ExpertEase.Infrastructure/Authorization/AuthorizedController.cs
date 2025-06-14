@@ -15,8 +15,8 @@ public abstract class AuthorizedController(IUserService userService) : ResponseC
 {
     private UserClaims? _userClaims;
     protected readonly IUserService UserService = userService;
-    
-    protected UserClaims ExtractClaims()
+
+    private UserClaims ExtractClaims()
     {
         if (_userClaims != null)
         {

@@ -9,6 +9,7 @@ import {PaginationComponent} from '../../shared/pagination/pagination.component'
 import {RequestService} from '../../services/request.service';
 import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-card.component';
 import {RouterLink, RouterLinkActive} from '@angular/router';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -26,7 +27,6 @@ export class HomeComponent implements OnInit{
   isUserDetailsVisible = false;
   users: SpecialistDTO[] = [];
   error: string | null = null;
-  selectedSpecialist: SpecialistDTO | null = null;
 
   isRequestFormVisible = false;
 
@@ -95,7 +95,9 @@ export class HomeComponent implements OnInit{
     }
   ];
 
-  constructor(private readonly homeService: SpecialistService, private readonly userRequestService: RequestService) { }
+  constructor(private readonly homeService: SpecialistService,
+              private readonly userRequestService: RequestService,
+              private readonly authService: AuthService) { }
 
   ngOnInit() {
     this.getPage();

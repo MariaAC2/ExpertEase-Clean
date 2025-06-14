@@ -104,21 +104,21 @@ public class PaymentController(IUserService userService, IPaymentService payment
     [AllowAnonymous]
     public async Task<IActionResult> StripeWebhook()
     {
-        // TODO: Implement Stripe webhook handling
-        // This would handle events like payment_intent.succeeded, payment_intent.payment_failed, etc.
-        
         var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
         
         try
         {
-            // Verify webhook signature
-            // Process webhook event
-            // Update payment status accordingly
+            // For now, just log the webhook - you can add proper handling later
+            Console.WriteLine($"Received Stripe webhook: {json}");
+            
+            // TODO: Add proper webhook signature verification and event handling
+            // This is just a placeholder to make the endpoint work
             
             return Ok();
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Webhook error: {ex.Message}");
             return BadRequest($"Webhook processing failed: {ex.Message}");
         }
     }

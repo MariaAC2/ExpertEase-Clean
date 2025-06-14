@@ -15,7 +15,7 @@ import {
 })
 export class RequestService {
   private readonly baseUrl = 'http://localhost:5241/api/Request';
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
   // getRequest(userId: string) {
   //   const token = this.authService.getToken();
@@ -49,6 +49,8 @@ export class RequestService {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
+
+    console.log('Headers:', headers);
 
     return this.http.post(`${this.baseUrl}/Add`, user, { headers });
   }

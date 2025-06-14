@@ -19,7 +19,7 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     /// <summary>
     /// In this constructor is the projection/mapping expression used to get UserDTO object directly from the database.
     /// </summary>
-    public UserProjectionSpec(bool orderByCreatedAt = false)
+    private UserProjectionSpec(bool orderByCreatedAt = false)
     {
         Query.Include(e => e.SpecialistProfile)
             .ThenInclude(e => e.Categories);
