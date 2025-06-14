@@ -2,12 +2,13 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {PhotoService} from '../../services/photo.service';
 import {DomSanitizer} from '@angular/platform-browser';
 import {PortfolioPictureAddDTO} from '../../models/api.models';
-import {NgForOf} from '@angular/common';
+import {NgForOf, NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-portfolio-upload',
   imports: [
-    NgForOf
+    NgForOf,
+    NgIf
   ],
   templateUrl: './portfolio-upload.component.html',
   styleUrl: './portfolio-upload.component.scss'

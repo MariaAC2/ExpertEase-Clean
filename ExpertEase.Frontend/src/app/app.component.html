@@ -10,7 +10,7 @@
 
     <!-- Navigation links -->
     <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
-          <li *ngIf="authService.getUserRole() === 'Client'">
+<!--      <li *ngIf="authService.getUserRole() === 'Client'">-->
       <li>
         <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
       </li>
@@ -22,12 +22,12 @@
       </li>
 
       <li>
-        <a
-          [routerLink]="authService.getToken() ? '/profile' : '/register'"
-          routerLinkActive="active">
-          {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}
-        </a>
-<!--        <a routerLink="/profile" routerLinkActive="active">Contul tău</a>-->
+<!--        <a-->
+<!--          [routerLink]="authService.getToken() ? '/profile' : '/register'"-->
+<!--          routerLinkActive="active">-->
+<!--          {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}-->
+<!--        </a>-->
+        <a routerLink="/profile" routerLinkActive="active">Contul tău</a>
       </li>
 
       <li>

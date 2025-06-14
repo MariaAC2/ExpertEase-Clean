@@ -54,7 +54,7 @@ export class ProfileComponent implements OnInit {
   }
 
   loadUserProfile() {
-    // this.user = this.dummyUser; // Use this for testing
+    this.user = this.dummyUser; // Use this for testing
     this.profileService.getUserProfile().subscribe({
       next: (res) => {
         const userResult = res.response;

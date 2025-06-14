@@ -46,7 +46,7 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
 
   isLoading = false;
 
-  constructor(private specialistService: SpecialistProfileService) {}
+  constructor(private readonly specialistService: SpecialistProfileService) {}
 
   ngOnInit() {
     if (this.user?.specialist) {
@@ -61,20 +61,20 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
   }
 
   private loadSpecialistData() {
-    if (this.user?.specialist) {
-      this.specialistInfo = {
-        phoneNumber: this.user.contactInfo?.phoneNumber || '',
-        address: this.user.contactInfo?.address || '',
-        categories: this.user.specialist.categories?.map(cat => cat.id) || [],
-        yearsExperience: this.user.specialist.yearsExperience || 0,
-        description: this.user.specialist.description || ''
-      };
-
-      // Load existing portfolio images if available
-      // Note: You may need to adjust this based on your actual API structure
-      this.portfolioImages = [];
-      this.newPortfolioFiles = [];
-    }
+    // if (this.user?.specialist) {
+    //   this.specialistInfo = {
+    //     phoneNumber: this.user.contactInfo?.phoneNumber || '',
+    //     address: this.user.contactInfo?.address || '',
+    //     categories: this.user.specialist.categories?.map(cat => cat.id) || [],
+    //     yearsExperience: this.user.specialist.yearsExperience || 0,
+    //     description: this.user.specialist.description || ''
+    //   };
+    //
+    //   // Load existing portfolio images if available
+    //   // Note: You may need to adjust this based on your actual API structure
+    //   this.portfolioImages = [];
+    //   this.newPortfolioFiles = [];
+    // }
   }
 
   updateCategories(categories: string[]) {
