@@ -60,6 +60,7 @@
 }
 
 .chat-area {
+  position: relative;
   width: 75%;
   display: flex;
   flex-direction: column;
@@ -602,8 +603,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  //padding: 1rem;
   box-sizing: border-box;
+}
+
+// Add this to properly contain the reply form
+.reply-form-container {
+  position: relative;
+  //background: transparent;
+  //border-radius: 16px;
+  //max-width: 500px;
+  //width: 100%;
+  //max-height: 80vh;
+  //overflow: visible;
+  //box-shadow: none;
+  //font-family: 'Roboto Mono', monospace;
+  //animation: overlayFadeIn 0.3s ease-out;
 }
 
 .overlay-background {
@@ -614,17 +629,4 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   cursor: pointer;
-}
-
-.reply-form-container {
-  position: relative;
-  background: transparent;
-  border-radius: 16px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  font-family: 'Roboto Mono', monospace;
-  animation: overlayFadeIn 0.3s ease-out;
 }

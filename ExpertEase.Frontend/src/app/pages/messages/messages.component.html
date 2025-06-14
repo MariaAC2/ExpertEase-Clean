@@ -149,7 +149,7 @@
       <!-- Chat Input -->
       <div class="chat-input">
         <button [disabled]="(loading$ | async) === true">
-          <img src="assets/icons/photo_media.svg" alt="photo_media" (click)="openMediaPicker()">
+          <img src="assets/icons/photo_media.svg" alt="photo_media" title="Adaugă o poză" (click)="openMediaPicker()">
         </button>
         <input
           type="text"
@@ -158,7 +158,7 @@
           (keydown.enter)="sendMessage(messageContent)"
           [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible">
         <button
-          class="send-btn"
+          class="send-btn" title="Trimite mesaj"
           (click)="sendMessage(messageContent)"
           [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage">
           <span *ngIf="!isSendingMessage">→</span>
@@ -166,6 +166,14 @@
         </button>
       </div>
 
+<!--      <div *ngIf="isReplyFormVisible" class="reply-form-overlay">-->
+<!--        <div class="overlay-background" (click)="hideReplyForm()"></div>-->
+<!--          <app-reply-form-->
+<!--            [replyForm]="replyFormData"-->
+<!--            (formSubmit)="onReplySubmit($event)"-->
+<!--            (close)="hideReplyForm()">-->
+<!--          </app-reply-form>-->
+<!--      </div>-->
       <div *ngIf="isReplyFormVisible" class="reply-form-overlay">
         <div class="overlay-background" (click)="hideReplyForm()"></div>
         <div class="reply-form-container">

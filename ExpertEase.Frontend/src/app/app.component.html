@@ -17,7 +17,7 @@
 
       <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
       <li>
-            <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">
+<!--      <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">-->
         <a routerLink="/messages" routerLinkActive="active">Mesajele tale</a>
       </li>
 
@@ -27,11 +27,11 @@
           routerLinkActive="active">
           {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}
         </a>
-<!--              <a routerLink="/profile" routerLinkActive="active">Contul tău</a>-->
+<!--        <a routerLink="/profile" routerLinkActive="active">Contul tău</a>-->
       </li>
 
       <li>
-            <li *ngIf="authService.getUserRole() === 'Admin'">
+<!--      <li *ngIf="authService.getUserRole() === 'Admin'">-->
         <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
       </li>
     </ul>

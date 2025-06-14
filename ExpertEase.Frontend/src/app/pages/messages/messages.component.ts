@@ -68,7 +68,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private readonly conversationListPagination = { page: 1, pageSize: 20 };
   private readonly messagesPagination = { page: 1, pageSize: 50 };
 
-  private readonly USE_MOCK_DATA = false;
+  private readonly USE_MOCK_DATA = true;
 
   // Reactive state
   private readonly exchangesSubject = new BehaviorSubject<UserConversationDTO[]>([]);
@@ -641,6 +641,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
    */
   openMediaPicker(): void {
     console.log('Open media picker');
+    this.isReplyFormVisible = true;
     // Your existing implementation
   }
 
