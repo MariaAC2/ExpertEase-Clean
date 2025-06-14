@@ -299,6 +299,24 @@
   }
 }
 
+// Spin animation
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Loading dots animation
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 768px) {
   .service-message-overlay {
     padding: 0.5rem;
@@ -326,5 +344,250 @@
   .close-overlay-btn.secondary {
     padding: 0.6rem 1.2rem;
     font-size: 0.9rem;
+  }
+
+  .loading-indicator,
+  .initial-messages-loading {
+    padding: 1rem;
+
+    .loading-spinner.large {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  .loading-more-messages {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e0caff;
+  border-top: 2px solid #6c5ce7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  &.large {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+
+  &.small {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}
+
+// Inline spinner for buttons and text
+.inline-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid transparent;
+  border-top: 1.5px solid currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 5px;
+
+  &.small {
+    width: 10px;
+    height: 10px;
+    border-width: 1px;
+  }
+}
+
+// Loading dots animation
+.loading-dots {
+  display: inline-block;
+  position: relative;
+  width: 20px;
+  height: 4px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    animation: loading-dots 1.4s ease-in-out infinite both;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    animation: loading-dots 1.4s ease-in-out 0.2s infinite both;
+  }
+}
+
+// Loading indicator containers
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+
+  p {
+    margin-top: 1rem;
+    margin-bottom: 0;
+  }
+}
+
+.initial-messages-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666;
+  font-style: italic;
+
+  p {
+    margin-top: 1rem;
+    margin-bottom: 0;
+  }
+}
+
+.loading-more-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: #666;
+  font-style: italic;
+  border-bottom: 1px solid #e0caff;
+  margin-bottom: 1rem;
+
+  .loading-spinner {
+    margin-right: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.sending-message-indicator {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
+
+  .message-sending {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #f0f0f0;
+    border-radius: 18px;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+
+    .loading-dots {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+// Loading text for buttons
+.loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Enhanced load more button
+.load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem;
+  background-color: #e0caff;
+  border: 2px solid #6c5ce7;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #d4bfff;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &.top {
+    margin-bottom: 1rem;
+  }
+}
+
+// Empty state styling
+.empty-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #888;
+  font-style: italic;
+
+  .empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+}
+
+.chat-area.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-style: italic;
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+}
+
+// Chat input disabled state
+.chat-input {
+  input[disabled] {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .send-btn[disabled] {
+    background-color: #e0e0e0;
   }
 }

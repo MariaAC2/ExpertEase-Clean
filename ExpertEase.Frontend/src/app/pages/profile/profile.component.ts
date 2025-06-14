@@ -57,7 +57,8 @@ export class ProfileComponent implements OnInit {
     // this.user = this.dummyUser; // Use this for testing
     this.profileService.getUserProfile().subscribe({
       next: (res) => {
-        this.user = res.response;
+        const userResult = res.response;
+        this.user = userResult ?? this.dummyUser;
         console.log(this.user);
       },
       error: (err) => {

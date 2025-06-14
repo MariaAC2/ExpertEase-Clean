@@ -25,7 +25,7 @@ interface PasswordChangeData {
 })
 export class EditUserInfoComponent implements OnInit {
   @Input() isVisible = false;
-  @Input() user: UserDTO | null = null;
+  @Input() user: UserDTO | undefined | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() userUpdated = new EventEmitter<UserDTO>();
 

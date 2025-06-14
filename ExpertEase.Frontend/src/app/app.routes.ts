@@ -46,7 +46,7 @@ export const routes: Routes = [
   {
     path: 'profile',
     component: ProfileComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'home/:id',
@@ -61,22 +61,22 @@ export const routes: Routes = [
   {
     path: 'messages',
     component: MessagesComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user/become-specialist',
     component: BecomeSpecialistComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user-settings',
     component: SettingsComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user-reviews',
     component: ReviewsComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'request-form',
@@ -100,27 +100,27 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: 'admin/users',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminUsersComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: 'admin/specialists',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminSpecialistsComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: 'admin/categories',
-    // canActivate: [AuthGuard, RoleGuard],
+    canActivate: [AuthGuard, RoleGuard],
     component: AdminCategoriesComponent,
-    // data: { roles: ['Admin'] }
+    data: { roles: ['Admin'] }
   },
   {
     path: '',

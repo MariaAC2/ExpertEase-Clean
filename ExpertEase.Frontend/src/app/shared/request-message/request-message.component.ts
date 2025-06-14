@@ -57,6 +57,7 @@ export class RequestMessageComponent implements OnInit {
   }
 
   triggerOffer() {
+    console.log('Fac o oferta pentru cererea:', this.request.id);
     this.makeOffer.emit(this.request.id);
   }
 

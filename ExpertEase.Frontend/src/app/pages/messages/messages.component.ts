@@ -32,6 +32,7 @@ import {MockExchangeService} from '../../services/mock-exchange.service';
 import {UserService} from '../../services/user.service';
 import {PaymentFlowService} from '../../services/payment-flow.service';
 import {ServiceMessageComponent} from '../../shared/service-message/service-message.component';
+import {ReplyFormComponent} from '../../shared/reply-form/reply-form.component';
 
 // Enhanced type guards for runtime validation
 interface TypeGuards {
@@ -56,6 +57,7 @@ interface TypeGuards {
     SlicePipe,
     ReplyMessageComponent,
     ServiceMessageComponent,
+    ReplyFormComponent,
   ],
   styleUrl: './messages.component.scss'
 })
@@ -97,12 +99,25 @@ export class MessagesComponent implements OnInit, OnDestroy {
     typed: MessageDTO | RequestDTO | ReplyDTO | null;
     type: 'message' | 'request' | 'reply' | 'unknown';
   }> = (index, itemWrapper) => itemWrapper.item.id;
-  private currentUserDetails: UserDTO | undefined;
+  currentUserDetails: UserDTO | null = null;
   isServiceConfirmationVisible: boolean = false;
   chatOverlayVisible: boolean = false;
   currentPaymentDetails: PaymentDetailsDTO | undefined;
   currentServiceTask: ServiceTaskDTO | undefined;
   showPaymentFlow: boolean = false;
+  isReplyFormVisible: boolean = false;
+  currentRequestId: string | null = null;
+  replyFormData = {
+    day: null as number | null,
+    month: null as number | null,
+    year: null as number | null,
+    startHour: null as number | null,
+    startMinute: null as number | null,
+    endHour: null as number | null,
+    endMinute: null as number | null,
+    price: null as number | null
+  }
+  isSendingMessage: boolean = false;
 
   constructor(
     private readonly exchangeService: ExchangeService,
@@ -153,12 +168,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
             }
           }
           this.loadingSubject.next(false);
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error loading conversations:', err);
           this.loadingSubject.next(false);
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         }
       });
   }
@@ -218,12 +233,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
             };
           }
           this.loadingSubject.next(false);
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error loading conversation messages:', err);
           this.loadingSubject.next(false);
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         }
       });
   }
@@ -242,7 +257,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private loadCurrentUserDetails(): void {
     this.userService.getUserProfile().subscribe({
       next: (res) => {
-        this.currentUserDetails = res.response;
+        this.currentUserDetails = res.response || null;
       },
       error: (err) => {
         console.error('Error loading user details:', err);
@@ -255,7 +270,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(state => {
         this.showPaymentFlow = state.isActive;
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       });
   }
 
@@ -315,7 +330,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       cancelledAt: new Date()
     };
 
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   // Add email notification method
@@ -456,7 +471,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
    */
   sendMessage(content: string): void {
     const selectedUser = this.selectedUserSubject.value;
-    if (!content.trim() || !selectedUser) return;
+    if (!content.trim() || !selectedUser || this.isSendingMessage) return;
+
+    // Set sending state
+    this.isSendingMessage = true;
+    this.cdr.detectChanges();
 
     // Optimistic update
     const tempMessage = {
@@ -476,22 +495,66 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const currentItems = this.conversationItemsSubject.value;
     this.conversationItemsSubject.next([...currentItems, tempMessage]);
     this.messageContent = '';
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
 
     // Send actual message
     this.messageService.sendMessage(selectedUser, { content: content.trim() })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          this.isSendingMessage = false;
           this.loadConversationMessages(selectedUser);
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error sending message:', err);
+          this.isSendingMessage = false;
+          // Revert optimistic update on error
           this.conversationItemsSubject.next(currentItems);
-          this.cdr.markForCheck();
+          // Restore message content so user can try again
+          this.messageContent = content.trim();
+          this.cdr.detectChanges();
         }
       });
   }
+  // sendMessage(content: string): void {
+  //   const selectedUser = this.selectedUserSubject.value;
+  //   if (!content.trim() || !selectedUser) return;
+  //
+  //   // Optimistic update
+  //   const tempMessage = {
+  //     id: `temp_${Date.now()}`,
+  //     conversationId: 'temp',
+  //     senderId: this.userId!,
+  //     type: 'message' as const,
+  //     createdAt: Timestamp.fromDate(new Date()),
+  //     data: {
+  //       Content: content.trim(),
+  //       SenderId: this.userId!,
+  //       CreatedAt: new Date(),
+  //       IsRead: false
+  //     }
+  //   };
+  //
+  //   const currentItems = this.conversationItemsSubject.value;
+  //   this.conversationItemsSubject.next([...currentItems, tempMessage]);
+  //   this.messageContent = '';
+  //   this.cdr.detectChanges();
+  //
+  //   // Send actual message
+  //   this.messageService.sendMessage(selectedUser, { content: content.trim() })
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: () => {
+  //         this.loadConversationMessages(selectedUser);
+  //       },
+  //       error: (err) => {
+  //         console.error('Error sending message:', err);
+  //         this.conversationItemsSubject.next(currentItems);
+  //         this.cdr.detectChanges();
+  //       }
+  //     });
+  // }
 
   /**
    * Accept request - called by your request-message component
@@ -605,7 +668,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     //   error: (err) => console.error('Error completing task:', err)
     // });
 
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   onServiceTaskCancelled(event: { replyId: string; taskId: string }): void {
@@ -627,6 +690,80 @@ export class MessagesComponent implements OnInit, OnDestroy {
     //   error: (err) => console.error('Error cancelling task:', err)
     // });
 
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Show reply form for making an offer
+   */
+  showReplyForm(requestId: string): void {
+    this.currentRequestId = requestId;
+    this.isReplyFormVisible = true;
+    this.chatOverlayVisible = true;
+
+    // Reset form data
+    this.replyFormData = {
+      day: null,
+      month: null,
+      year: null,
+      startHour: null,
+      startMinute: null,
+      endHour: null,
+      endMinute: null,
+      price: null
+    };
+
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Hide reply form
+   */
+  hideReplyForm(): void {
+    this.isReplyFormVisible = false;
+    this.chatOverlayVisible = false;
+    this.currentRequestId = null;
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Handle reply form submission
+   */
+  onReplySubmit(replyData: any): void {
+    if (!this.currentRequestId) {
+      console.error('No current request ID for reply');
+      return;
+    }
+
+    console.log('Submitting reply:', replyData);
+
+    // TODO: Call your reply service to submit the offer
+    this.replyService.addReply(this.currentRequestId, replyData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log('Reply submitted successfully');
+          this.hideReplyForm();
+
+          // Reload conversation to show the new reply
+          const selectedUser = this.selectedUserSubject.value;
+          if (selectedUser) {
+            this.loadConversationMessages(selectedUser);
+          }
+        },
+        error: (err) => {
+          console.error('Error submitting reply:', err);
+          // Handle error - maybe show a toast or error message
+        }
+      });
+
+    // For now, just hide the form and log the data
+    this.hideReplyForm();
+
+    // Simulate successful submission
+    console.log('Reply would be submitted with data:', {
+      requestId: this.currentRequestId,
+      ...replyData
+    });
   }
 }

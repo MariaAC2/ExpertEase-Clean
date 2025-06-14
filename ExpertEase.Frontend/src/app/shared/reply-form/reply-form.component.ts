@@ -28,7 +28,7 @@ export class ReplyFormComponent {
 
   formSubmitted = false;
 
-  constructor(private router: Router) { }
+  constructor(private readonly router: Router) { }
 
   submitReply(formRef: NgForm) {
     this.formSubmitted = true;

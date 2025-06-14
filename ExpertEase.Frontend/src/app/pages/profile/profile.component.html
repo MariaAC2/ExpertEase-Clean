@@ -1,7 +1,7 @@
 <!-- Edit User Info Modal -->
 <app-edit-user-info
   [isVisible]="showEditUserModal"
-  [user]="user"
+  [user]="user ?? null"
   (close)="onCloseEditUserModal()"
   (userUpdated)="onUserUpdated($event)">
 </app-edit-user-info>

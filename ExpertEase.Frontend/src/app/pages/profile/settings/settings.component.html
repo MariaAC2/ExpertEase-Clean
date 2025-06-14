@@ -1,57 +1,283 @@
 <div class="settings-container">
-  <h1 class="settings-title">Setările contului</h1>
+  <div class="settings-header">
+    <button class="back-button" (click)="goBack()">← Înapoi la profil</button>
+    <h1 class="settings-title">Setările contului</h1>
+  </div>
 
-  <!-- Profilul tău -->
+  <!-- Loading indicator -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Se încarcă...</p>
+  </div>
+
+  <!-- Save message -->
+  <div *ngIf="saveMessage" class="save-message" [class.error]="saveMessage.includes('Eroare')">
+    {{ saveMessage }}
+  </div>
+
+  <!-- Informații de bază -->
   <section class="settings-section">
-    <h2>Profilul tău</h2>
-    <form>
-      <label for="fullName">Nume complet</label>
-      <input id="fullName" type="text" [(ngModel)]="settings.fullName" name="fullName">
+    <h2>Informații de bază</h2>
+    <form (ngSubmit)="saveBasicInfo()">
+      <div class="form-group">
+        <label for="fullName">Nume complet</label>
+        <input
+          id="fullName"
+          type="text"
+          [(ngModel)]="settings.fullName"
+          name="fullName"
+          required>
+      </div>
 
-      <label for="email">Adresa e-mail</label>
-      <input id="email" type="email" [(ngModel)]="settings.email" name="email">
+      <div class="form-group">
+        <label for="email">Adresa e-mail</label>
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="settings.email"
+          name="email"
+          required>
+      </div>
 
-      <label for="phone">Număr de telefon</label>
-      <input id="phone" type="text" [(ngModel)]="settings.phoneNumber" name="phone">
+      <div class="form-group">
+        <label for="phone">Număr de telefon</label>
+        <input
+          id="phone"
+          type="tel"
+          [(ngModel)]="settings.phoneNumber"
+          name="phone">
+      </div>
 
-      <label for="profileImage">Poza de profil</label>
-      <input id="profileImage" type="file" (change)="onImageUpload($event)">
+      <div class="form-group">
+        <label for="address">Adresa</label>
+        <textarea
+          id="address"
+          [(ngModel)]="settings.address"
+          name="address"
+          rows="3"
+          placeholder="Strada, numărul, orașul, județul"></textarea>
+      </div>
 
-      <button type="button" (click)="changePassword()">Schimbă parola</button>
+      <div class="form-group">
+        <label for="profileImage">Poza de profil</label>
+        <input
+          id="profileImage"
+          type="file"
+          (change)="onImageUpload($event)"
+          accept="image/*">
+        <small>Formate acceptate: JPG, PNG, GIF (max 5MB)</small>
+      </div>
+
+      <button type="submit" [disabled]="loading">
+        Salvează informațiile de bază
+      </button>
     </form>
   </section>
 
-  <!-- Setări cont -->
+  <!-- Setări aplicație -->
   <section class="settings-section">
-    <h2>Setări aplicație</h2>
-    <form>
-      <label for="language">Limba aplicației</label>
-      <select id="language" [(ngModel)]="settings.language" name="language">
-        <option value="ro">Română</option>
-        <option value="en">English</option>
-      </select>
+    <h2>Preferințe aplicație</h2>
+    <form (ngSubmit)="saveNotificationSettings()">
+      <div class="form-group">
+        <label for="language">Limba aplicației</label>
+        <select id="language" [(ngModel)]="settings.language" name="language">
+          <option *ngFor="let lang of languages" [value]="lang.value">
+            {{ lang.label }}
+          </option>
+        </select>
+      </div>
 
-      <label>
-        <input type="checkbox" [(ngModel)]="settings.darkMode" name="darkMode">
-        Activează modul întrunecat
-      </label>
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.darkMode"
+            name="darkMode">
+          <span>Activează modul întunecat</span>
+        </label>
+      </div>
 
-      <label>
-        <input type="checkbox" [(ngModel)]="settings.emailNotifications" name="emailNotifications">
-        Notificări prin e-mail
-      </label>
-
-      <label>
-        <input type="checkbox" [(ngModel)]="settings.smsNotifications" name="smsNotifications">
-        Notificări prin SMS
-      </label>
+      <button type="submit" [disabled]="loading">
+        Salvează preferințele
+      </button>
     </form>
   </section>
 
-  <!-- Siguranță și acțiuni -->
+  <!-- Setări notificări -->
   <section class="settings-section">
-    <h2>Siguranță și acțiuni</h2>
-    <button class="danger" (click)="deactivateAccount()">Dezactivează contul</button>
-    <button class="danger" (click)="deleteAccount()">Șterge contul</button>
+    <h2>Notificări</h2>
+    <form (ngSubmit)="saveNotificationSettings()">
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.emailNotifications"
+            name="emailNotifications">
+          <span>Notificări prin e-mail</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.smsNotifications"
+            name="smsNotifications">
+          <span>Notificări prin SMS</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.pushNotifications"
+            name="pushNotifications">
+          <span>Notificări push în browser</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.serviceReminders"
+            name="serviceReminders">
+          <span>Amintiri pentru serviciile programate</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.marketingEmails"
+            name="marketingEmails">
+          <span>E-mailuri de marketing și promoții</span>
+        </label>
+      </div>
+
+      <button type="submit" [disabled]="loading">
+        Salvează setările de notificare
+      </button>
+    </form>
+  </section>
+
+  <!-- Setări confidențialitate -->
+  <section class="settings-section">
+    <h2>Confidențialitate</h2>
+    <form (ngSubmit)="savePrivacySettings()">
+      <div class="form-group">
+        <label for="profileVisibility">Vizibilitatea profilului</label>
+        <select
+          id="profileVisibility"
+          [(ngModel)]="settings.profileVisibility"
+          name="profileVisibility">
+          <option *ngFor="let option of profileVisibilityOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.locationSharing"
+            name="locationSharing">
+          <span>Permite partajarea locației pentru servicii</span>
+        </label>
+
+        <label class="checkbox-label" *ngIf="isSpecialist()">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.autoAcceptRequests"
+            name="autoAcceptRequests">
+          <span>Acceptă automat cererile în programul de lucru</span>
+        </label>
+      </div>
+
+      <button type="submit" [disabled]="loading">
+        Salvează setările de confidențialitate
+      </button>
+    </form>
+  </section>
+
+  <!-- Program de lucru (doar pentru specialiști) -->
+  <section class="settings-section" *ngIf="isSpecialist()">
+    <h2>Program de lucru</h2>
+    <form (ngSubmit)="saveWorkingHours()">
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="settings.workingHours.enabled"
+            name="workingHoursEnabled">
+          <span>Activează programul de lucru</span>
+        </label>
+      </div>
+
+      <div *ngIf="settings.workingHours.enabled" class="working-hours-config">
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="startTime">Ora de început</label>
+            <input
+              id="startTime"
+              type="time"
+              [(ngModel)]="settings.workingHours.start"
+              name="startTime">
+          </div>
+          <div class="form-group half">
+            <label for="endTime">Ora de sfârșit</label>
+            <input
+              id="endTime"
+              type="time"
+              [(ngModel)]="settings.workingHours.end"
+              name="endTime">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Zilele de lucru</label>
+          <div class="days-selection">
+            <label
+              *ngFor="let day of availableDays"
+              class="day-checkbox"
+              [class.selected]="isWorkingDaySelected(day.value)">
+              <input
+                type="checkbox"
+                [checked]="isWorkingDaySelected(day.value)"
+                (change)="toggleWorkingDay(day.value)">
+              <span>{{ day.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="loading">
+        Salvează programul de lucru
+      </button>
+    </form>
+  </section>
+
+  <!-- Securitate -->
+  <section class="settings-section">
+    <h2>Securitate</h2>
+    <div class="security-actions">
+      <button type="button" (click)="changePassword()" class="security-btn">
+        Schimbă parola
+      </button>
+      <button type="button" (click)="exportData()" class="security-btn">
+        Exportă datele mele
+      </button>
+    </div>
+  </section>
+
+  <!-- Acțiuni cont -->
+  <section class="settings-section danger-section">
+    <h2>Acțiuni cont</h2>
+    <div class="danger-actions">
+      <button class="danger" (click)="deactivateAccount()" [disabled]="loading">
+        Dezactivează contul temporar
+      </button>
+      <button class="danger delete" (click)="deleteAccount()" [disabled]="loading">
+        Șterge contul permanent
+      </button>
+    </div>
+    <small class="danger-warning">
+      ⚠️ Acțiunile de mai sus sunt ireversibile. Te rugăm să fii foarte atent.
+    </small>
   </section>
 </div>
