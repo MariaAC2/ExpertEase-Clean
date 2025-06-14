@@ -384,6 +384,8 @@ export interface SpecialistProfileUpdateDTO {
     address?: string | undefined;
     yearsExperience?: number | undefined;
     description?: string | undefined;
+    categories?: string[] | undefined;
+    portfolio?: PortfolioPictureAddDTO[] | undefined;
 }
 
 export interface SpecialistUpdateDTO {
@@ -543,7 +545,6 @@ export interface UserUpdateDTO {
     firstName?: string | undefined;
     lastName?: string | undefined;
     password?: string | undefined;
-    specialist?: SpecialistProfileUpdateDTO;
 }
 
 export interface AdminUserUpdateDTO {

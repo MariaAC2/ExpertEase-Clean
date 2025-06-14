@@ -6,15 +6,22 @@ import {Router} from '@angular/router';
 import {UserService} from '../../services/user.service';
 import {AuthService} from '../../services/auth.service';
 import {PhotoService} from '../../services/photo.service';
+import {EditSpecialistInfoComponent} from './edit-specialist-info/edit-specialist-info.component';
+import {EditUserInfoComponent} from './edit-user-info/edit-user-info.component';
 
 @Component({
   selector: 'app-profile',
-  imports: [DatePipe, IconButtonComponent, NgForOf, NgIf],
+  imports: [DatePipe, IconButtonComponent, NgForOf, NgIf, EditSpecialistInfoComponent, EditUserInfoComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
-  user: UserDTO | undefined;
+  user: UserDTO | null = null;
+
+  // Modal visibility states
+  showEditUserModal = false;
+  showEditSpecialistModal = false;
+
   dummyUser: UserDTO = {
     id: 'user-001',
     fullName: 'Elena Georgescu',
@@ -36,12 +43,18 @@ export class ProfileComponent implements OnInit {
       ]
     }
   };
+
   constructor(private readonly profileService: UserService,
               private readonly authService: AuthService,
               private readonly photoService: PhotoService,
               private readonly route: Router) {}
+
   ngOnInit() {
-    // this.user = this.dummyUser;
+    this.loadUserProfile();
+  }
+
+  loadUserProfile() {
+    // this.user = this.dummyUser; // Use this for testing
     this.profileService.getUserProfile().subscribe({
       next: (res) => {
         this.user = res.response;
@@ -57,13 +70,11 @@ export class ProfileComponent implements OnInit {
     const file: File = event.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     this.photoService.addProfilePicture(file).subscribe({
       next: (res) => {
         console.log('Upload success:', res);
-        console.log(this.user?.profilePictureUrl);
+        // Reload user profile to get updated picture URL
+        this.loadUserProfile();
       },
       error: (err) => {
         console.error('Upload error:', err);
@@ -71,34 +82,47 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  uploadProfilePicture(file: File) {
-    this.photoService.addProfilePicture(file).subscribe({
-      next: (res) => {
-        console.log('Upload success:', res);
-      },
-      error: (err) => {
-        console.error('Upload error:', err);
-      }
-    });
+  // User Edit Modal Methods
+  openEditUserModal() {
+    this.showEditUserModal = true;
   }
 
-
-  onEdit() {
-    // open modal or navigate to profile edit
+  onCloseEditUserModal() {
+    this.showEditUserModal = false;
   }
 
+  onUserUpdated(updatedUser: UserDTO) {
+    this.user = updatedUser;
+    console.log('User profile updated:', updatedUser);
+    // Optionally show a success message
+    // this.showSuccessMessage('Profilul a fost actualizat cu succes!');
+  }
+
+  // Specialist Edit Modal Methods
+  openEditSpecialistModal() {
+    this.showEditSpecialistModal = true;
+  }
+
+  onCloseEditSpecialistModal() {
+    this.showEditSpecialistModal = false;
+  }
+
+  onSpecialistUpdated(updatedUser: UserDTO) {
+    this.user = updatedUser;
+    console.log('Specialist profile updated:', updatedUser);
+    // Reload the entire profile to ensure all data is fresh
+    this.loadUserProfile();
+    // Optionally show a success message
+    // this.showSuccessMessage('Anunțul de specialist a fost actualizat cu succes!');
+  }
+
+  // Keep your existing methods
   goToReviews() {
-    // navigate to reviews page
     this.route.navigate(['profile/user-reviews']);
   }
 
   goToHistory() {
     // navigate to service history
-  }
-
-  goToExpertEase() {
-    // navigate to ExpertEase account management
-    // this.route.navigate(['profile/account']);
   }
 
   goToSettings() {
@@ -110,9 +134,7 @@ export class ProfileComponent implements OnInit {
 
     if (confirmed) {
       this.authService.logout();
+      this.route.navigate(['/home']);
     }
-    this.route.navigate(['/home']);
   }
-
-  protected readonly UserRoleEnum = UserRoleEnum;
 }

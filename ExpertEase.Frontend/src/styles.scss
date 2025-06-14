@@ -4,6 +4,16 @@ html, body {
   font-family: 'Roboto Mono', monospace;
 }
 
+.page-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  margin-bottom: 100px; /* Space for footer */
+}
+
 .logo-button {
   background: none;
   border: none;
@@ -22,29 +32,6 @@ html, body {
   transform: scale(1.4);
   transform-origin: center;
   display: block;
-}
-
-/* Tooltip styling */
-.toggle-btn::after {
-  content: attr(data-btn);
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: white;
-  border: 1px solid black;
-  color: #333;
-  padding: 3px 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 100;
-}
-
-.toggle-btn:hover::after {
-  opacity: 1;
 }
 
 /* Form overlay */
@@ -74,14 +61,21 @@ html, body {
 .form-box {
   background: #fff;
   border: 2px solid #c9b7ff;
-  padding: 12px 16px;
+  padding: 24px 32px; /* Increased from 12px 16px to give more space */
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 600px; /* Added minimum width to ensure enough space */
+  max-width: 800px; /* Added maximum width to prevent it from being too wide */
 }
 
 .close-button-wrapper {
   display: flex;
   justify-content: flex-end;
+}
+
+.back-button-wrapper {
+  display: flex;
+  justify-content: flex-start;
 }
 
 /* Close button */
@@ -120,3 +114,4 @@ html, body {
   max-width: 400px;
   margin: auto;
 }
+

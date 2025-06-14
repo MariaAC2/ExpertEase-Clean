@@ -4,7 +4,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,21 +13,46 @@
 
 .request-form-wrapper {
   position: relative;
-  max-width: 600px;
+  width: 600px;
+  max-width: 90vw;
   margin: 2rem auto;
   background-color: #e8d9ff;
   border: 2px solid #000;
   padding: 2rem;
   font-family: 'Roboto Mono', monospace;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #000;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+  }
 }
 
 .request-form-wrapper h2 {
   text-align: center;
-}
-
-.request-form-wrapper h2 {
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
+  margin-top: 0;
 }
 
 .request-form label {
@@ -35,6 +60,7 @@
   flex-direction: column;
   margin-bottom: 1rem;
   font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .form-row {
@@ -51,39 +77,166 @@
   font-size: 0.9rem;
 }
 
-.request-form input,
-.request-form textarea {
-  padding: 0.5rem;
-  border: 1px solid #999;
-  border-radius: 4px;
-  font-family: 'Roboto Mono', monospace;
-  background-color: #fff;
+// Input box styling similar to dynamic-form
+.input-box {
+  background-color: #f8f5ff;
+  border: 2px solid #c9b7ff;
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.3s ease;
+  margin-top: 4px;
+
+  &:focus-within {
+    border-color: #9a79ff;
+    box-shadow: 0 2px 8px rgba(154, 121, 255, 0.2);
+  }
 }
 
-.request-form textarea {
+.input-box input,
+.input-box textarea {
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+  outline: none;
+  color: #333;
+
+  &::placeholder {
+    color: #888;
+    font-style: italic;
+  }
+}
+
+// Date and time row styling
+.datetime-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.date-fields {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-fields {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.date-field {
+  flex: 1;
+
+  &:nth-child(5) { // year field
+    flex: 1.5;
+  }
+}
+
+.time-field {
+  flex: 1;
+}
+
+.date-separator,
+.time-separator {
+  font-weight: bold;
+  font-size: 18px;
+  color: #666;
+  margin: 0 2px;
+}
+
+// Special styling for date and time inputs
+.date-field .input-box input[type="number"],
+.time-field .input-box input[type="number"] {
+  text-align: center;
+  font-weight: 500;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
+}
+
+.textarea-box textarea {
   resize: vertical;
+  min-height: 80px;
+  padding: 8px 0;
+  line-height: 1.4;
 }
 
 .center-button {
   display: flex;
   justify-content: center;
+  margin-top: 1.5rem;
 }
 
 .request-form button {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 12px 24px;
   border: 2px solid #000;
   border-radius: 6px;
   background-color: #c9b7ff;
   font-weight: bold;
   cursor: pointer;
-  display: flex;
-  justify-content: center;
   font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #b8a3ff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .request-form button:disabled {
   background-color: #dcdcdc;
   color: #888;
   cursor: not-allowed;
+  border-color: #bbb;
+  transform: none;
+  box-shadow: none;
+}
+
+// Error styling matching dynamic-form
+.error {
+  color: #d8000c;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  padding-left: 2px;
+  font-weight: 400;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .request-form-wrapper {
+    max-width: 90vw;
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-row label {
+    margin-bottom: 0.5rem;
+  }
 }

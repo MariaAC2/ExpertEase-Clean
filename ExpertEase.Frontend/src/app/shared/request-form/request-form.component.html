@@ -3,31 +3,132 @@
     <button class="close-button" (click)="closeForm()">×</button>
     <h2>Trimite o solicitare</h2>
 
-    <form class="request-form">
-      <div class="form-row">
-        <label>
-          Data și ora dorite:
-          <input type="datetime-local" name="startDate" [(ngModel)]="requestForm.requestedStartDate" required />
-        </label>
+    <form class="request-form" #formRef="ngForm" (ngSubmit)="submitRequest(formRef)">
+      <label>
+        Data și ora dorite:
+        <div class="datetime-row">
+          <div class="date-fields">
+            <div class="date-field">
+              <div class="input-box">
+                <input type="number"
+                       name="day"
+                       [(ngModel)]="requestForm.day"
+                       placeholder="ZZ"
+                       min="1"
+                       max="31"
+                       required
+                       #dayCtrl="ngModel" />
+              </div>
+            </div>
+            <span class="date-separator">/</span>
+            <div class="date-field">
+              <div class="input-box">
+                <input type="number"
+                       name="month"
+                       [(ngModel)]="requestForm.month"
+                       placeholder="LL"
+                       min="1"
+                       max="12"
+                       required
+                       #monthCtrl="ngModel" />
+              </div>
+            </div>
+            <span class="date-separator">/</span>
+            <div class="date-field">
+              <div class="input-box">
+                <input type="number"
+                       name="year"
+                       [(ngModel)]="requestForm.year"
+                       placeholder="AAAA"
+                       min="2024"
+                       max="2030"
+                       required
+                       #yearCtrl="ngModel" />
+              </div>
+            </div>
+          </div>
+          <div class="time-fields">
+            <div class="time-field">
+              <div class="input-box">
+                <input type="number"
+                       name="startHour"
+                       [(ngModel)]="requestForm.startHour"
+                       placeholder="HH"
+                       min="0"
+                       max="23"
+                       required
+                       #hourCtrl="ngModel" />
+              </div>
+            </div>
+            <span class="time-separator">:</span>
+            <div class="time-field">
+              <div class="input-box">
+                <input type="number"
+                       name="startMinute"
+                       [(ngModel)]="requestForm.startMinute"
+                       placeholder="MM"
+                       min="0"
+                       max="59"
+                       required
+                       #minuteCtrl="ngModel" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="error" *ngIf="(dayCtrl.invalid || monthCtrl.invalid || yearCtrl.invalid || hourCtrl.invalid || minuteCtrl.invalid) && ((dayCtrl.dirty || dayCtrl.touched || monthCtrl.dirty || monthCtrl.touched || yearCtrl.dirty || yearCtrl.touched || hourCtrl.dirty || hourCtrl.touched || minuteCtrl.dirty || minuteCtrl.touched) || formSubmitted)">
+          Data și ora sunt obligatorii.
+        </div>
+      </label>
 
-        <label>
-          Număr de telefon:
-          <input type="tel" name="phoneNumber" [(ngModel)]="requestForm.phoneNumber" required />
-        </label>
-      </div>
+      <label>
+        Număr de telefon:
+        <div class="input-box">
+          <input type="tel"
+                 name="phoneNumber"
+                 [(ngModel)]="requestForm.phoneNumber"
+                 placeholder="ex: 0723 123 456"
+                 required
+                 #phoneCtrl="ngModel" />
+        </div>
+        <div class="error" *ngIf="phoneCtrl.invalid && (phoneCtrl.dirty || phoneCtrl.touched || formSubmitted)">
+          Numărul de telefon este obligatoriu.
+        </div>
+      </label>
 
       <label>
         Adresă:
-        <input type="text" name="address" [(ngModel)]="requestForm.address" required />
+        <div class="input-box">
+          <input type="text"
+                 name="address"
+                 [(ngModel)]="requestForm.address"
+                 placeholder="ex: Str. Teiului nr. 14, București"
+                 required
+                 #addressCtrl="ngModel" />
+        </div>
+        <div class="error" *ngIf="addressCtrl.invalid && (addressCtrl.dirty || addressCtrl.touched || formSubmitted)">
+          Adresa este obligatorie.
+        </div>
       </label>
 
       <label>
         Descrierea solicitării:
-        <textarea name="description" rows="4" [(ngModel)]="requestForm.description" required></textarea>
+        <div class="input-box textarea-box">
+          <textarea name="description"
+                    rows="4"
+                    [(ngModel)]="requestForm.description"
+                    placeholder="Descrieți în detaliu serviciul de care aveți nevoie..."
+                    required
+                    #descriptionCtrl="ngModel"></textarea>
+        </div>
+        <div class="error" *ngIf="descriptionCtrl.invalid && (descriptionCtrl.dirty || descriptionCtrl.touched || formSubmitted)">
+          Descrierea solicitării este obligatorie.
+        </div>
       </label>
 
       <div class="center-button">
-        <button type="submit" (click)="submitRequest()">Trimite solicitarea</button>
+        <button type="submit" [disabled]="formRef.invalid && formSubmitted">
+          Trimite solicitarea
+        </button>
       </div>
     </form>
   </div>

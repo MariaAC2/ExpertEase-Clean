@@ -1,5 +1,13 @@
 <div class="alert" [ngClass]="type">
   <strong *ngIf="title">{{ title }}</strong>
   <p>{{ message }}</p>
-  <button class="close-btn" (click)="onClose()">×</button>
+
+  <!-- Action buttons for confirmation dialogs -->
+  <div class="alert-actions" *ngIf="showActions">
+    <button class="alert-btn confirm-btn" (click)="onConfirm()">{{ confirmText }}</button>
+    <button class="alert-btn cancel-btn" (click)="onCancel()">{{ cancelText }}</button>
+  </div>
+
+  <!-- Close button (only show if no actions) -->
+  <button class="close-btn" (click)="onClose()" *ngIf="!showActions">×</button>
 </div>

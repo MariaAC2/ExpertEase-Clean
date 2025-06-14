@@ -1,0 +1,117 @@
+<div class="edit-overlay" *ngIf="isVisible">
+  <div class="edit-modal">
+    <div class="edit-header">
+      <h2>Editează informațiile de specialist</h2>
+      <button class="close-button" (click)="onClose()">×</button>
+    </div>
+
+    <form class="edit-form" (ngSubmit)="onSubmit()" #editForm="ngForm">
+
+      <!-- Contact Info Section -->
+      <div class="form-section">
+        <h3>Informații de contact</h3>
+        <div class="form-group">
+          <label for="phoneNumber">Număr de telefon</label>
+          <input
+            id="phoneNumber"
+            type="tel"
+            [(ngModel)]="specialistInfo.phoneNumber"
+            name="phoneNumber"
+            placeholder="Ex: 0712345678"
+            required
+            #phoneControl="ngModel">
+          <div class="error-message" *ngIf="phoneControl.invalid && phoneControl.touched">
+            Numărul de telefon este obligatoriu
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Adresa</label>
+          <input
+            id="address"
+            type="text"
+            [(ngModel)]="specialistInfo.address"
+            name="address"
+            placeholder="Ex: Strada Florilor 12, București"
+            required
+            #addressControl="ngModel">
+          <div class="error-message" *ngIf="addressControl.invalid && addressControl.touched">
+            Adresa este obligatorie
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Section -->
+      <div class="form-section">
+        <h3>Categorii de servicii</h3>
+        <app-category-selector
+          [selectedCategoryIds]="specialistInfo.categories"
+          (categoryChange)="updateCategories($event)">
+        </app-category-selector>
+      </div>
+
+      <!-- Experience -->
+      <div class="form-group">
+        <label for="yearsExperience">Ani de experiență</label>
+        <input
+          id="yearsExperience"
+          type="number"
+          [(ngModel)]="specialistInfo.yearsExperience"
+          name="yearsExperience"
+          min="0"
+          max="50"
+          required
+          #experienceControl="ngModel">
+        <div class="error-message" *ngIf="experienceControl.invalid && experienceControl.touched">
+          Experiența este obligatorie
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Descrierea serviciilor</label>
+        <textarea
+          id="description"
+          [(ngModel)]="specialistInfo.description"
+          name="description"
+          rows="4"
+          placeholder="Descrie serviciile pe care le oferi..."
+          required
+          #descriptionControl="ngModel"></textarea>
+        <div class="error-message" *ngIf="descriptionControl.invalid && descriptionControl.touched">
+          Descrierea este obligatorie
+        </div>
+      </div>
+
+      <!-- Portfolio Section -->
+      <div class="form-section">
+        <h3>Portofoliu imagini</h3>
+        <div class="portfolio-section">
+          <div class="portfolio-images" *ngIf="portfolioImages.length > 0">
+            <div class="image-item" *ngFor="let image of portfolioImages; let i = index">
+              <img [src]="image.url" alt="Portfolio image" />
+              <button type="button" class="delete-image-btn" (click)="removeImage(i)">×</button>
+            </div>
+          </div>
+
+          <div class="portfolio-empty" *ngIf="portfolioImages.length === 0">
+            <p>Nu ai încă imagini în portofoliu</p>
+          </div>
+
+          <label class="upload-portfolio-btn">
+            📸 Adaugă imagini
+            <input type="file" multiple accept="image/*" (change)="onPortfolioImagesSelected($event)" hidden />
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-button" (click)="onClose()">Anulează</button>
+        <button type="submit" class="save-button" [disabled]="editForm.invalid || isLoading">
+          <span *ngIf="isLoading">Se salvează...</span>
+          <span *ngIf="!isLoading">Salvează modificările</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

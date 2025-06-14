@@ -1,22 +1,23 @@
-<h2>Autentificare</h2>
+<div class="register-form">
+  <h2>Autentificare</h2>
 
-<div class="form-wrapper">
-  <div class="form-box">
-    <app-dynamic-form
-      [fields]="formFields"
-      [submitText]="'Trimite'"
-      (formSubmit)="loginUser($event)">
-    </app-dynamic-form>
+  <div class="form-wrapper">
+    <div class="form-box">
+      <app-dynamic-form
+        [fields]="formFields"
+        [submitText]="'Trimite'"
+        (formSubmit)="loginUser($event)">
+      </app-dynamic-form>
+    </div>
   </div>
+
+  <!--<div *ngIf="errorMessage" class="error-message">-->
+  <!--  {{ errorMessage }}-->
+  <!--</div>-->
+
+  <p class="auth-switch">
+    Nu ai cont?
+    <button (click)="goToRegister()" class="auth-button">Înregistrează-te</button>
+  </p>
+  <!--</div>-->
 </div>
-
-<!--<div *ngIf="errorMessage" class="error-message">-->
-<!--  {{ errorMessage }}-->
-<!--</div>-->
-
-<p class="auth-switch">
-  Nu ai cont?
-  <button (click)="goToRegister()" class="auth-button">Înregistrează-te</button>
-</p>
-<!--</div>-->
-

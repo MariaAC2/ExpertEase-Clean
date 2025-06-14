@@ -1,50 +1,55 @@
-<nav class="navbar">
-  <!-- Logo button -->
-  <button class="logo-button toggle-btn" routerLink="/home" data-btn="Acasă">
-    <img src="logo.svg" alt="Logo" />
-  </button>
+<div class="page-container">
+  <nav class="navbar">
+    <!-- Logo button -->
+    <button class="logo-button" routerLink="/home" title="Acasă">
+      <img src="logo.svg" alt="Logo" />
+    </button>
 
-  <!-- Hamburger toggle button -->
-  <button class="navbar-toggle" (click)="toggleNavbar()">&#9776;</button>
+    <!-- Hamburger toggle button -->
+    <button class="navbar-toggle" (click)="toggleNavbar()">&#9776;</button>
 
-  <!-- Navigation links -->
-  <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
-<!--    <li *ngIf="authService.getUserRole() === 'Client'">-->
-    <li>
-      <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
-    </li>
+    <!-- Navigation links -->
+    <ul class="navbar-links" [ngClass]="{ 'show': navbarOpen }">
+      <!--    <li *ngIf="authService.getUserRole() === 'Client'">-->
+      <li>
+        <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
+      </li>
 
-    <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
-    <li>
-<!--    <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">-->
-      <a routerLink="/messages" routerLinkActive="active">Mesajele tale</a>
-    </li>
+      <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
+      <li>
+        <!--    <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">-->
+        <a routerLink="/messages" routerLinkActive="active">Mesajele tale</a>
+      </li>
 
-    <li>
-      <a
-        [routerLink]="authService.getToken() ? '/profile' : '/register'"
-        routerLinkActive="active">
-        {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}
-      </a>
-<!--      <a routerLink="/profile" routerLinkActive="active">Contul tău</a>-->
-    </li>
+      <li>
+<!--        <a-->
+<!--          [routerLink]="authService.getToken() ? '/profile' : '/register'"-->
+<!--          routerLinkActive="active">-->
+<!--          {{ authService.getToken() ? 'Contul tău' : 'Înregistrează-te!' }}-->
+<!--        </a>-->
+              <a routerLink="/profile" routerLinkActive="active">Contul tău</a>
+      </li>
 
-    <li>
-<!--    <li *ngIf="authService.getUserRole() === 'Admin'">-->
-      <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
-    </li>
-  </ul>
-</nav>
+      <li>
+        <!--    <li *ngIf="authService.getUserRole() === 'Admin'">-->
+        <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
+      </li>
+    </ul>
+  </nav>
 
-<router-outlet></router-outlet>
-<footer class="site-footer">
-  <div class="footer-content">
-    <p>&copy; 2025 ExpertEase. Toate drepturile rezervate.</p>
-    <nav class="footer-links">
-      <a routerLink="/about" routerLinkActive="active">Despre noi</a>
-      <a routerLink="/contact-us" routerLinkActive="active">Contactează-ne!</a>
-      <a routerLink="/terms" routerLinkActive="active">Termeni și condiții</a>
-      <a routerLink="/privacy" routerLinkActive="active">Politică de confidențialitate</a>
-    </nav>
+  <div class="main-content">
+    <router-outlet></router-outlet>
   </div>
-</footer>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>&copy; 2025 ExpertEase. Toate drepturile rezervate.</p>
+      <nav class="footer-links">
+        <a routerLink="/about" routerLinkActive="active">Despre noi</a>
+        <a routerLink="/contact-us" routerLinkActive="active">Contactează-ne!</a>
+        <a routerLink="/terms" routerLinkActive="active">Termeni și condiții</a>
+        <a routerLink="/privacy" routerLinkActive="active">Politică de confidențialitate</a>
+      </nav>
+    </div>
+  </footer>
+</div>

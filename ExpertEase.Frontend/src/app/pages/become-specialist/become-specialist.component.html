@@ -1,11 +1,27 @@
 <h2>Devino specialist!</h2>
+<div class="modal-overlay" *ngIf="showStep2BackAlert || showStep3BackAlert">
+  <app-alert
+    type="warning"
+    title="Confirmare"
+    [message]="getAlertMessage()"
+    [showActions]="true"
+    confirmText="Da, mă întorc"
+    cancelText="Anulează"
+    (confirm)="handleAlertConfirm()"
+    (cancel)="handleAlertCancel()">
+  </app-alert>
+</div>
 <div class="form-wrapper">
   <div class="form-box">
+    <button *ngIf="step > 1" (click)="showBackConfirmation()" class="close-button" title="Înapoi">
+      ←
+    </button>
     <ng-container [ngSwitch]="step">
+      <!-- Step 1: Basic Information -->
       <app-dynamic-form *ngSwitchCase="1"
-        [fields]="step1FormFields"
-        [submitText]="'Treci la pasul următor'"
-        (formSubmit)="handleStep1($event)">
+                        [fields]="step1FormFields"
+                        [submitText]="'Treci la pasul următor'"
+                        (formSubmit)="handleStep1($event)">
       </app-dynamic-form>
 
       <!-- Step 2: Category Selection -->
@@ -22,11 +38,14 @@
         </div>
       </div>
 
+      <!-- Step 3: Portfolio Upload -->
       <div *ngSwitchCase="3" class="form-layout">
-        <app-portfolio-upload
-          [uploadedPictures]="specialistData.portfolio || []"
-          (portfolioChange)="updatePortfolio($event)">
-        </app-portfolio-upload>
+        <div class="form-group full-width">
+          <app-portfolio-upload
+            [uploadedPictures]="specialistData.portfolio || []"
+            (portfolioChange)="updatePortfolio($event)">
+          </app-portfolio-upload>
+        </div>
 
         <div class="form-group full-width">
           <div class="button-wrapper">
@@ -35,10 +54,5 @@
         </div>
       </div>
     </ng-container>
-<!--    <app-dynamic-form-->
-<!--      [fields]="addEntityFormFields"-->
-<!--      [submitText]="'Treci la pasul următor'"-->
-<!--      (formSubmit)="addEntity($event)">-->
-<!--    </app-dynamic-form>-->
   </div>
 </div>

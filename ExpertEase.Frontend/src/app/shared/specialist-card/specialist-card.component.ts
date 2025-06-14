@@ -29,7 +29,11 @@ export class SpecialistCardComponent {
 
   requestForm = {
     receiverUserId: '',
-    requestedStartDate: new Date(),
+    day: null as number | null,
+    month: null as number | null,
+    year: null as number | null,
+    startHour: null as number | null,
+    startMinute: null as number | null,
     phoneNumber: '',
     address: '',
     description: ''

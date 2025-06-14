@@ -1,3 +1,20 @@
+<!-- Edit User Info Modal -->
+<app-edit-user-info
+  [isVisible]="showEditUserModal"
+  [user]="user"
+  (close)="onCloseEditUserModal()"
+  (userUpdated)="onUserUpdated($event)">
+</app-edit-user-info>
+
+<!-- Edit Specialist Info Modal (only show if user is specialist) -->
+<app-edit-specialist-info
+  *ngIf="user?.specialist"
+  [isVisible]="showEditSpecialistModal"
+  [user]="user"
+  (close)="onCloseEditSpecialistModal()"
+  (specialistUpdated)="onSpecialistUpdated($event)">
+</app-edit-specialist-info>
+
 <div class="account-card">
   <div class="account-header">
     <div class="avatar-wrapper">
@@ -8,10 +25,6 @@
           <img src="assets/icons/photo_media.svg" alt="Upload icon" />
         </label>
       </div>
-<!--      <div class="rating-badge">-->
-<!--        <img src="assets/star-rating.svg" alt="User star" />-->
-<!--        <span class="rating-value">{{ user?.rating }}</span>-->
-<!--      </div>-->
     </div>
 
     <div class="account-info">
@@ -20,15 +33,17 @@
       <p><strong>Parolă:</strong> ********</p>
       <p><strong>Creat la data de:</strong> {{ user?.createdAt | date:'dd.MM.yyyy' }}</p>
     </div>
+
+    <!-- Updated edit profile button -->
     <app-icon-button
       [label]="'Editează profilul'"
       [icon]="'assets/icons/edit.svg'"
-      (onClick)="onEdit()">
+      (onClick)="openEditUserModal()">
     </app-icon-button>
   </div>
 
-<!--  *ngIf="user?.role === UserRoleEnum.Specialist"-->
-  <div class="card">
+  <!-- Specialist Info Card (only show if user is specialist) -->
+  <div class="card" *ngIf="user?.specialist">
     <div class="info">
       <h2 class="full-name">Anunțul tău</h2>
       <div class="details-block">
@@ -50,10 +65,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Updated edit specialist button -->
     <app-icon-button
       [label]="'Editează anunțul'"
       [icon]="'assets/icons/edit.svg'"
-      (onClick)="onEdit()">
+      (onClick)="openEditSpecialistModal()">
     </app-icon-button>
   </div>
 
@@ -68,11 +85,6 @@
       [icon]="'assets/icons/history.svg'"
       (onClick)="goToHistory()">
     </app-icon-button>
-<!--    <app-icon-button-->
-<!--      [label]="'Contul ExpertEase'"-->
-<!--      [icon]="'assets/icons/account.svg'"-->
-<!--      (onClick)="goToExpertEase()">-->
-<!--    </app-icon-button>-->
     <app-icon-button
       [label]="'Setările contului'"
       [icon]="'assets/icons/settings.svg'"

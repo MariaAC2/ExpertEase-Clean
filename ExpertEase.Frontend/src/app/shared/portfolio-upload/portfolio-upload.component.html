@@ -1,23 +1,9 @@
-<!--<h3 class="section-title">Fă-ți un portofoliu cu lucrările tale</h3>-->
-
-<!--<div class="portfolio-upload">-->
-<!--  <div class="portfolio-preview" *ngFor="let preview of imagePreviews; let i = index">-->
-<!--    <img [src]="preview" alt="Preview image" />-->
-<!--    <button class="delete-btn" (click)="remove(i)">✕</button>-->
-<!--  </div>-->
-<!--</div>-->
-
-<!--<label class="custom-upload-btn">-->
-<!--  <span>📸 Adaugă imagini</span>-->
-<!--  <input type="file" multiple accept="image/*" (change)="onFileSelected($event)" hidden />-->
-<!--</label>-->
-
-<!--<div class="portfolio-upload">-->
-  <div class="porfolio-content">
+<div class="portfolio-upload">
+  <div class="portfolio-content">
     <div class="portfolio-preview" *ngFor="let preview of imagePreviews; let i = index">
       <div class="image-container">
-        <img [src]="preview" alt="Preview" />
-        <button class="delete-btn" (click)="remove(i)">✕</button>
+        <img [src]="preview" alt="Portfolio image preview" />
+        <button class="delete-btn" (click)="remove(i)" type="button" title="Remove image">✕</button>
       </div>
     </div>
   </div>
@@ -26,5 +12,4 @@
     📸 Adaugă imagini
     <input type="file" multiple accept="image/*" (change)="onFileSelected($event)" hidden />
   </label>
-<!--</div>-->
-
+</div>

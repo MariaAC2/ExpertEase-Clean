@@ -1,30 +1,151 @@
 <!--<div class="overlay">-->
-  <div class="request-form-wrapper">
-    <button class="close-button" (click)="closeForm()">×</button>
-    <h2>Trimite o ofertă</h2>
+<div class="request-form-wrapper">
+  <button class="close-button" (click)="closeForm()">×</button>
+  <h2>Trimite o ofertă</h2>
 
-    <form class="request-form">
-      <div class="form-row">
-        <label>
-          De la data de:
-          <input type="datetime-local" name="startDate" [(ngModel)]="replyForm.startDate" required />
-        </label>
-
-        <label>
-          Până la data de:
-          <input type="datetime-local" name="endDate" [(ngModel)]="replyForm.endDate" required />
-        </label>
+  <form class="request-form" #formRef="ngForm" (ngSubmit)="submitReply(formRef)">
+    <label>
+      Data:
+      <div class="datetime-row">
+        <div class="date-fields">
+          <div class="date-field">
+            <div class="input-box">
+              <input type="number"
+                     name="day"
+                     [(ngModel)]="replyForm.day"
+                     placeholder="ZZ"
+                     min="1"
+                     max="31"
+                     required
+                     #dayCtrl="ngModel" />
+            </div>
+          </div>
+          <span class="date-separator">/</span>
+          <div class="date-field">
+            <div class="input-box">
+              <input type="number"
+                     name="month"
+                     [(ngModel)]="replyForm.month"
+                     placeholder="LL"
+                     min="1"
+                     max="12"
+                     required
+                     #monthCtrl="ngModel" />
+            </div>
+          </div>
+          <span class="date-separator">/</span>
+          <div class="date-field">
+            <div class="input-box">
+              <input type="number"
+                     name="year"
+                     [(ngModel)]="replyForm.year"
+                     placeholder="AAAA"
+                     min="2024"
+                     max="2030"
+                     required
+                     #yearCtrl="ngModel" />
+            </div>
+          </div>
+        </div>
       </div>
+      <div class="error" *ngIf="(dayCtrl.invalid || monthCtrl.invalid || yearCtrl.invalid) && ((dayCtrl.dirty || dayCtrl.touched || monthCtrl.dirty || monthCtrl.touched || yearCtrl.dirty || yearCtrl.touched) || formSubmitted)">
+        Data este obligatorie.
+      </div>
+    </label>
 
+    <div class="time-row">
       <label>
-        Preț:
-        <input type="number" name="price" [(ngModel)]="replyForm.price" step="0.01" required />
+        De la:
+        <div class="time-fields">
+          <div class="time-field">
+            <div class="input-box">
+              <input type="number"
+                     name="startHour"
+                     [(ngModel)]="replyForm.startHour"
+                     placeholder="HH"
+                     min="0"
+                     max="23"
+                     required
+                     #startHourCtrl="ngModel" />
+            </div>
+          </div>
+          <span class="time-separator">:</span>
+          <div class="time-field">
+            <div class="input-box">
+              <input type="number"
+                     name="startMinute"
+                     [(ngModel)]="replyForm.startMinute"
+                     placeholder="MM"
+                     min="0"
+                     max="59"
+                     required
+                     #startMinuteCtrl="ngModel" />
+            </div>
+          </div>
+        </div>
+        <div class="error" *ngIf="(startHourCtrl.invalid || startMinuteCtrl.invalid) && ((startHourCtrl.dirty || startHourCtrl.touched || startMinuteCtrl.dirty || startMinuteCtrl.touched) || formSubmitted)">
+          Ora de început este obligatorie.
+        </div>
       </label>
 
-      <div class="center-button">
-        <button type="submit" (click)="submitReply()">Trimite oferta</button>
-      </div>
-    </form>
-  </div>
-<!--</div>-->
+      <label>
+        Până la:
+        <div class="time-fields">
+          <div class="time-field">
+            <div class="input-box">
+              <input type="number"
+                     name="endHour"
+                     [(ngModel)]="replyForm.endHour"
+                     placeholder="HH"
+                     min="0"
+                     max="23"
+                     required
+                     #endHourCtrl="ngModel" />
+            </div>
+          </div>
+          <span class="time-separator">:</span>
+          <div class="time-field">
+            <div class="input-box">
+              <input type="number"
+                     name="endMinute"
+                     [(ngModel)]="replyForm.endMinute"
+                     placeholder="MM"
+                     min="0"
+                     max="59"
+                     required
+                     #endMinuteCtrl="ngModel" />
+            </div>
+          </div>
+        </div>
+        <div class="error" *ngIf="(endHourCtrl.invalid || endMinuteCtrl.invalid) && ((endHourCtrl.dirty || endHourCtrl.touched || endMinuteCtrl.dirty || endMinuteCtrl.touched) || formSubmitted)">
+          Ora de sfârșit este obligatorie.
+        </div>
+      </label>
+    </div>
 
+    <label>
+      Preț:
+      <div class="input-box price-input">
+        <input type="number"
+               name="price"
+               [(ngModel)]="replyForm.price"
+               placeholder="ex: 150.00"
+               step="0.01"
+               min="0"
+               required
+               #priceCtrl="ngModel" />
+        <span class="currency">RON</span>
+      </div>
+      <div class="error" *ngIf="priceCtrl.invalid && (priceCtrl.dirty || priceCtrl.touched || formSubmitted)">
+        Prețul este obligatoriu.
+      </div>
+    </label>
+
+    <div class="center-button">
+      <button type="submit" [disabled]="formRef.invalid && formSubmitted">
+        Trimite oferta
+      </button>
+    </div>
+  </form>
+</div>
+<!--</div-->

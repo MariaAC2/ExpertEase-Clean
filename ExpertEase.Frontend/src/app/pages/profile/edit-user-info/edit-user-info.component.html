@@ -1,0 +1,100 @@
+<div class="edit-overlay" *ngIf="isVisible">
+  <div class="edit-modal">
+    <div class="edit-header">
+      <h2>Editează informațiile personale</h2>
+      <button class="close-button" (click)="onClose()">×</button>
+    </div>
+
+    <form class="edit-form" (ngSubmit)="onSubmit()" #editForm="ngForm">
+      <div class="form-group-row">
+        <div class="form-group">
+          <label for="firstName">Prenume</label>
+          <input
+            id="firstName"
+            type="text"
+            [(ngModel)]="userInfo.firstName"
+            name="firstName"
+            required
+            #firstNameControl="ngModel">
+          <div class="error-message" *ngIf="firstNameControl.invalid && firstNameControl.touched">
+            Prenumele este obligatoriu
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Nume</label>
+          <input
+            id="lastName"
+            type="text"
+            [(ngModel)]="userInfo.lastName"
+            name="lastName"
+            required
+            #lastNameControl="ngModel">
+          <div class="error-message" *ngIf="lastNameControl.invalid && lastNameControl.touched">
+            Numele este obligatoriu
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Adresa de email</label>
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="userInfo.email"
+          name="email"
+          required
+          email
+          readonly
+          #emailControl="ngModel">
+        <small class="info-text">Email-ul nu poate fi modificat din această secțiune</small>
+      </div>
+
+      <div class="password-section">
+        <h3>Schimbă parola</h3>
+        <div class="form-group">
+          <label for="currentPassword">Parola actuală</label>
+          <input
+            id="currentPassword"
+            type="password"
+            [(ngModel)]="passwordData.currentPassword"
+            name="currentPassword">
+        </div>
+
+        <div class="form-group">
+          <label for="newPassword">Parola nouă</label>
+          <input
+            id="newPassword"
+            type="password"
+            [(ngModel)]="passwordData.newPassword"
+            name="newPassword"
+            minlength="6"
+            #newPasswordControl="ngModel">
+          <div class="error-message" *ngIf="newPasswordControl.invalid && newPasswordControl.touched">
+            Parola trebuie să aibă cel puțin 6 caractere
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirmă parola nouă</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            [(ngModel)]="passwordData.confirmPassword"
+            name="confirmPassword">
+          <div class="error-message" *ngIf="passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword">
+            Parolele nu coincid
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-button" (click)="onClose()">Anulează</button>
+        <button type="submit" class="save-button" [disabled]="editForm.invalid || isLoading">
+          <span *ngIf="isLoading">Se salvează...</span>
+          <span *ngIf="!isLoading">Salvează modificările</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
