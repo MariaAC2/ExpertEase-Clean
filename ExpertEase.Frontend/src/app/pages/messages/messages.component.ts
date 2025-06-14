@@ -6,7 +6,7 @@ import {
   ReplyDTO,
   RequestDTO,
   StatusEnum,
-  UserConversationDTO,
+  UserConversationDTO, UserDTO,
 } from '../../models/api.models';
 import {AuthService} from '../../services/auth.service';
 import {ExchangeService} from '../../services/exchange.service';
@@ -29,6 +29,8 @@ import {BehaviorSubject, Subject, takeUntil, tap} from 'rxjs';
 import {ReplyService} from '../../services/reply.service';
 import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.component';
 import {MockExchangeService} from '../../services/mock-exchange.service';
+import {UserService} from '../../services/user.service';
+import {PaymentFlowService} from '../../services/payment-flow.service';
 
 // Enhanced type guards for runtime validation
 interface TypeGuards {
@@ -93,21 +95,27 @@ export class MessagesComponent implements OnInit, OnDestroy {
     typed: MessageDTO | RequestDTO | ReplyDTO | null;
     type: 'message' | 'request' | 'reply' | 'unknown';
   }> = (index, itemWrapper) => itemWrapper.item.id;
+  private currentUserDetails: UserDTO | undefined;
+  isServiceConfirmationVisible: boolean = false;
+  chatOverlayVisible: boolean = false;
 
   constructor(
     private readonly exchangeService: ExchangeService,
     private readonly messageService: MessageService,
     private readonly requestService: RequestService,
-    private readonly replyService: ReplyService, // Add this if you have reply service
+    private readonly replyService: ReplyService,
     private readonly authService: AuthService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly mockExchangeService: MockExchangeService
+    private readonly mockExchangeService: MockExchangeService,
+    private readonly userService: UserService,
+    private readonly paymentFlowService: PaymentFlowService,
   ) {}
 
   ngOnInit() {
-    // this.userId = "user_client_123";
     this.userId = this.authService.getUserId();
     this.loadExchanges();
+    this.loadCurrentUserDetails();
+    this.subscribeToPaymentCompletion();
   }
 
   loadExchanges(loadMore = false): void {
@@ -224,6 +232,49 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.messagesPagination.page++;
       this.loadConversationMessages(selectedUser, true);
     }
+  }
+
+  private loadCurrentUserDetails(): void {
+    this.userService.getUserProfile().subscribe({
+      next: (res) => {
+        this.currentUserDetails = res.response;
+      },
+      error: (err) => {
+        console.error('Error loading user details:', err);
+      }
+    });
+  }
+
+  private subscribeToPaymentCompletion(): void {
+    this.paymentFlowService.paymentCompleted$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(paymentDetails => {
+        if (paymentDetails) {
+          this.handlePaymentCompletion(paymentDetails);
+        }
+      });
+  }
+
+  private handlePaymentCompletion(paymentDetails: any): void {
+    console.log('Payment completed in messages:', paymentDetails);
+    this.showServiceConfirmation();
+    const selectedUser = this.selectedUserSubject.value;
+    this.loadExchanges(false);
+  }
+
+  private showServiceConfirmation(): void {
+    this.isServiceConfirmationVisible = true;
+    this.chatOverlayVisible = true;
+
+    // Auto-hide overlay after 5 seconds
+    setTimeout(() => {
+      this.hideServiceConfirmation();
+    }, 5000);
+  }
+
+  hideServiceConfirmation(): void {
+    this.isServiceConfirmationVisible = false;
+    this.chatOverlayVisible = false;
   }
 
   /**

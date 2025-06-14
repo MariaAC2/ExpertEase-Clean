@@ -50,3 +50,34 @@ public class ServiceTaskProjectionSpec: Specification<ServiceTask, ServiceTaskDT
         );
     }
 }
+
+public class ServiceTaskDetailsProjectionSpec : Specification<ServiceTask, ServiceTaskDetailsDTO>
+{
+    public ServiceTaskDetailsProjectionSpec(Guid id)
+    {
+        Query.Where(e => e.Id == id)
+            .Include(e => e.User)
+            .Include(e => e.Specialist);
+        Query.Select(e => new ServiceTaskDetailsDTO
+        {
+            StartDate = e.StartDate,
+            EndDate = e.EndDate,
+            Description = e.Description,
+            Address = e.Address,
+            Price = e.Price,
+            ClientName = e.User.FullName,
+            SpecialistName = e.Specialist.FullName
+        });
+    }
+}
+
+public class ServiceTaskDetailsDTO
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string ClientName { get; set; } = string.Empty;
+    public string SpecialistName { get; set; } = string.Empty;
+}

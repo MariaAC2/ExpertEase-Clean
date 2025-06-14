@@ -84,7 +84,6 @@ builder.Services.AddScoped<IConversationNotifier, ConversationNotifier>();
 builder.Services.AddSingleton<IMessageUpdateQueue, MessageUpdateWorker>();
 builder.Services.AddMemoryCache();
 
-
 builder.Services.AddHostedService<InitializerWorker>()
     .AddHostedService<MessageUpdateWorker>();
 

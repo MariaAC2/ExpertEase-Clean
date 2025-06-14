@@ -5,7 +5,9 @@ namespace ExpertEase.Domain.Entities;
 public class ServiceTask : BaseEntity
 {
     public Guid UserId { get; set; }
+    public User User { get; set; }
     public Guid SpecialistId { get; set; }
+    public User Specialist { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string Description { get; set; } = null!;

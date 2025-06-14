@@ -1,59 +1,134 @@
-<!--<div class="container">-->
-<!--  <h2>Detalii serviciu</h2>-->
+<!-- service-payment.component.html -->
+<div class="payment-overlay">
+  <div class="payment-container">
+    <div class="payment-header">
+      <h2>Confirmă și plătește serviciul</h2>
+      <button class="close-btn" (click)="cancelPayment()" [disabled]="isProcessing">×</button>
+    </div>
 
-<!--  <div class="task-detail">-->
-<!--    <label>Descriere:</label>-->
-<!--    <span>{{ serviceTask.description }}</span>-->
-<!--  </div>-->
+    <div class="payment-content">
+      <!-- Service Description -->
+      <section class="payment-section">
+        <h3>Descriere</h3>
+        <p>{{ serviceDetails.description }}</p>
+      </section>
 
-<!--  <div class="task-detail">-->
-<!--    <label>Adresă:</label>-->
-<!--    <span>{{ serviceTask.address }}</span>-->
-<!--  </div>-->
+      <!-- Specialist Details -->
+      <section class="payment-section">
+        <h3>Detalii specialist</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Nume:</span>
+            <span class="value">{{ specialistDetails.fullName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Adresă email:</span>
+            <span class="value">{{ specialistDetails.email }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Număr de telefon:</span>
+            <span class="value">{{ specialistDetails.phoneNumber }}</span>
+          </div>
+        </div>
+      </section>
 
-<!--  <div class="task-detail">-->
-<!--    <p><strong>Data:</strong> {{ serviceTask.startDate | date: 'dd MMMM yyyy' }}</p>-->
+      <!-- Service Details -->
+      <section class="payment-section">
+        <h3>Detalii serviciu</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Adresa serviciului:</span>
+            <span class="value">{{ serviceDetails.address }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Data:</span>
+            <span class="value">{{ serviceDetails.startDate | date:'dd MMMM yyyy' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Ora:</span>
+            <span class="value">
+              {{ serviceDetails.startDate | date:'HH:mm' }} - {{ serviceDetails.endDate | date:'HH:mm' }}
+            </span>
+          </div>
+        </div>
+      </section>
 
-<!--    <p>-->
-<!--      <strong>De la ora:</strong> {{ serviceTask.startDate | date: 'HH:mm' }} &nbsp;—&nbsp;-->
-<!--      <strong>Până la ora:</strong> {{ serviceTask.endDate | date: 'HH:mm' }}-->
-<!--    </p>-->
-<!--  </div>-->
+      <!-- Client Contact Details -->
+      <section class="payment-section">
+        <h3>Date de contact ale clientului</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Număr de telefon:</span>
+            <span class="value">{{ userDetails.phoneNumber }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Adresă email:</span>
+            <span class="value">{{ userDetails.email }}</span>
+          </div>
+        </div>
+      </section>
 
-<!--  <div class="task-detail">-->
-<!--    <label>Metodă de plată:</label>-->
-<!--    <div class="card-payment-option" (click)="selectCardPayment()">-->
-<!--      <img src="assets/icons/card.svg" alt="Card bancar">-->
-<!--      <div class="card-text">-->
-<!--        <strong>Card bancar</strong>-->
-<!--        <p>Utilizează un card de credit sau de debit</p>-->
-<!--        <img src="assets/icons/visa.png" alt="Visa">-->
-<!--        <img src="assets/icons/mastercard.png" alt="Mastercard">-->
-<!--        <img src="assets/icons/discover.png" alt="Discover">-->
-<!--      </div>-->
-<!--      <span class="add-icon">+</span>-->
-<!--    </div>-->
-<!--    <p class="error-message" *ngIf="showError">Selectează metoda de plată pe care dorești s-o utilizezi</p>-->
-<!--  </div>-->
+      <!-- Payment Method -->
+      <section class="payment-section">
+        <h3>Plata</h3>
+        <div class="payment-method">
+          <div class="card-payment-option"
+               [class.selected]="paymentMethodSelected"
+               (click)="selectCardPayment()">
+            <img src="assets/icons/card.svg" alt="Card bancar" class="payment-icon">
+            <div class="payment-text">
+              <strong>Card bancar</strong>
+              <p>Utilizează un card de credit sau de debit</p>
+              <div class="card-brands">
+                <img src="assets/icons/visa.png" alt="Visa" class="brand-icon">
+                <img src="assets/icons/mastercard.png" alt="Mastercard" class="brand-icon">
+              </div>
+            </div>
+            <span class="selection-indicator" *ngIf="paymentMethodSelected">✓</span>
+          </div>
+          <p class="error-message" *ngIf="showError">
+            Selectează metoda de plată pe care dorești s-o utilizezi
+          </p>
+        </div>
+      </section>
 
-<!--  <div class="pay-section">-->
-<!--    <div class="price">Total de plată: {{ serviceTask.price | currency:'RON':'symbol-narrow':'1.2-2' }}</div>-->
-<!--    <button class="pay-button" (click)="payForService()">Plătește</button>-->
-<!--  </div>-->
-<!--</div>-->
+      <!-- Price Details -->
+      <section class="payment-section price-section">
+        <h3>Detalii preț</h3>
+        <div class="price-breakdown">
+          <div class="price-item">
+            <span class="price-label">Prețul serviciului:</span>
+            <span class="price-value">{{ serviceDetails.price | currency:'RON':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="price-item">
+            <span class="price-label">Taxă de protecție pentru client:</span>
+            <span class="price-value">{{ protectionFee | currency:'RON':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="price-item protection-info">
+            <small>Pentru cazuri de servicii nesatisfăcătoare</small>
+          </div>
+          <hr class="price-divider">
+          <div class="price-item total">
+            <span class="price-label">Total:</span>
+            <span class="price-value total-amount">{{ totalAmount | currency:'RON':'symbol':'1.2-2' }}</span>
+          </div>
+        </div>
+      </section>
+    </div>
 
-<form id="payment-form">
-  <label for="card-element" style="display: block; margin-bottom: 8px;">
-    Număr card
-  </label>
-
-  <div id="card-element" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px;">
-    <!-- Stripe injects the card element here -->
+    <!-- Payment Actions -->
+    <div class="payment-actions">
+      <button class="cancel-btn"
+              (click)="cancelPayment()"
+              [disabled]="isProcessing">
+        Anulează
+      </button>
+      <button class="pay-btn"
+              (click)="processPayment()"
+              [disabled]="!paymentMethodSelected || isProcessing">
+        <span *ngIf="!isProcessing">Confirmă și plătește</span>
+        <span *ngIf="isProcessing">Se procesează...</span>
+      </button>
+    </div>
   </div>
-
-  <div id="card-errors" role="alert" style="color: red; margin-bottom: 12px;"></div>
-
-  <button id="submit" type="submit" style="padding: 10px 20px; background-color: #8e44ad; color: white; border: none; border-radius: 4px; cursor: pointer;">
-    Plătește
-  </button>
-</form>
+</div>
