@@ -2,11 +2,13 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {SpecialistDTO} from '../../models/api.models';
 import {Router} from '@angular/router';
 import {FormsModule, NgForm} from '@angular/forms';
+import {NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-reply-form',
   imports: [
-    FormsModule
+    FormsModule,
+    NgIf
   ],
   templateUrl: './reply-form.component.html',
   styleUrl: './reply-form.component.scss'

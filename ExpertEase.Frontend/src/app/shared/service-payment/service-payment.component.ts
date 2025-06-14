@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angular/core';
-import {CurrencyPipe, DatePipe} from '@angular/common';
+import {CurrencyPipe, DatePipe, NgIf} from '@angular/common';
 import {
   JobStatusEnum, PaymentDetailsDTO, PaymentStatusEnum,
   ServicePaymentDetailsDTO,
@@ -17,7 +17,8 @@ import {PaymentFlowService, PaymentFlowState} from '../../services/payment-flow.
   imports: [
     FormsModule,
     DatePipe,
-    CurrencyPipe
+    CurrencyPipe,
+    NgIf
   ],
   templateUrl: './service-payment.component.html',
   styleUrl: './service-payment.component.scss'
