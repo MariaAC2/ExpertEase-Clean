@@ -6,7 +6,7 @@ import {
   UserPaymentDetailsDTO,
   PaymentDetailsDTO,
   SpecialistDTO,
-  FirestoreConversationItemDTO
+  FirestoreConversationItemDTO, ReplyDTO, RequestDTO
 } from '../models/api.models';
 
 export interface PaymentFlowState {
@@ -38,29 +38,19 @@ export class PaymentFlowService {
   public paymentCompleted$ = this.paymentCompleted.asObservable();
 
   initiatePaymentFlow(
-    replyItem: FirestoreConversationItemDTO,
-    originalRequest: FirestoreConversationItemDTO,
+    replyId: string,
+    serviceDetails: ServicePaymentDetailsDTO,
     userDetails: UserPaymentDetailsDTO,
     specialistDetails: UserPaymentDetailsDTO,
     conversationId: string
   ): void {
-    const replyData = replyItem.data;
-
-    const serviceDetails: ServicePaymentDetailsDTO = {
-      serviceTaskId: replyItem.id,
-      startDate: new Date(replyData['startDate']),
-      endDate: new Date(replyData['endDate']),
-      description: originalRequest?.data['description'] || 'Serviciu solicitat',
-      address: originalRequest?.data['address'] || '',
-      price: replyData['price']
-    };
 
     this.paymentFlowState.next({
       isActive: true,
       serviceDetails,
       userDetails,
       specialistDetails,
-      replyId: replyItem.id,
+      replyId: replyId,
       conversationId
     });
   }

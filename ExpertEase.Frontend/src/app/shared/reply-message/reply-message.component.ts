@@ -37,6 +37,7 @@ export class ReplyMessageComponent implements OnInit {
 
   ngOnInit(): void {
     this.userRole = this.authService.getUserRole();
+    console.log('Reply info:', this.reply);
   }
 
   acceptReply() {

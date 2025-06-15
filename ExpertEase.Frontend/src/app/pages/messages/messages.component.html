@@ -36,7 +36,7 @@
 
         <!-- Load more conversations -->
         <button
-          *ngIf="conversationListMeta.hasMore"
+          *ngIf="messagesState.conversationListMeta.hasMore"
           class="load-more-btn"
           (click)="loadMoreExchanges()"
           [disabled]="(loading$ | async) === true">
@@ -75,7 +75,7 @@
 
         <!-- Load more messages button -->
         <button
-          *ngIf="messagesMeta.hasMore && (conversationItems$ | async)?.length"
+          *ngIf="messagesState.messagesMeta.hasMore && (conversationItems$ | async)?.length"
           class="load-more-btn top"
           (click)="loadMoreMessages()"
           [disabled]="(loading$ | async) === true">
@@ -87,7 +87,7 @@
         </button>
 
         <!-- Loading indicator at top when loading more messages -->
-        <div *ngIf="(loading$ | async) === true && (conversationItems$ | async)?.length && messagesMeta.hasMore"
+        <div *ngIf="(loading$ | async) === true && (conversationItems$ | async)?.length && messagesState.messagesMeta.hasMore"
              class="loading-more-messages">
           <div class="loading-spinner"></div>
           <p>Se încarcă mesaje mai vechi...</p>
@@ -144,6 +144,14 @@
             <span>Se trimite mesajul...</span>
           </div>
         </div>
+
+        <!-- 🆕 Connection status indicator -->
+        <div *ngIf="(signalRService.connectionState$ | async) === false" class="connection-status offline">
+          <div class="status-indicator">
+            <span class="status-dot offline"></span>
+            <span>Reconectare în curs...</span>
+          </div>
+        </div>
       </div>
 
       <!-- Chat Input -->
@@ -156,24 +164,17 @@
           placeholder="Scrie un mesaj aici"
           [(ngModel)]="messageContent"
           (keydown.enter)="sendMessage(messageContent)"
-          [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible">
+          [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible || (signalRService.connectionState$ | async) === false">
         <button
           class="send-btn" title="Trimite mesaj"
           (click)="sendMessage(messageContent)"
-          [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage">
+          [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage || (signalRService.connectionState$ | async) === false">
           <span *ngIf="!isSendingMessage">→</span>
           <div *ngIf="isSendingMessage" class="inline-spinner small"></div>
         </button>
       </div>
 
-<!--      <div *ngIf="isReplyFormVisible" class="reply-form-overlay">-->
-<!--        <div class="overlay-background" (click)="hideReplyForm()"></div>-->
-<!--          <app-reply-form-->
-<!--            [replyForm]="replyFormData"-->
-<!--            (formSubmit)="onReplySubmit($event)"-->
-<!--            (close)="hideReplyForm()">-->
-<!--          </app-reply-form>-->
-<!--      </div>-->
+      <!-- Reply Form Overlay -->
       <div *ngIf="isReplyFormVisible" class="reply-form-overlay">
         <div class="overlay-background" (click)="hideReplyForm()"></div>
         <div class="reply-form-container">
@@ -216,4 +217,15 @@
       </div>
     </ng-template>
   </div>
+</div>
+
+<!-- 🆕 Global notification container (optional - implement based on your notification system) -->
+<div class="notification-container" *ngIf="false">
+  <!-- This would be populated by your notification service -->
+  <!-- Example structure:
+  <div class="notification success" *ngFor="let notification of notifications">
+    <span>{{ notification.message }}</span>
+    <button (click)="dismissNotification(notification.id)">×</button>
+  </div>
+  -->
 </div>
