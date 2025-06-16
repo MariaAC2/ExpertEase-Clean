@@ -5,7 +5,7 @@ import {
   UserDTO,
   MessageDTO,
   RequestDTO,
-  ReplyDTO, FirestoreConversationItemDTO
+  ReplyDTO, FirestoreConversationItemDTO, ConversationItemDTO
 } from '../../models/api.models';
 import { AuthService } from '../../services/auth.service';
 import { ExchangeService } from '../../services/exchange.service';
@@ -85,7 +85,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   showPaymentFlow: boolean = false;
 
   exchanges$: Observable<UserConversationDTO[]> | undefined;
-  conversationItems$: Observable<FirestoreConversationItemDTO[]> | undefined;
+  conversationItems$: Observable<ConversationItemDTO[]> | undefined;
   selectedUser$: Observable<string | null> | undefined;
   selectedUserInfo$: Observable<SelectedUserInfo | null> | undefined;
   loading$: Observable<boolean> | undefined;

@@ -6,7 +6,7 @@ import {
   RequestResponse,
   PagedResponse,
   UserConversationDTO,
-  FirestoreConversationItemDTO
+  FirestoreConversationItemDTO, ConversationItemDTO
 } from '../models/api.models';
 
 @Injectable({
@@ -34,7 +34,7 @@ export class MockExchangeService {
 
   ];
 
-  private mockConversationItems: FirestoreConversationItemDTO[] = [
+  private mockConversationItems: ConversationItemDTO[] = [
     {
       id: "msg_001",
       conversationId: "conv_12345",
@@ -110,8 +110,8 @@ export class MockExchangeService {
   getExchange(
     userId: string,
     pagination?: { page: number; pageSize: number }
-  ): Observable<RequestResponse<PagedResponse<FirestoreConversationItemDTO>>> {
-    const response: RequestResponse<PagedResponse<FirestoreConversationItemDTO>> = {
+  ): Observable<RequestResponse<PagedResponse<ConversationItemDTO>>> {
+    const response: RequestResponse<PagedResponse<ConversationItemDTO>> = {
       response: {
         page: pagination?.page || 1,
         pageSize: pagination?.pageSize || 50,

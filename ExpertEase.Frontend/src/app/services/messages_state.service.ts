@@ -5,12 +5,12 @@ import {
   UserConversationDTO,
   MessageDTO,
   RequestDTO,
-  ReplyDTO
+  ReplyDTO, ConversationItemDTO
 } from '../models/api.models';
 import { Timestamp } from 'firebase/firestore';
 
 export interface ConversationItemWrapper {
-  item: FirestoreConversationItemDTO;
+  item: ConversationItemDTO;
   typed: MessageDTO | RequestDTO | ReplyDTO | null;
   type: 'message' | 'request' | 'reply' | 'unknown';
 }
@@ -32,7 +32,7 @@ export interface PaginationMeta {
 export class MessagesStateService {
   // State subjects
   private readonly exchangesSubject = new BehaviorSubject<UserConversationDTO[]>([]);
-  private readonly conversationItemsSubject = new BehaviorSubject<FirestoreConversationItemDTO[]>([]);
+  private readonly conversationItemsSubject = new BehaviorSubject<ConversationItemDTO[]>([]);
   private readonly selectedUserSubject = new BehaviorSubject<string | null>(null);
   private readonly selectedUserInfoSubject = new BehaviorSubject<SelectedUserInfo | null>(null);
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
@@ -53,7 +53,7 @@ export class MessagesStateService {
     return this.exchangesSubject.value;
   }
 
-  get conversationItems(): FirestoreConversationItemDTO[] {
+  get conversationItems(): ConversationItemDTO[] {
     return this.conversationItemsSubject.value;
   }
 
@@ -80,7 +80,7 @@ export class MessagesStateService {
   /**
    * Update conversation items
    */
-  public setConversationItems(items: FirestoreConversationItemDTO[], append = false): void {
+  public setConversationItems(items: ConversationItemDTO[], append = false): void {
     const newItems = append
       ? [...items, ...this.conversationItems] // Prepend for messages (newer first)
       : [...this.conversationItems, ...items]; // Append for initial load
@@ -90,13 +90,13 @@ export class MessagesStateService {
   /**
    * Add optimistic message
    */
-  public addOptimisticMessage(content: string, senderId: string): FirestoreConversationItemDTO {
-    const tempMessage: FirestoreConversationItemDTO = {
+  public addOptimisticMessage(content: string, senderId: string): ConversationItemDTO {
+    const tempMessage: ConversationItemDTO = {
       id: `temp_${Date.now()}`,
       conversationId: 'temp',
       senderId: senderId,
       type: 'message',
-      createdAt: Timestamp.fromDate(new Date()),
+      createdAt: new Date(),
       data: {
         Content: content.trim(),
         SenderId: senderId,
@@ -197,11 +197,10 @@ export class MessagesStateService {
   /**
    * Deserialize conversation item
    */
-  private deserializeItem(item: FirestoreConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
+  private deserializeItem(item: ConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
     if (!item || !item.data || !item.type) {
       return null;
     }
-    console.log('Deserializing conversation item:', item);
 
     const data = item.data;
     const baseFields = {

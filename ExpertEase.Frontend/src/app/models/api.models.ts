@@ -491,6 +491,16 @@ export interface FirestoreConversationItemDTO {
   data: { [key: string]: any };
 }
 
+export interface ConversationItemDTO {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  type: 'message' | 'request' | 'reply';
+  createdAt: Date;
+  data: { [key: string]: any };
+}
+
+
 export interface ConversationDTO {
   conversationId: string;
   userId: string;

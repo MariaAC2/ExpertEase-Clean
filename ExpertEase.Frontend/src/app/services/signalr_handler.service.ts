@@ -52,6 +52,10 @@ export class SignalRHandlerService {
       this.handleRequestRejected(payload);
     });
 
+    this.signalRService.on('ReceiveRequestCompleted', (payload: any) => {
+      this.handleRequestRejected(payload);
+    });
+
     this.signalRService.on('ReceiveRequestCancelled', (payload: any) => {
       this.handleRequestCancelled(payload);
     });

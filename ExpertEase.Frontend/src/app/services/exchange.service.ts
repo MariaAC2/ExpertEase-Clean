@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {
-  ConversationDTO, FirestoreConversationItemDTO,
+  ConversationDTO, ConversationItemDTO, FirestoreConversationItemDTO,
   PagedResponse,
   RequestResponse,
   SpecialistDTO,
@@ -50,7 +50,7 @@ export class ExchangeService {
   getExchange(
     userId: string,
     pagination?: { page: number; pageSize: number }
-  ): Observable<RequestResponse<PagedResponse<FirestoreConversationItemDTO>>> {
+  ): Observable<RequestResponse<PagedResponse<ConversationItemDTO>>> {
     let params = new HttpParams();
 
     if (pagination) {
@@ -65,7 +65,7 @@ export class ExchangeService {
     });
 
     // Use the full URL with baseUrl
-    return this.http.get<RequestResponse<PagedResponse<FirestoreConversationItemDTO>>>(
+    return this.http.get<RequestResponse<PagedResponse<ConversationItemDTO>>>(
       `${this.baseUrl}/GetById/${userId}`,
       { params, headers }
     );
