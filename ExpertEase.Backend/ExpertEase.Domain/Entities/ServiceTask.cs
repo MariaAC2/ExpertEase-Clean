@@ -8,6 +8,8 @@ public class ServiceTask : BaseEntity
     public User User { get; set; }
     public Guid SpecialistId { get; set; }
     public User Specialist { get; set; } = null!;
+    public Guid PaymentId { get; set; }
+    public Payment Payment { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string Description { get; set; } = null!;
@@ -19,5 +21,4 @@ public class ServiceTask : BaseEntity
     public Guid ReplyId { get; set; }
     public Reply Reply { get; set; } = null!;
     public Review? Review { get; set; } = null!;
-    public Payment Payment { get; set; } = null!;
 }

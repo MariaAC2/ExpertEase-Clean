@@ -9,6 +9,7 @@ namespace ExpertEase.Application.Services;
 
 public interface IServiceTaskService
 {
+    Task<ServiceResponse> CreateServiceTaskFromPayment(Guid paymentId, CancellationToken cancellationToken = default);
     Task<ServiceResponse<ServiceTask>> AddServiceTask(ServiceTaskAddDTO service, CancellationToken cancellationToken = default);
     Task<ServiceResponse<ServiceTaskDTO>> GetServiceTask(Guid id, CancellationToken cancellationToken = default);
     Task<ServiceResponse<PagedResponse<ServiceTaskDTO>>> GetServiceTasks(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);

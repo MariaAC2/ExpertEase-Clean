@@ -13,7 +13,7 @@ public interface IConversationService
     Task UpdateConversationRequestId(Guid conversationId, Guid requestId,
         CancellationToken cancellationToken = default);
 
-    Task<ServiceResponse<PagedResponse<FirestoreConversationItemDTO>>> GetConversationByUsers(
+    Task<ServiceResponse<PagedResponse<ConversationItemDTO>>> GetConversationByUsers(
         Guid currentUserId,
         Guid userId,
         PaginationQueryParams pagination,

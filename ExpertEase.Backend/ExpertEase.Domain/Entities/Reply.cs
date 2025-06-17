@@ -11,5 +11,5 @@ public class Reply : BaseEntity
     public decimal Price { get; set; }
     public StatusEnum Status { get; set; }
     public DateTime? RejectedAt { get; set; }
-    public ServiceTask? ServiceTask { get; set; }
+    public Payment? Payment { get; set; }
 }

@@ -25,7 +25,8 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
     IServiceTaskService serviceTaskService,
     IPaymentService paymentService,
     IFirestoreRepository firestoreRepository,
-    IConversationService conversationService) : IReplyService
+    IConversationService conversationService,
+    IConversationNotifier notificationService) : IReplyService
 {
     public async Task<ServiceResponse> AddReply(Guid requestId, ReplyAddDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
     {
@@ -95,7 +96,7 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             {
                 { "StartDate", Timestamp.FromDateTime(newReply.StartDate) },
                 { "EndDate", Timestamp.FromDateTime(newReply.EndDate) },
-                { "Price", newReply.Price },
+                { "Price", (double)newReply.Price },
                 { "Status", "Pending" },
                 { "RequestId", requestId.ToString() }
             }
@@ -150,6 +151,10 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
                 "Only pending replies can be updated", ErrorCodes.CannotUpdate));
         }
 
+        // Store original data for notifications
+        var specialistId = entity.Request.ReceiverUserId; // The specialist who sent the reply
+        var clientId = requestingUser.Id; // The client performing the action
+
         switch (reply.Status)
         {
             // Handle different status updates
@@ -159,7 +164,11 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             
                 // 🆕 Update Firestore
                 await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Cancelled, cancellationToken);
+                
+                // 🆕 Send notification
+                await SendReplyCancelledNotification(entity, specialistId, cancellationToken);
                 break;
+                
             case StatusEnum.Rejected:
             {
                 entity.Status = StatusEnum.Rejected;
@@ -167,6 +176,9 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             
                 // 🆕 Update Firestore
                 await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Rejected, cancellationToken);
+                
+                // 🆕 Send notification
+                await SendReplyRejectedNotification(entity, specialistId, cancellationToken);
             
                 var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
             
@@ -186,77 +198,50 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
             {
                 entity.Status = StatusEnum.Accepted;
                 await repository.UpdateAsync(entity, cancellationToken);
-            
-                // 🆕 Update Firestore
+
+                // Update Firestore
                 await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Accepted, cancellationToken);
-            
+    
+                // Send notification
+                await SendReplyAcceptedNotification(entity, specialistId, cancellationToken);
+
                 var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
-                            
+                        
                 if (request == null)
                     return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-            
-                var activeReplies = request.Replies
-                    .Where(r => r.Status != StatusEnum.Cancelled)
-                    .ToList();
-
-                if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
+    
                 request.Status = StatusEnum.Completed;
                 await repository.UpdateAsync(request, cancellationToken);
-            
-                await using var transaction = await repository.DbContext.Database.BeginTransactionAsync(cancellationToken);
+
+                // 🔄 ONLY CREATE PAYMENT INTENT - NOT SERVICE TASK YET
                 try
                 {
-                    var serviceTask = new ServiceTaskAddDTO
-                    {
-                        UserId = request.SenderUserId,
-                        SpecialistId = request.ReceiverUserId,
-                        ReplyId = entity.Id,
-                        StartDate = entity.StartDate,
-                        EndDate = entity.EndDate,
-                        Description = request.Description,
-                        Address = request.Address,
-                        Price = entity.Price
-                    };
-                    var service = await serviceTaskService.AddServiceTask(serviceTask, cancellationToken);
-                    if (service.Error != null)
-                    {
-                        await transaction.RollbackAsync(cancellationToken);
-                        return ServiceResponse.CreateErrorResponse(service.Error);
-                    }
-                    
                     var specialistAccountId = await repository.GetAsync(new StripeAccountIdProjectionSpec(request.ReceiverUserId), cancellationToken);
                     if (string.IsNullOrEmpty(specialistAccountId))
                     {
-                        await transaction.RollbackAsync(cancellationToken);
                         return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, "Specialist has no connected Stripe account", ErrorCodes.Invalid));
                     }
 
-                    if (service.Result != null)
+                    // Create payment intent for the frontend payment flow
+                    var payment = new PaymentAddDTO
                     {
-                        var payment = new PaymentAddDTO
-                        {
-                            ServiceTaskId = service.Result.Id,
-                            StripeAccountId = specialistAccountId,
-                            Amount = serviceTask.Price,
-                        };
-                    
-                        var paymentResponse = await paymentService.AddPayment(payment, cancellationToken);
-                    
-                        if (paymentResponse.Error != null)
-                        {
-                            await transaction.RollbackAsync(cancellationToken);
-                            return ServiceResponse.CreateErrorResponse(paymentResponse.Error);
-                        }
+                        ReplyId = entity.Id, // Link to reply instead of service task
+                        StripeAccountId = specialistAccountId,
+                        Amount = entity.Price,
+                    };
+    
+                    var paymentResponse = await paymentService.AddPayment(payment, cancellationToken);
+    
+                    if (paymentResponse.Error != null)
+                    {
+                        return ServiceResponse.CreateErrorResponse(paymentResponse.Error);
                     }
 
-                    await transaction.CommitAsync(cancellationToken);
-                    
                     return ServiceResponse.CreateSuccessResponse();
                 }
                 catch (Exception ex)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, $"Transaction failed: {ex.Message}", ErrorCodes.TransactionFailed));
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, $"Payment creation failed: {ex.Message}", ErrorCodes.TransactionFailed));
                 }
             }
             case StatusEnum.Pending:
@@ -267,6 +252,82 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
                     "Other types of status codes not permitted", ErrorCodes.CannotUpdate));
         }
         return ServiceResponse.CreateSuccessResponse();
+    }
+
+    // 🆕 Private methods for sending notifications
+    private async Task SendReplyAcceptedNotification(Reply reply, Guid specialistId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var payload = new
+            {
+                ReplyId = reply.Id,
+                RequestId = reply.RequestId,
+                SpecialistId = specialistId,
+                Status = "Accepted",
+                StartDate = reply.StartDate,
+                EndDate = reply.EndDate,
+                Price = reply.Price,
+                UpdatedAt = DateTime.UtcNow,
+                Message = "Great news! Your service offer has been accepted and payment processing has begun."
+            };
+
+            await notificationService.NotifyReplyAccepted(specialistId, payload);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send reply accepted notification for reply {reply.Id}: {ex.Message}");
+        }
+    }
+
+    private async Task SendReplyRejectedNotification(Reply reply, Guid specialistId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var payload = new
+            {
+                ReplyId = reply.Id,
+                RequestId = reply.RequestId,
+                SpecialistId = specialistId,
+                Status = "Rejected",
+                StartDate = reply.StartDate,
+                EndDate = reply.EndDate,
+                Price = reply.Price,
+                UpdatedAt = DateTime.UtcNow,
+                Message = "Your service offer has been declined by the client."
+            };
+
+            await notificationService.NotifyReplyRejected(specialistId, payload);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send reply rejected notification for reply {reply.Id}: {ex.Message}");
+        }
+    }
+
+    private async Task SendReplyCancelledNotification(Reply reply, Guid specialistId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var payload = new
+            {
+                ReplyId = reply.Id,
+                reply.RequestId,
+                SpecialistId = specialistId,
+                Status = "Cancelled",
+                reply.StartDate,
+                reply.EndDate,
+                reply.Price,
+                UpdatedAt = DateTime.UtcNow,
+                Message = "A service offer has been cancelled."
+            };
+
+            await notificationService.NotifyReplyCancelled(specialistId, payload);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send reply cancelled notification for reply {reply.Id}: {ex.Message}");
+        }
     }
 
     public async Task<ServiceResponse> UpdateReply(ReplyUpdateDTO reply, UserDTO? requestingUser = null,

@@ -31,3 +31,13 @@ public class UserConversationDTO
     public DateTime LastMessageAt { get; set; } = DateTime.MinValue;
     public int UnreadCount { get; set; } = 0;
 }
+
+public class ConversationItemDTO
+{
+    public Guid Id { get; set; }
+    public string ConversationId { get; set; } = null!;
+    public string SenderId { get; set; } = null!;
+    public string Type { get; set; } = null!; // "message", "request", "reply"
+    public DateTime CreatedAt { get; set; }
+    public Dictionary<string, object> Data { get; set; } = new();
+}

@@ -13,20 +13,20 @@ public class PaymentProjectionSpec : Specification<Payment, PaymentDetailsDTO>
         Query.Select(x => new PaymentDetailsDTO
         {
             Id = x.Id,
-            ServiceTaskId = x.ServiceTaskId,
+            ReplyId = x.ReplyId,
             Amount = x.Amount,
             Currency = x.Currency,
             Status = x.Status.ToString(),
             PaidAt = x.PaidAt,
             CreatedAt = x.CreatedAt,
             StripePaymentIntentId = x.StripePaymentIntentId,
-            ServiceDescription = x.ServiceTask.Description
+            ServiceDescription = x.Reply.Request.Description
         });
     }
     
-    public PaymentProjectionSpec(Guid serviceTaskId, string? search)
+    public PaymentProjectionSpec(Guid replyId, string? search)
     {
-        Query.Where(x => x.ServiceTaskId == serviceTaskId);
+        Query.Where(x => x.ReplyId == replyId);
         
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -34,8 +34,8 @@ public class PaymentProjectionSpec : Specification<Payment, PaymentDetailsDTO>
             var searchExpr = $"%{search.Replace(" ", "%")}%";
             
             Query.Where(p =>
-                EF.Functions.ILike(p.ServiceTask.Description, searchExpr) ||
-                EF.Functions.ILike(p.ServiceTask.Address, searchExpr) ||
+                EF.Functions.ILike(p.Reply.Request.Description, searchExpr) ||
+                EF.Functions.ILike(p.Reply.Request.Address, searchExpr) ||
                 EF.Functions.ILike(p.Status.ToString(), searchExpr) ||
                 EF.Functions.ILike(p.Amount.ToString(), searchExpr)
             );
@@ -44,14 +44,14 @@ public class PaymentProjectionSpec : Specification<Payment, PaymentDetailsDTO>
         Query.Select(x => new PaymentDetailsDTO
         {
             Id = x.Id,
-            ServiceTaskId = x.ServiceTaskId,
+            ReplyId = x.ReplyId,
             Amount = x.Amount,
             Currency = x.Currency,
             Status = x.Status.ToString(),
             PaidAt = x.PaidAt,
             CreatedAt = x.CreatedAt,
             StripePaymentIntentId = x.StripePaymentIntentId,
-            ServiceDescription = x.ServiceTask.Description
+            ServiceDescription = x.Reply.Request.Description
         });
     }
 }
@@ -60,7 +60,7 @@ public class PaymentHistoryProjectionSpec : Specification<Payment, PaymentHistor
 {
     public PaymentHistoryProjectionSpec(Guid userId, string? search)
     {
-        Query.Where(x => x.ServiceTask.UserId == userId || x.ServiceTask.SpecialistId == userId);
+        Query.Where(x => x.Reply.Request.SenderUserId == userId || x.Reply.Request.ReceiverUserId == userId);
         
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -68,8 +68,8 @@ public class PaymentHistoryProjectionSpec : Specification<Payment, PaymentHistor
             var searchExpr = $"%{search.Replace(" ", "%")}%";
             
             Query.Where(p =>
-                EF.Functions.ILike(p.ServiceTask.Description, searchExpr) ||
-                EF.Functions.ILike(p.ServiceTask.Address, searchExpr) ||
+                EF.Functions.ILike(p.Reply.Request.Description, searchExpr) ||
+                EF.Functions.ILike(p.Reply.Request.Address, searchExpr) ||
                 EF.Functions.ILike(p.Status.ToString(), searchExpr) ||
                 EF.Functions.ILike(p.Amount.ToString(), searchExpr)
             );
@@ -78,15 +78,15 @@ public class PaymentHistoryProjectionSpec : Specification<Payment, PaymentHistor
         Query.Select(x => new PaymentHistoryDTO
         {
             Id = x.Id,
-            ServiceTaskId = x.ServiceTaskId,
+            ReplyId = x.ReplyId,
             Amount = x.Amount,
             Currency = x.Currency,
             Status = x.Status.ToString(),
             PaidAt = x.PaidAt,
-            ServiceDescription = x.ServiceTask.Description,
-            ServiceAddress = x.ServiceTask.Address,
-            SpecialistName = x.ServiceTask.Specialist.FullName,
-            ClientName = x.ServiceTask.User.FullName
+            ServiceDescription = x.Reply.Request.Description,
+            ServiceAddress = x.Reply.Request.Address,
+            SpecialistName = x.Reply.Request.ReceiverUser.FullName,
+            ClientName = x.Reply.Request.SenderUser.FullName
         });
     }
 }

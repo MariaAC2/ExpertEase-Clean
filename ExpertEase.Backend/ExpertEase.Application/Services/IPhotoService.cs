@@ -16,15 +16,15 @@ public interface IPhotoService
         throw new NotImplementedException();
     }
     
-    public Task<ServiceResponse> AddProfilePicture(ProfilePictureAddDTO photo, UserDTO? requestingUser = null,
+    Task<ServiceResponse> AddProfilePicture(ProfilePictureAddDTO photo, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default);
 
-    public Task<ServiceResponse> AddPortfolioPicture(PortfolioPictureAddDTO photo, UserDTO? requestingUser = null,
+    Task<ServiceResponse> AddPortfolioPicture(PortfolioPictureAddDTO photo, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default);
 
-    public Task<ServiceResponse> UpdateProfilePicture(ProfilePictureAddDTO photoDto, UserDTO? requestingUser = null,
+    Task<ServiceResponse> UpdateProfilePicture(ProfilePictureAddDTO photoDto, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default);
 
-    public Task<ServiceResponse> DeletePortfolioPicture(string photoId, UserDTO? requestingUser = null,
+    Task<ServiceResponse> DeletePortfolioPicture(string photoId, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default);
 }

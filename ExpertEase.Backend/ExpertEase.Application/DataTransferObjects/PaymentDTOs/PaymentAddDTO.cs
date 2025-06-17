@@ -2,14 +2,14 @@
 
 public class PaymentAddDTO
 {
-    public Guid ServiceTaskId { get; set; }
+    public Guid ReplyId { get; set; }
     public decimal Amount { get; set; }
     public string StripeAccountId { get; set; } = null!;
 }
 
 public class PaymentIntentCreateDTO
 {
-    public Guid ServiceTaskId { get; set; }
+    public Guid ReplyId { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "ron";
     public string Description { get; set; } = null!;
@@ -26,7 +26,7 @@ public class PaymentIntentResponseDTO
 public class PaymentConfirmationDTO
 {
     public string PaymentIntentId { get; set; } = null!;
-    public Guid ServiceTaskId { get; set; }
+    public Guid ReplyId { get; set; }
     public decimal Amount { get; set; }
     public string PaymentMethod { get; set; } = null!;
 }
@@ -35,7 +35,7 @@ public class PaymentConfirmationDTO
 public class PaymentHistoryDTO
 {
     public Guid Id { get; set; }
-    public Guid ServiceTaskId { get; set; }
+    public Guid ReplyId { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = null!;
     public string Status { get; set; } = null!;
@@ -50,7 +50,7 @@ public class PaymentHistoryDTO
 public class PaymentDetailsDTO
 {
     public Guid Id { get; set; }
-    public Guid ServiceTaskId { get; set; }
+    public Guid ReplyId { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = null!;
     public string Status { get; set; } = null!;

@@ -17,8 +17,8 @@ public class PaymentService(IRepository<WebAppDatabaseContext> repository): IPay
 {
     public async Task<ServiceResponse<Payment>> AddPayment(PaymentAddDTO paymentDTO, CancellationToken cancellationToken = default)
     {
-        var service = await repository.GetAsync(new ServiceTaskSpec(paymentDTO.ServiceTaskId), cancellationToken);
-        if (service == null)
+        var reply = await repository.GetAsync(new ReplySpec(paymentDTO.ReplyId), cancellationToken);
+        if (reply == null)
         {
             return ServiceResponse.CreateErrorResponse<Payment>(new(
                 System.Net.HttpStatusCode.NotFound, 
@@ -27,8 +27,8 @@ public class PaymentService(IRepository<WebAppDatabaseContext> repository): IPay
         }
         var payment = new Payment
         {
-            ServiceTaskId = paymentDTO.ServiceTaskId,
-            ServiceTask = service,
+            ReplyId = paymentDTO.ReplyId,
+            Reply = reply,
             Amount = paymentDTO.Amount,
             StripeAccountId = paymentDTO.StripeAccountId,
             Status = PaymentStatusEnum.Pending,
@@ -47,7 +47,7 @@ public class PaymentService(IRepository<WebAppDatabaseContext> repository): IPay
         try
         {
             // Verify service task exists
-            var serviceTask = await repository.GetAsync(new ServiceTaskSpec(createDTO.ServiceTaskId), cancellationToken);
+            var serviceTask = await repository.GetAsync(new ReplySpec(createDTO.ReplyId), cancellationToken);
             if (serviceTask == null)
             {
                 return ServiceResponse.CreateErrorResponse<PaymentIntentResponseDTO>(new(
@@ -75,8 +75,8 @@ public class PaymentService(IRepository<WebAppDatabaseContext> repository): IPay
             // Create payment record
             var payment = new Payment
             {
-                ServiceTaskId = createDTO.ServiceTaskId,
-                ServiceTask = serviceTask,
+                ReplyId = createDTO.ReplyId,
+                Reply = serviceTask,
                 Amount = createDTO.Amount,
                 StripeAccountId = paymentIntent.Id, // Use PaymentIntent ID as account ID for now
                 StripePaymentIntentId = paymentIntent.Id,
@@ -143,7 +143,7 @@ public class PaymentService(IRepository<WebAppDatabaseContext> repository): IPay
             payment.StripeChargeId = paymentIntent.LatestChargeId;
 
             // Update service task status
-            var serviceTask = await repository.GetAsync(new ServiceTaskSpec(payment.ServiceTaskId), cancellationToken);
+            var serviceTask = await repository.GetAsync(new ServiceTaskSpec(payment.ReplyId), cancellationToken);
             if (serviceTask != null)
             {
                 serviceTask.Status = JobStatusEnum.Confirmed;
@@ -205,12 +205,12 @@ public class PaymentService(IRepository<WebAppDatabaseContext> repository): IPay
                     ErrorCodes.EntityNotFound));
             }
             
-            var serviceTask = await repository.GetAsync(new ServiceTaskDetailsProjectionSpec(payment.ServiceTaskId), cancellationToken);
+            var serviceTask = await repository.GetAsync(new ServiceTaskDetailsProjectionSpec(payment.ReplyId), cancellationToken);
 
             var paymentDetails = new PaymentDetailsDTO
             {
                 Id = payment.Id,
-                ServiceTaskId = payment.ServiceTaskId,
+                ReplyId = payment.ReplyId,
                 Amount = payment.Amount,
                 Currency = payment.Currency ?? "RON",
                 Status = payment.Status,

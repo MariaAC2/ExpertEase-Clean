@@ -14,6 +14,17 @@ namespace ExpertEase.API.Controllers;
 public class ServiceTaskController(IUserService userService, IServiceTaskService specialistService): AuthorizedController(userService)
 {
     [Authorize]
+    [HttpPost("{paymentId:guid}")]
+    public async Task<ActionResult<RequestResponse>> AddTaskToPayment(
+        [FromRoute] Guid paymentId)
+    {
+        var currentUser = await GetCurrentUser();
+        
+        return currentUser.Result != null
+            ? CreateRequestResponseFromServiceResponse(await specialistService.CreateServiceTaskFromPayment(paymentId))
+            : CreateErrorMessageResult(currentUser.Error);
+    }
+    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ServiceTaskDTO>>> GetById([FromRoute] Guid id)
     {

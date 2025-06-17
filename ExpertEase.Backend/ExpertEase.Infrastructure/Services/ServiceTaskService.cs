@@ -18,6 +18,55 @@ namespace ExpertEase.Infrastructure.Services;
 public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, 
     IReviewService reviewService): IServiceTaskService
 {
+    public async Task<ServiceResponse> CreateServiceTaskFromPayment(
+        Guid paymentId, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get payment details
+            var payment = await repository.GetAsync(new PaymentSpec(paymentId), cancellationToken);
+            if (payment == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Payment not found", ErrorCodes.EntityNotFound));
+
+            // Get reply details
+            var reply = await repository.GetAsync(new ReplySpec(payment.ReplyId), cancellationToken);
+            if (reply == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Reply not found", ErrorCodes.EntityNotFound));
+
+            var request = reply.Request;
+
+            // Create service task
+            var serviceTask = new ServiceTaskAddDTO
+            {
+                UserId = request.SenderUserId,
+                SpecialistId = request.ReceiverUserId,
+                ReplyId = reply.Id,
+                StartDate = reply.StartDate,
+                EndDate = reply.EndDate,
+                Description = request.Description,
+                Address = request.Address,
+                Price = reply.Price
+            };
+
+            var result = await AddServiceTask(serviceTask, cancellationToken);
+        
+            if (result.Error != null)
+                return ServiceResponse.CreateErrorResponse<ServiceTask>(result.Error);
+
+            // Update payment with service task ID
+            payment.ServiceTaskId = result.Result?.Id;
+            await repository.UpdateAsync(payment, cancellationToken);
+
+            return ServiceResponse.CreateSuccessResponse();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating service task from payment: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse<ServiceTask>(new(HttpStatusCode.InternalServerError, "Service task creation failed", ErrorCodes.TechnicalError));
+        }
+    }
+    
     public async Task<ServiceResponse<ServiceTask>> AddServiceTask(ServiceTaskAddDTO service, CancellationToken cancellationToken = default)
     {
         var reply = await repository.GetAsync(new ReplySpec(service.ReplyId), cancellationToken);

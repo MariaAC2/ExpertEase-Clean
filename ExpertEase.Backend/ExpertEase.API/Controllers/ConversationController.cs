@@ -16,12 +16,12 @@ public class ConversationController(IUserService userService, IConversationServi
 {
     [Authorize]
     [HttpGet("{senderId:guid}")]
-    public async Task<ActionResult<RequestResponse<PagedResponse<FirestoreConversationItemDTO>>>> GetById([FromQuery]PaginationQueryParams pagination, [FromRoute] Guid senderId)
+    public async Task<ActionResult<RequestResponse<PagedResponse<ConversationItemDTO>>>> GetById([FromQuery]PaginationQueryParams pagination, [FromRoute] Guid senderId)
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
             CreateRequestResponseFromServiceResponse(await conversationService.GetConversationByUsers(currentUser.Result.Id, senderId, pagination)) : 
-            CreateErrorMessageResult<PagedResponse<FirestoreConversationItemDTO>>(currentUser.Error);
+            CreateErrorMessageResult<PagedResponse<ConversationItemDTO>>(currentUser.Error);
     }
 
     [Authorize]

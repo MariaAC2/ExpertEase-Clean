@@ -9,4 +9,9 @@ public class PaymentSpec: Specification<Payment>
     {
         Query.Where(p => p.StripePaymentIntentId == paymentIntentId);
     }
+
+    public PaymentSpec(Guid id)
+    {
+        Query.Where(p => p.Id == id);
+    }
 }

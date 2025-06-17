@@ -22,9 +22,5 @@ public class ReplyConfiguration : IEntityTypeConfiguration<Reply>
             .IsRequired();
         builder.Property(r => r.Status)
             .IsRequired();
-        builder.HasOne(r => r.ServiceTask)
-            .WithOne(st => st.Reply)
-            .HasForeignKey<ServiceTask>(st => st.ReplyId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

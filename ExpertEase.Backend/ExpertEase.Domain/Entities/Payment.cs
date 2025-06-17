@@ -4,8 +4,8 @@ namespace ExpertEase.Domain.Entities;
 
 public class Payment : BaseEntity
 {
-    public Guid ServiceTaskId { get; set; }
-    public ServiceTask ServiceTask { get; set; } = null!;
+    public Guid ReplyId { get; set; }
+    public Reply Reply { get; set; } = null!;
     public decimal Amount { get; set; }
     public string StripeAccountId { get; set; } = null!;
     public string? StripePaymentIntentId { get; set; }
@@ -14,4 +14,6 @@ public class Payment : BaseEntity
     public DateTime? PaidAt { get; set; }
     public DateTime? CancelledAt { get; set; }
     public string? Currency { get; set; } = "RON";
+    
+    public Guid? ServiceTaskId { get; set; }
 }

@@ -96,6 +96,19 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-Y52V3B5U.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-2XGO4LIG.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-Y2BMKTCC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-BETIDDLB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-EL26B7AP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-YPPDQDOP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\styles-3BUZ4IJY.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-NRJMPM6W.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YMW5IQYJ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-J6AZGHQ7.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-MD3HT7GW.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-NEAOGARY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SZJCEROC.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-UEVNZK2Q.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-XIL6MKPX.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-XUWXJGYH.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

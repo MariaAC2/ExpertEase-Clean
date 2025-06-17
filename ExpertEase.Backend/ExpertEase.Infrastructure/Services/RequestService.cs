@@ -15,10 +15,14 @@ using ExpertEase.Infrastructure.Firebase.FirestoreRepository;
 using ExpertEase.Infrastructure.Firestore.FirestoreDTOs;
 using ExpertEase.Infrastructure.Repositories;
 using Google.Cloud.Firestore;
+using SystemException = System.SystemException;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class RequestService(IRepository<WebAppDatabaseContext> repository, IFirestoreRepository firestoreRepository, IConversationService conversationService) : IRequestService
+public class RequestService(IRepository<WebAppDatabaseContext> repository, 
+    IFirestoreRepository firestoreRepository, 
+    IConversationService conversationService,
+    IConversationNotifier notificationService) : IRequestService
 {
     public async Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
     {
@@ -31,7 +35,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
         var sender = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
         var receiver = await repository.GetAsync(new UserSpec(request.ReceiverUserId), cancellationToken);
 
-        if (sender == null || receiver == null || receiver.Role != UserRoleEnum.Specialist)
+        if (sender == null || receiver is not { Role: UserRoleEnum.Specialist })
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Invalid sender or receiver", ErrorCodes.CannotAdd));
 
         var conversationKey = $"{requestingUser.Id}_{request.ReceiverUserId}";
@@ -122,12 +126,7 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
     {
         var result = await repository.GetAsync(spec, cancellationToken);
         
-        if (result == null)
-        {
-            return ServiceResponse.CreateErrorResponse<RequestDTO>(new (HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound));
-        }
-
-        return ServiceResponse.CreateSuccessResponse(result);
+        return result == null ? ServiceResponse.CreateErrorResponse<RequestDTO>(new (HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound)) : ServiceResponse.CreateSuccessResponse(result);
     }
 
     public async Task<ServiceResponse<PagedResponse<RequestDTO>>> GetRequests(Specification<Request, RequestDTO> spec,
@@ -140,7 +139,6 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
     
     public async Task<ServiceResponse<int>> GetRequestCount(CancellationToken cancellationToken = default) => 
         ServiceResponse.CreateSuccessResponse(await repository.GetCountAsync<Request>(cancellationToken));
-
     public async Task<ServiceResponse> UpdateRequestStatus(StatusUpdateDTO request, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
@@ -161,6 +159,10 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Request is already processed", ErrorCodes.CannotUpdate));
         }
         
+        // Store original data for notification payload
+        var originalSenderId = entity.SenderUserId;
+        var specialistId = requestingUser?.Id ?? entity.ReceiverUserId; // The one performing the action
+        
         // Update PostgreSQL
         entity.Status = request.Status;
         if (entity.Status == StatusEnum.Rejected)
@@ -173,7 +175,73 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository, IFire
         // 🆕 Update Firestore conversation item
         await UpdateFirestoreRequestStatus(entity.Id, request.Status, cancellationToken);
         
+        // 🆕 Send SignalR notifications based on status
+        await SendRequestStatusNotification(entity, originalSenderId, specialistId, cancellationToken);
+        
         return ServiceResponse.CreateSuccessResponse();
+    }
+
+    private async Task SendRequestStatusNotification(
+        Request entity, 
+        Guid originalSenderId, 
+        Guid? specialistId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Create notification payload with relevant request data
+            var payload = new
+            {
+                RequestId = entity.Id,
+                SenderId = originalSenderId,
+                SpecialistId = specialistId,
+                Status = entity.Status.ToString(),
+                entity.Description,
+                entity.RequestedStartDate,
+                entity.PhoneNumber,
+                entity.Address,
+                UpdatedAt = DateTime.UtcNow,
+                // Add any other relevant data for the frontend
+                Message = GetStatusUpdateMessage(entity.Status)
+            };
+
+            switch (entity.Status)
+            {
+                case StatusEnum.Accepted:
+                    // Notify the original requester (client) that their request was accepted
+                    await notificationService.NotifyRequestAccepted(originalSenderId, payload);
+                    break;
+                    
+                case StatusEnum.Rejected:
+                    // Notify the original requester (client) that their request was rejected
+                    await notificationService.NotifyRequestRejected(originalSenderId, payload);
+                    break;
+                    
+                case StatusEnum.Cancelled:
+                    // Notify the specialist that the request was cancelled by the client
+                    if (specialistId.HasValue && specialistId != originalSenderId)
+                    {
+                        await notificationService.NotifyRequestCancelled(specialistId.Value, payload);
+                    }
+                    break;
+            }
+        }
+        catch (SystemException ex)
+        {
+            // Log the error but don't fail the main operation
+            Console.WriteLine($"Error sending request status notification: {ex.Message}");
+        }
+    }
+
+    private static string GetStatusUpdateMessage(StatusEnum status)
+    {
+        return status switch
+        {
+            StatusEnum.Accepted => "Your service request has been accepted!",
+            StatusEnum.Rejected => "Your service request has been declined.",
+            StatusEnum.Cancelled => "The service request has been cancelled.",
+            _ => "Service request status updated."
+        };
     }
 
     public async Task<ServiceResponse> UpdateRequest(RequestUpdateDTO request, UserDTO? requestingUser = null,

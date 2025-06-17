@@ -20,9 +20,9 @@ public class PaymentConfiguration: IEntityTypeConfiguration<Payment>
         builder.Property(p => p.Currency)
             .HasMaxLength(3)
             .HasDefaultValue("RON");
-        builder.HasOne(p => p.ServiceTask)
+        builder.HasOne(p => p.Reply)
             .WithOne(st => st.Payment)
-            .HasForeignKey<Payment>(p => p.ServiceTaskId)
+            .HasForeignKey<Payment>(p => p.ReplyId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
