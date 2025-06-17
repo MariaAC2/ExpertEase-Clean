@@ -24,6 +24,23 @@ public class PaymentProjectionSpec : Specification<Payment, PaymentDetailsDTO>
         });
     }
     
+    public PaymentProjectionSpec(string paymentIntentId)
+    {
+        Query.Where(p => p.StripePaymentIntentId == paymentIntentId);
+        Query.Select(x => new PaymentDetailsDTO
+        {
+            Id = x.Id,
+            ReplyId = x.ReplyId,
+            Amount = x.Amount,
+            Currency = x.Currency,
+            Status = x.Status.ToString(),
+            PaidAt = x.PaidAt,
+            CreatedAt = x.CreatedAt,
+            StripePaymentIntentId = x.StripePaymentIntentId,
+            ServiceDescription = x.Reply.Request.Description
+        });
+    }
+    
     public PaymentProjectionSpec(Guid replyId, string? search)
     {
         Query.Where(x => x.ReplyId == replyId);

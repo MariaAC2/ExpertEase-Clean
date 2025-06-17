@@ -276,7 +276,7 @@ export interface UserPaymentDetailsDTO {
 }
 
 export interface PaymentIntentCreateDTO {
-  serviceTaskId: string; // Guid
+  replyId: string; // Guid
   amount: number;
   currency?: string; // default: "ron"
   description: string;
@@ -290,14 +290,14 @@ export interface PaymentIntentResponseDTO {
 
 export interface PaymentConfirmationDTO {
   paymentIntentId: string;
-  serviceTaskId: string;
+  replyId: string;
   amount: number;
   paymentMethod: string;
 }
 
 export interface PaymentHistoryDTO {
   id: string;
-  serviceTaskId: string;
+  replyId: string;
   amount: number;
   currency: string;
   status: string;
@@ -325,12 +325,18 @@ export interface PaymentDetailsDTO {
   clientName: string;
 }
 
+export interface PaymentRefundDTO {
+  paymentId: string;
+  amount?: number;
+  reason?: string;
+}
+
 export interface ServiceTaskUpdateDTO {
-    id: string;
-    startDate?: Date | undefined;
-    endDate?: Date | undefined;
-    address?: string | undefined;
-    price?: number | undefined;
+  id: string;
+  startDate?: Date | undefined;
+  endDate?: Date | undefined;
+  address?: string | undefined;
+  price?: number | undefined;
 }
 
 export interface SpecialistAddDTO {

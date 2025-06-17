@@ -1,11 +1,24 @@
 // service-payment.component.ts
 import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { loadStripe, Stripe, StripeElements, StripeCardNumberElement, StripeCardExpiryElement, StripeCardCvcElement } from '@stripe/stripe-js';
+import {firstValueFrom} from 'rxjs';
+import {PaymentConfirmationDTO, PaymentIntentCreateDTO} from '../../models/api.models';
+import {PaymentService} from '../../services/payment.service';
+import {PaymentFlowService} from '../../services/payment-flow.service';
+import {NotificationService} from '../../services/notification.service';
+import {CurrencyPipe, DatePipe, NgIf} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-service-payment',
   templateUrl: './service-payment.component.html',
-  styleUrls: ['./service-payment.component.css']
+  imports: [
+    DatePipe,
+    CurrencyPipe,
+    NgIf,
+    FormsModule
+  ],
+  styleUrls: ['./service-payment.component.scss']
 })
 export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('cardNumberElement') cardNumberElement!: ElementRef;
@@ -43,7 +56,7 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   cardholderNameError: string | null = null;
   showError = false;
 
-  // Your existing properties
+  // Payment flow properties
   serviceDetails: any;
   specialistDetails: any;
   userDetails: any;
@@ -52,11 +65,14 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   isProcessing = false;
 
   constructor(
-    // Your existing dependencies
+    private readonly paymentService: PaymentService,
+    private readonly paymentFlowService: PaymentFlowService,
+    private readonly notificationService: NotificationService
   ) {}
 
   async ngOnInit() {
     await this.initializeStripe();
+    this.loadPaymentFlowData();
     this.calculateTotal();
   }
 
@@ -68,6 +84,13 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     this.destroyStripeElements();
   }
 
+  private loadPaymentFlowData() {
+    const paymentFlowState = this.paymentFlowService.getCurrentState();
+    this.serviceDetails = paymentFlowState.serviceDetails;
+    this.userDetails = paymentFlowState.userDetails;
+    this.specialistDetails = paymentFlowState.specialistDetails;
+  }
+
   get allFieldsComplete(): boolean {
     return this.cardNumberComplete &&
       this.cardExpiryComplete &&
@@ -77,12 +100,17 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
 
   private async initializeStripe() {
     try {
-      this.stripe = await loadStripe('pk_test_your_publishable_key_here');
+      // ✅ TODO: Replace with your actual Stripe publishable key
+      this.stripe = await loadStripe('pk_test_your_actual_publishable_key_here');
       if (!this.stripe) {
         throw new Error('Failed to load Stripe');
       }
     } catch (error) {
       console.error('Error initializing Stripe:', error);
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to initialize payment system'
+      });
     }
   }
 
@@ -267,8 +295,9 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     this.cardholderNameError = null;
   }
 
+  // ✅ UPDATED: Complete payment processing flow
   async processPayment() {
-    if (!this.cardDetailsEntered) {
+    if (!this.cardDetailsEntered || !this.serviceDetails || !this.userDetails) {
       this.showError = true;
       return;
     }
@@ -276,39 +305,51 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     this.isProcessing = true;
 
     try {
-      // Create payment intent on your backend
-      const paymentIntent = await this.createPaymentIntent();
+      console.log('🚀 Starting payment process...');
 
-      // Confirm payment with the stored payment method
-      const { error, paymentIntent: confirmedPayment } = await this.stripe!.confirmCardPayment(
-        paymentIntent.clientSecret,
-        {
-          payment_method: {
-            card: this.cardNumber!,
-            billing_details: {
-              name: this.cardholderName,
-              email: this.userDetails?.email,
-              phone: this.userDetails?.phoneNumber,
-            },
+      // 1. Create payment intent on backend
+      const paymentIntentResponse = await this.createPaymentIntent();
+
+      if (!paymentIntentResponse.response) {
+        throw new Error(paymentIntentResponse.errorMessage?.message || 'Failed to create payment intent');
+      }
+
+      const { clientSecret, paymentIntentId } = paymentIntentResponse.response;
+      console.log('✅ Payment intent created:', paymentIntentId);
+
+      // 2. Confirm payment with Stripe
+      const { error, paymentIntent } = await this.stripe!.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: this.cardNumber!,
+          billing_details: {
+            name: this.cardholderName,
+            email: this.userDetails?.email,
+            phone: this.userDetails?.phoneNumber,
           },
-        }
-      );
+        },
+      });
 
       if (error) {
-        this.showNotification({
+        console.error('❌ Stripe payment failed:', error);
+        this.notificationService.showNotification({
           type: 'error',
           message: error.message || 'Payment failed. Please try again.'
         });
         return;
       }
 
-      if (confirmedPayment?.status === 'succeeded') {
-        await this.handlePaymentSuccess(confirmedPayment);
+      if (paymentIntent?.status === 'succeeded') {
+        console.log('✅ Stripe payment succeeded');
+
+        // 3. Confirm payment with backend
+        await this.confirmPaymentWithBackend(paymentIntentId);
+
+        console.log('✅ Payment process completed successfully');
       }
 
     } catch (error) {
-      console.error('Payment error:', error);
-      this.showNotification({
+      console.error('❌ Payment error:', error);
+      this.notificationService.showNotification({
         type: 'error',
         message: 'Payment failed. Please try again.'
       });
@@ -317,25 +358,74 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  // ✅ UPDATED: Create payment intent
+  private async createPaymentIntent() {
+    const paymentFlowState = this.paymentFlowService.getCurrentState();
+
+    const paymentIntentDto: PaymentIntentCreateDTO = {
+      replyId: paymentFlowState.replyId!,
+      amount: this.totalAmount,
+      currency: 'ron',
+      description: `Service booking: ${this.serviceDetails?.description || 'Professional service'}`,
+      metadata: {
+        replyId: paymentFlowState.replyId!,
+        conversationId: paymentFlowState.conversationId!,
+        userId: this.userDetails?.userId || '',
+        specialistId: this.specialistDetails?.userId || ''
+      }
+    };
+
+    return await firstValueFrom(this.paymentService.createPaymentIntent(paymentIntentDto));
+  }
+
+  // ✅ UPDATED: Confirm payment with backend
+  private async confirmPaymentWithBackend(paymentIntentId: string): Promise<void> {
+    const paymentFlowState = this.paymentFlowService.getCurrentState();
+
+    const confirmationDto: PaymentConfirmationDTO = {
+      paymentIntentId: paymentIntentId,
+      replyId: paymentFlowState.replyId!,
+      amount: this.totalAmount,
+      paymentMethod: `${this.cardBrand} •••• ${this.cardLast4}`
+    };
+
+    try {
+      const confirmResponse = await firstValueFrom(
+        this.paymentService.confirmPayment(confirmationDto)
+      );
+
+      if (confirmResponse.response !== undefined) {
+        // Payment confirmed successfully
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Payment completed successfully!'
+        });
+
+        // Trigger payment completion in flow service
+        // Note: We pass null since the backend API just returns success/failure
+        this.paymentFlowService.completePayment();
+
+        console.log('💳 Payment flow completed - service task will be created');
+      } else {
+        throw new Error(confirmResponse.errorMessage?.message || 'Failed to confirm payment');
+      }
+    } catch (error) {
+      console.error('❌ Backend confirmation failed:', error);
+      throw error;
+    }
+  }
+
   private calculateTotal() {
     const servicePrice = this.serviceDetails?.price || 0;
     this.totalAmount = servicePrice + this.protectionFee;
   }
 
-  // Your existing methods...
-  private async createPaymentIntent() {
-    // Implementation from previous example
-  }
-
-  private async handlePaymentSuccess(paymentIntent: any) {
-    // Implementation from previous example
-  }
-
   cancelPayment() {
-    // Implementation from previous example
-  }
-
-  private showNotification(notification: { type: string; message: string }) {
-    // Implementation from previous example
+    console.log('🚫 Payment cancelled by user');
+    this.paymentFlowService.cancelPaymentFlow();
+    this.notificationService.showNotification({
+      type: 'info',
+      message: 'Payment cancelled'
+    });
   }
 }

@@ -30,14 +30,14 @@ public class PaymentController(IUserService userService, IPaymentService payment
     /// </summary>
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<RequestResponse<ServiceTask>>> ConfirmPayment(
+    public async Task<ActionResult<RequestResponse>> ConfirmPayment(
         [FromBody] PaymentConfirmationDTO confirmationDTO)
     {
         var currentUser = await GetCurrentUser();
 
         return currentUser.Result != null
             ? CreateRequestResponseFromServiceResponse(await paymentService.ConfirmPayment(confirmationDTO))
-            : CreateErrorMessageResult<ServiceTask>(currentUser.Error);
+            : CreateErrorMessageResult(currentUser.Error);
     }
     
     /// <summary>
@@ -73,14 +73,14 @@ public class PaymentController(IUserService userService, IPaymentService payment
     /// </summary>
     [Authorize(Roles = "Admin")] // You might want to also allow service owners
     [HttpPost]
-    public async Task<ActionResult<RequestResponse<Payment>>> RefundPayment(
+    public async Task<ActionResult<RequestResponse>> RefundPayment(
         [FromBody] PaymentRefundDTO refundDTO)
     {
         var currentUser = await GetCurrentUser();
         
         return currentUser.Result != null
             ? CreateRequestResponseFromServiceResponse(await paymentService.RefundPayment(refundDTO))
-            : CreateErrorMessageResult<Payment>(currentUser.Error);
+            : CreateErrorMessageResult(currentUser.Error);
     }
     
     /// <summary>
@@ -88,13 +88,13 @@ public class PaymentController(IUserService userService, IPaymentService payment
     /// </summary>
     [Authorize]
     [HttpPost("{paymentId:guid}")]
-    public async Task<ActionResult<RequestResponse<Payment>>> CancelPayment([FromRoute] Guid paymentId)
+    public async Task<ActionResult<RequestResponse>> CancelPayment([FromRoute] Guid paymentId)
     {
         var currentUser = await GetCurrentUser();
         
         return currentUser.Result != null
             ? CreateRequestResponseFromServiceResponse(await paymentService.CancelPayment(paymentId))
-            : CreateErrorMessageResult<Payment>(currentUser.Error);
+            : CreateErrorMessageResult(currentUser.Error);
     }
     
     /// <summary>
@@ -102,24 +102,15 @@ public class PaymentController(IUserService userService, IPaymentService payment
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
-    public async Task<IActionResult> StripeWebhook()
+    public async Task<ActionResult<RequestResponse>> StripeWebhook()
     {
         var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-        
-        try
-        {
-            // For now, just log the webhook - you can add proper handling later
-            Console.WriteLine($"Received Stripe webhook: {json}");
-            
-            // TODO: Add proper webhook signature verification and event handling
-            // This is just a placeholder to make the endpoint work
-            
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Webhook error: {ex.Message}");
-            return BadRequest($"Webhook processing failed: {ex.Message}");
-        }
+        var signature = Request.Headers["Stripe-Signature"];
+    
+        var result = await paymentService.HandleStripeWebhook(json, signature);
+    
+        return result.IsOk
+            ? CreateRequestResponseFromServiceResponse(result)
+            : CreateErrorMessageResult(result.Error);
     }
 }

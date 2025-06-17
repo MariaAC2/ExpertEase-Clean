@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {NotificationService} from '../../services/notification_service';
+import {NotificationService} from '../../services/notification.service';
 import {Subject, takeUntil} from 'rxjs';
 import {AppNotification} from '../../models/api.models';
 import {DatePipe, NgClass, NgForOf, NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common'; // Adjust the import path as necessary

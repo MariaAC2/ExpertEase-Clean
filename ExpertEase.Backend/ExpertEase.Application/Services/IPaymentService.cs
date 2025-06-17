@@ -13,7 +13,8 @@ public interface IPaymentService
         PaymentIntentCreateDTO createDTO,
         CancellationToken cancellationToken = default);
 
-    Task<ServiceResponse<ServiceTask>> ConfirmPayment(
+    // ✅ UPDATED: Returns just success/failure
+    Task<ServiceResponse> ConfirmPayment(
         PaymentConfirmationDTO confirmationDTO,
         CancellationToken cancellationToken = default);
 
@@ -26,11 +27,16 @@ public interface IPaymentService
         Guid paymentId,
         CancellationToken cancellationToken = default);
 
-    Task<ServiceResponse<Payment>> RefundPayment(
+    // ✅ UPDATED: Returns just success/failure
+    Task<ServiceResponse> RefundPayment(
         PaymentRefundDTO refundDTO,
         CancellationToken cancellationToken = default);
 
-    Task<ServiceResponse<Payment>> CancelPayment(
+    // ✅ UPDATED: Returns just success/failure
+    Task<ServiceResponse> CancelPayment(
         Guid paymentId,
         CancellationToken cancellationToken = default);
+
+    Task<ServiceResponse> HandleStripeWebhook(string eventJson,
+        string signature, CancellationToken cancellationToken = default);
 }

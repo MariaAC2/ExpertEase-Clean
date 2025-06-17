@@ -53,7 +53,8 @@ export class PaymentFlowService {
     });
   }
 
-  completePayment(paymentDetails: PaymentDetailsDTO): void {
+  // ✅ FIXED: Added optional parameter and proper handling
+  completePayment(paymentDetails: PaymentDetailsDTO | null = null): void {
     this.paymentCompleted.next(paymentDetails);
     this.cancelPaymentFlow();
   }
@@ -71,5 +72,21 @@ export class PaymentFlowService {
 
   getCurrentState(): PaymentFlowState {
     return this.paymentFlowState.value;
+  }
+
+  // ✅ ADDED: Helper method to get current reply ID
+  getCurrentReplyId(): string | null {
+    return this.paymentFlowState.value.replyId;
+  }
+
+  // ✅ ADDED: Helper method to check if payment flow is active
+  isPaymentFlowActive(): boolean {
+    return this.paymentFlowState.value.isActive;
+  }
+
+  // ✅ ADDED: Helper method to get payment amount
+  getPaymentAmount(): number {
+    const serviceDetails = this.paymentFlowState.value.serviceDetails;
+    return serviceDetails?.price || 0;
   }
 }

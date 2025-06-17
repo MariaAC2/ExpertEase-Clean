@@ -147,7 +147,7 @@
 
     <div class="card-modal-content">
       <div class="form-group">
-        <label for="cardNumber">Numărul cardului</label>
+        <label id="cardNumber">Numărul cardului</label>
         <div class="input-container">
           <div #cardNumberElement class="stripe-element"></div>
         </div>
@@ -156,14 +156,19 @@
 
       <div class="form-group">
         <label for="cardholderName">Numele titularului</label>
-        <input type="text" id="cardholderName" [(ngModel)]="cardholderName" placeholder="Numele de pe card"
-               class="form-input" [class.error]="cardholderNameError">
+        <input type="text"
+               id="cardholderName"
+               [(ngModel)]="cardholderName"
+               (input)="onCardholderNameChange()"
+               placeholder="Numele de pe card"
+               class="form-input"
+               [class.error]="cardholderNameError">
         <div class="field-error" *ngIf="cardholderNameError">{{ cardholderNameError }}</div>
       </div>
 
       <div class="form-row">
         <div class="form-group half">
-          <label for="cardExpiry">Data de expirare</label>
+          <label id="cardExpiry">Data de expirare</label>
           <div class="input-container">
             <div #cardExpiryElement class="stripe-element"></div>
           </div>
@@ -171,7 +176,7 @@
         </div>
 
         <div class="form-group half">
-          <label for="cardCvc">Codul cardului</label>
+          <label id="cardCvc">Codul cardului</label>
           <div class="input-container">
             <div #cardCvcElement class="stripe-element"></div>
           </div>

@@ -30,7 +30,7 @@ import {ServiceMessageComponent} from '../../shared/service-message/service-mess
 import {ReplyFormComponent} from '../../shared/reply-form/reply-form.component';
 import {RouterLink} from '@angular/router';
 import {ServicePaymentComponent} from '../../shared/service-payment/service-payment.component';
-import {NotificationService} from '../../services/notification_service';
+import {NotificationService} from '../../services/notification.service';
 import {NotificationDisplayComponent} from '../../shared/notification-display/notification-display.component';
 import {TaskService} from '../../services/task.service';
 
@@ -149,7 +149,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       // Subscribe to notifications
       this.signalRHandler.notification$
         .pipe(takeUntil(this.destroy$))
-        .subscribe(notification => this.showNotification(notification));
+        .subscribe(notification => this.notificationService.showNotification(notification));
 
       // Subscribe to conversation updates
       this.signalRHandler.conversationUpdate$
@@ -299,17 +299,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Show notification to user
-   */
-  private showNotification(notification: NotificationEvent): void {
-    // 🆕 ADDED: Use the notification service to show visual notifications
-    this.notificationService.show(notification.message, notification.type);
-
-    // Also log to console for debugging
-    console.log(`${notification.type.toUpperCase()}: ${notification.message}`);
-  }
-
-  /**
    * Load exchanges/conversations
    */
   loadExchanges(loadMore = false): void {
@@ -442,7 +431,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.loadExchanges(false);
     } else {
       this.messageContent = content.trim();
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: result.error || 'Failed to send message'
       });
@@ -454,7 +443,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   async acceptRequest(requestId: string): Promise<void> {
     const result = await this.conversationActions.acceptRequest(requestId);
     if (!result.success) {
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: result.error || 'Failed to accept request'
       });
@@ -464,7 +453,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   async rejectRequest(requestId: string): Promise<void> {
     const result = await this.conversationActions.rejectRequest(requestId);
     if (!result.success) {
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: result.error || 'Failed to reject request'
       });
@@ -474,7 +463,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   async acceptReply(replyId: string): Promise<void> {
     const result = await this.conversationActions.acceptReply(replyId);
     if (!result.success) {
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: result.error || 'Failed to accept reply'
       });
@@ -488,7 +477,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   async rejectReply(replyId: string): Promise<void> {
     const result = await this.conversationActions.rejectReply(replyId);
     if (!result.success) {
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: result.error || 'Failed to reject reply'
       });
@@ -532,7 +521,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     if (result.success) {
       this.hideReplyForm();
     } else {
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: result.error || 'Failed to submit reply'
       });
@@ -590,7 +579,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     if (!this.authService.getUserId()) {
       console.error('❌ User not authenticated');
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: 'Authentication required to create service task'
       });
@@ -607,7 +596,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       } else {
         const errorMsg = response.errorMessage?.message || 'Failed to create service task after payment';
         console.error('❌ Failed to create service task:', response.errorMessage);
-        this.showNotification({
+        this.notificationService.showNotification({
           type: 'error',
           message: errorMsg
         });
@@ -615,7 +604,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('❌ Error creating service task:', error);
-      this.showNotification({
+      this.notificationService.showNotification({
         type: 'error',
         message: 'Error creating service task after payment'
       });

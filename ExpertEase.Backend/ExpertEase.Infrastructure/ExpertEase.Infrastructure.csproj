@@ -27,6 +27,7 @@
       </PackageReference>
       <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
       <PackageReference Include="MimeKit" Version="4.11.0" />
+      <PackageReference Include="Stripe.Extensions.AspNetCore" Version="0.2.0" />
       <PackageReference Include="Stripe.net" Version="48.2.0" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
     </ItemGroup>

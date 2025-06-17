@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import {AppNotification} from '../models/api.models';
+import {NotificationEvent} from './signalr_handler.service';
 
 @Injectable({
   providedIn: 'root'
@@ -69,5 +70,13 @@ export class NotificationService {
 
   error(message: string, duration?: number): string {
     return this.show(message, 'error', duration);
+  }
+
+  public showNotification(notification: NotificationEvent): void {
+    // 🆕 ADDED: Use the notification service to show visual notifications
+    this.show(notification.message, notification.type);
+
+    // Also log to console for debugging
+    console.log(`${notification.type.toUpperCase()}: ${notification.message}`);
   }
 }
