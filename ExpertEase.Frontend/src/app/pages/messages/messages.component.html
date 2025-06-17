@@ -185,6 +185,10 @@
           </app-reply-form>
         </div>
       </div>
+      <app-service-payment
+        *ngIf="showPaymentFlow"
+        [ngClass]="{'payment-active': showPaymentFlow}">
+      </app-service-payment>
 
       <!-- Service confirmation overlay -->
       <div *ngIf="isServiceConfirmationVisible && currentServiceTask" class="service-message-overlay">
@@ -221,11 +225,5 @@
 
 <!-- 🆕 Global notification container (optional - implement based on your notification system) -->
 <div class="notification-container" *ngIf="false">
-  <!-- This would be populated by your notification service -->
-  <!-- Example structure:
-  <div class="notification success" *ngFor="let notification of notifications">
-    <span>{{ notification.message }}</span>
-    <button (click)="dismissNotification(notification.id)">×</button>
-  </div>
-  -->
+  <app-notification-display></app-notification-display>
 </div>

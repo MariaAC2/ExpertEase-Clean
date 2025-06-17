@@ -5,8 +5,6 @@ import {
   ServicePaymentDetailsDTO,
   UserPaymentDetailsDTO,
   PaymentDetailsDTO,
-  SpecialistDTO,
-  FirestoreConversationItemDTO, ReplyDTO, RequestDTO
 } from '../models/api.models';
 
 export interface PaymentFlowState {
@@ -22,7 +20,7 @@ export interface PaymentFlowState {
   providedIn: 'root'
 })
 export class PaymentFlowService {
-  private paymentFlowState = new BehaviorSubject<PaymentFlowState>({
+  private readonly paymentFlowState = new BehaviorSubject<PaymentFlowState>({
     isActive: false,
     serviceDetails: null,
     userDetails: null,
@@ -34,7 +32,7 @@ export class PaymentFlowService {
   public paymentFlow$ = this.paymentFlowState.asObservable();
 
   // Subject for payment completion events
-  private paymentCompleted = new BehaviorSubject<PaymentDetailsDTO | null>(null);
+  private readonly paymentCompleted = new BehaviorSubject<PaymentDetailsDTO | null>(null);
   public paymentCompleted$ = this.paymentCompleted.asObservable();
 
   initiatePaymentFlow(

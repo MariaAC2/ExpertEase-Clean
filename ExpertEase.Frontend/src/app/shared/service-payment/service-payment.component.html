@@ -1,4 +1,3 @@
-<!-- service-payment.component.html -->
 <div class="payment-overlay">
   <div class="payment-container">
     <div class="payment-header">
@@ -7,6 +6,7 @@
     </div>
 
     <div class="payment-content">
+
       <!-- Service Description -->
       <section class="payment-section">
         <h3>Descriere</h3>
@@ -74,7 +74,7 @@
         <div class="payment-method">
           <div class="card-payment-option"
                [class.selected]="paymentMethodSelected"
-               (click)="selectCardPayment()">
+               (click)="openCardDetailsModal()">
             <img src="assets/icons/card.svg" alt="Card bancar" class="payment-icon">
             <div class="payment-text">
               <strong>Card bancar</strong>
@@ -86,8 +86,18 @@
             </div>
             <span class="selection-indicator" *ngIf="paymentMethodSelected">✓</span>
           </div>
+
+          <!-- Card details summary (shown after card is entered) -->
+          <div class="card-summary" *ngIf="cardDetailsEntered">
+            <div class="card-info">
+              <span class="card-last4">**** **** **** {{ cardLast4 }}</span>
+              <span class="card-brand">{{ cardBrand }}</span>
+            </div>
+            <button class="edit-card-btn" (click)="openCardDetailsModal()">Modifică</button>
+          </div>
+
           <p class="error-message" *ngIf="showError">
-            Selectează metoda de plată pe care dorești s-o utilizezi
+            Introdu datele cardului pentru a continua
           </p>
         </div>
       </section>
@@ -118,16 +128,68 @@
 
     <!-- Payment Actions -->
     <div class="payment-actions">
-      <button class="cancel-btn"
-              (click)="cancelPayment()"
-              [disabled]="isProcessing">
-        Anulează
-      </button>
-      <button class="pay-btn"
-              (click)="processPayment()"
-              [disabled]="!paymentMethodSelected || isProcessing">
+      <button class="cancel-btn" (click)="cancelPayment()" [disabled]="isProcessing">Anulează</button>
+      <button class="pay-btn" (click)="processPayment()" [disabled]="!cardDetailsEntered || isProcessing">
         <span *ngIf="!isProcessing">Confirmă și plătește</span>
         <span *ngIf="isProcessing">Se procesează...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Card Details Modal -->
+<div class="card-modal-overlay" *ngIf="showCardModal" (click)="closeCardModal($event)">
+  <div class="card-modal" (click)="$event.stopPropagation()">
+    <div class="card-modal-header">
+      <h3>Introdu datele cardului</h3>
+      <button class="modal-close-btn" (click)="closeCardModal()">×</button>
+    </div>
+
+    <div class="card-modal-content">
+      <div class="form-group">
+        <label for="cardNumber">Numărul cardului</label>
+        <div class="input-container">
+          <div #cardNumberElement class="stripe-element"></div>
+        </div>
+        <div class="field-error" *ngIf="cardNumberError">{{ cardNumberError }}</div>
+      </div>
+
+      <div class="form-group">
+        <label for="cardholderName">Numele titularului</label>
+        <input type="text" id="cardholderName" [(ngModel)]="cardholderName" placeholder="Numele de pe card"
+               class="form-input" [class.error]="cardholderNameError">
+        <div class="field-error" *ngIf="cardholderNameError">{{ cardholderNameError }}</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="cardExpiry">Data de expirare</label>
+          <div class="input-container">
+            <div #cardExpiryElement class="stripe-element"></div>
+          </div>
+          <div class="field-error" *ngIf="cardExpiryError">{{ cardExpiryError }}</div>
+        </div>
+
+        <div class="form-group half">
+          <label for="cardCvc">Codul cardului</label>
+          <div class="input-container">
+            <div #cardCvcElement class="stripe-element"></div>
+          </div>
+          <div class="field-error" *ngIf="cardCvcError">{{ cardCvcError }}</div>
+        </div>
+      </div>
+
+      <div class="security-info">
+        <div class="security-icon">🔒</div>
+        <p>Datele tale sunt protejate și criptate în siguranță</p>
+      </div>
+    </div>
+
+    <div class="card-modal-actions">
+      <button class="cancel-btn" (click)="closeCardModal()">Anulează</button>
+      <button class="save-btn" (click)="saveCardDetails()" [disabled]="!allFieldsComplete || isSavingCard">
+        <span *ngIf="!isSavingCard">Salvează datele</span>
+        <span *ngIf="isSavingCard">Se verifică...</span>
       </button>
     </div>
   </div>

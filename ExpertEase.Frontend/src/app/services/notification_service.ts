@@ -1,19 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
-export interface Notification {
-  id: string;
-  type: 'success' | 'info' | 'warning' | 'error';
-  message: string;
-  timestamp: Date;
-  duration?: number; // Auto-dismiss after this many milliseconds
-}
+import {AppNotification} from '../models/api.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  private notifications = new BehaviorSubject<Notification[]>([]);
+  private notifications = new BehaviorSubject<AppNotification[]>([]);
   public notifications$ = this.notifications.asObservable();
 
   private readonly defaultDuration = 5000; // 5 seconds
@@ -21,8 +14,8 @@ export class NotificationService {
   /**
    * Show a notification
    */
-  show(message: string, type: Notification['type'] = 'info', duration?: number): string {
-    const notification: Notification = {
+  show(message: string, type: AppNotification['type'] = 'info', duration?: number): string {
+    const notification: AppNotification = {
       id: `notification_${Date.now()}_${Math.random()}`,
       type,
       message,

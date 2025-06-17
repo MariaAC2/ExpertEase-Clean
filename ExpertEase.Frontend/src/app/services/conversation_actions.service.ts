@@ -99,7 +99,7 @@ export class ConversationActionsService {
    */
   public async acceptReply(replyId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      await this.replyService.acceptReply(replyId).toPromise();
+      await this.replyService.acceptReply(replyId);
       this.triggerRefresh();
       return { success: true };
     } catch (error) {
@@ -140,6 +140,7 @@ export class ConversationActionsService {
    * Trigger a refresh of conversations and messages
    */
   private triggerRefresh(): void {
+    console.log('Triggering refresh of conversations and messages');
     this.refreshTrigger.next();
   }
 }

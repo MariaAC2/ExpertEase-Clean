@@ -208,7 +208,7 @@ export interface ReplyDTO {
     endDate: Date;
     price: number;
     status: StatusEnum;
-    serviceTask?: ServiceTaskDTO;
+    payment?: PaymentDetailsDTO
 }
 
 export interface ReplyUpdateDTO {
@@ -260,7 +260,7 @@ export interface ServiceTaskDTO {
 }
 
 export interface ServicePaymentDetailsDTO {
-  serviceTaskId: string;
+  replyId: string;
   startDate: Date;
   endDate: Date;
   description: string;
@@ -310,7 +310,7 @@ export interface PaymentHistoryDTO {
 
 export interface PaymentDetailsDTO {
   id: string;
-  serviceTaskId: string;
+  replyId: string;
   amount: number;
   currency: string;
   status: string;
@@ -598,4 +598,12 @@ export interface MapMarker {
     profilePicture?: string;
     distance?: number;
   };
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'success' | 'info' | 'warning' | 'error';
+  message: string;
+  timestamp: Date;
+  duration?: number; // Auto-dismiss after this many milliseconds
 }

@@ -1,11 +1,12 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, TrackByFunction } from '@angular/core';
-import {Observable, Subject, takeUntil} from 'rxjs';
+import {firstValueFrom, Observable, Subject, takeUntil} from 'rxjs';
 import {
   UserConversationDTO,
   UserDTO,
   MessageDTO,
   RequestDTO,
-  ReplyDTO, FirestoreConversationItemDTO, ConversationItemDTO
+  ReplyDTO,
+  ConversationItemDTO // Updated import
 } from '../../models/api.models';
 import { AuthService } from '../../services/auth.service';
 import { ExchangeService } from '../../services/exchange.service';
@@ -21,13 +22,17 @@ import {
 } from '../../services/signalr_handler.service';
 import {ConversationActionsService} from '../../services/conversation_actions.service';
 import {FormsModule} from '@angular/forms';
-import {AsyncPipe, NgForOf, NgIf, NgSwitch, NgSwitchCase, SlicePipe} from '@angular/common';
+import {AsyncPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase, SlicePipe} from '@angular/common';
 import {MessageBubbleComponent} from '../../shared/message-bubble/message-bubble.component';
 import {RequestMessageComponent} from '../../shared/request-message/request-message.component';
 import {ReplyMessageComponent} from '../../shared/reply-message/reply-message.component';
 import {ServiceMessageComponent} from '../../shared/service-message/service-message.component';
 import {ReplyFormComponent} from '../../shared/reply-form/reply-form.component';
 import {RouterLink} from '@angular/router';
+import {ServicePaymentComponent} from '../../shared/service-payment/service-payment.component';
+import {NotificationService} from '../../services/notification_service';
+import {NotificationDisplayComponent} from '../../shared/notification-display/notification-display.component';
+import {TaskService} from '../../services/task.service';
 
 @Component({
   selector: 'app-messages',
@@ -45,7 +50,10 @@ import {RouterLink} from '@angular/router';
     ReplyFormComponent,
     NgForOf,
     RouterLink,
-    SlicePipe
+    SlicePipe,
+    ServicePaymentComponent,
+    NgClass,
+    NotificationDisplayComponent
   ],
   styleUrl: './messages.component.scss'
 })
@@ -84,6 +92,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   currentServiceTask: any;
   showPaymentFlow: boolean = false;
 
+  // Updated observables to use ConversationItemDTO
   exchanges$: Observable<UserConversationDTO[]> | undefined;
   conversationItems$: Observable<ConversationItemDTO[]> | undefined;
   selectedUser$: Observable<string | null> | undefined;
@@ -104,7 +113,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
     protected readonly signalRService: SignalRService,
     private readonly signalRHandler: SignalRHandlerService,
     protected readonly messagesState: MessagesStateService,
-    private readonly conversationActions: ConversationActionsService
+    private readonly conversationActions: ConversationActionsService,
+    private readonly notificationService: NotificationService,
+    private readonly taskService: TaskService,
   ) {}
 
   async ngOnInit() {
@@ -146,6 +157,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
         .subscribe(update => this.handleConversationUpdate(update));
 
       // Subscribe to action refresh events
+      this.paymentFlowService.paymentFlow$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(state => {
+          console.log('💳 Payment flow state changed:', state);
+          this.showPaymentFlow = state.isActive;
+          this.cdr.detectChanges();
+        });
+
+      // Subscribe to action refresh events
       this.conversationActions.refresh$
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
@@ -159,6 +179,105 @@ export class MessagesComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Failed to initialize services:', error);
     }
+  }
+
+  // 🆕 ADD: Trigger payment flow for accepted reply
+  private triggerPaymentFlowForReply(replyId: string): void {
+    const replyItem = this.getReplyItemById(replyId);
+
+    if (!replyItem) {
+      console.error('Reply item not found for payment flow');
+      // Fallback: trigger with basic data
+      this.triggerTestPaymentFlow(replyId);
+      return;
+    }
+
+    const reply = this.asTypedReply(replyItem);
+    const selectedUserInfo = this.messagesState.selectedUserInfo;
+
+    if (!reply || !selectedUserInfo || !this.currentUserDetails) {
+      console.error('Missing data for payment flow, using test data');
+      this.triggerTestPaymentFlow(replyId);
+      return;
+    }
+
+    // Create payment flow data from real reply
+    const serviceDetails = {
+      replyId: replyId,
+      startDate: reply.startDate,
+      endDate: reply.endDate,
+      description: 'Service booking',
+      address: 'Service address', // You might need to get this from the request
+      price: reply.price
+    };
+
+    const userDetails = {
+      userId: this.currentUserDetails.id,
+      userFullName: this.currentUserDetails.fullName,
+      email: this.currentUserDetails.email || 'user@example.com',
+      phoneNumber: this.currentUserDetails.contactInfo?.phoneNumber || '1234567890'
+    };
+
+    const specialistDetails = {
+      userId: selectedUserInfo.userId,
+      userFullName: selectedUserInfo.fullName,
+      email: 'specialist@example.com',
+      phoneNumber: '0987654321'
+    };
+
+    this.paymentFlowService.initiatePaymentFlow(
+      replyId,
+      serviceDetails,
+      userDetails,
+      specialistDetails,
+      this.messagesState.selectedUser || ''
+    );
+
+    console.log('🚀 Payment flow triggered with real data for reply:', replyId);
+  }
+
+// 🆕 ADD: Helper method to find reply by ID
+  private getReplyItemById(replyId: string): any {
+    const items = this.messagesState.getTypedConversationItems();
+    return items.find(item => item.item.id === replyId && item.type === 'reply');
+  }
+
+// 🆕 ADD: Fallback test payment flow
+  private triggerTestPaymentFlow(replyId: string): void {
+    console.log('🧪 Using test payment flow data');
+
+    const serviceDetails = {
+      replyId: replyId,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours later
+      description: 'Test service booking',
+      address: 'Test service address',
+      price: 150
+    };
+
+    const userDetails = {
+      userId: this.userId || 'test-user',
+      userFullName: this.currentUserDetails?.fullName || 'Test User',
+      email: this.currentUserDetails?.email || 'test@example.com',
+      phoneNumber: '1234567890'
+    };
+
+    const specialistDetails = {
+      userId: this.messagesState.selectedUser || 'test-specialist',
+      userFullName: this.messagesState.selectedUserInfo?.fullName || 'Test Specialist',
+      email: 'specialist@example.com',
+      phoneNumber: '0987654321'
+    };
+
+    this.paymentFlowService.initiatePaymentFlow(
+      replyId,
+      serviceDetails,
+      userDetails,
+      specialistDetails,
+      'test-conversation'
+    );
+
+    console.log('🚀 Test payment flow triggered for reply:', replyId);
   }
 
   /**
@@ -183,11 +302,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
    * Show notification to user
    */
   private showNotification(notification: NotificationEvent): void {
+    // 🆕 ADDED: Use the notification service to show visual notifications
+    this.notificationService.show(notification.message, notification.type);
+
+    // Also log to console for debugging
     console.log(`${notification.type.toUpperCase()}: ${notification.message}`);
-    // TODO: Implement your actual notification system here
-    // Examples:
-    // this.toastService.show(notification.message, notification.type);
-    // this.snackBar.open(notification.message, 'Close', { duration: 4000 });
   }
 
   /**
@@ -279,9 +398,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Load more exchanges
-   */
+  // Rest of the methods remain the same...
   loadMoreExchanges(): void {
     if (this.messagesState.conversationListMeta.hasMore && !this.messagesState.isLoading) {
       this.conversationListPagination.page++;
@@ -289,9 +406,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Load more messages
-   */
   loadMoreMessages(): void {
     const selectedUser = this.messagesState.selectedUser;
     if (selectedUser && this.messagesState.messagesMeta.hasMore && !this.messagesState.isLoading) {
@@ -300,9 +414,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Refresh current conversation
-   */
   private refreshCurrentConversation(): void {
     const selectedUser = this.messagesState.selectedUser;
     if (selectedUser) {
@@ -310,9 +421,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Send message
-   */
   async sendMessage(content: string): Promise<void> {
     const selectedUser = this.messagesState.selectedUser;
     if (!content.trim() || !selectedUser || this.isSendingMessage || !this.currentUserDetails) return;
@@ -333,7 +441,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.refreshCurrentConversation();
       this.loadExchanges(false);
     } else {
-      // Restore message content so user can try again
       this.messageContent = content.trim();
       this.showNotification({
         type: 'error',
@@ -344,9 +451,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  /**
-   * Accept request
-   */
   async acceptRequest(requestId: string): Promise<void> {
     const result = await this.conversationActions.acceptRequest(requestId);
     if (!result.success) {
@@ -357,9 +461,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Reject request
-   */
   async rejectRequest(requestId: string): Promise<void> {
     const result = await this.conversationActions.rejectRequest(requestId);
     if (!result.success) {
@@ -370,9 +471,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Accept reply
-   */
   async acceptReply(replyId: string): Promise<void> {
     const result = await this.conversationActions.acceptReply(replyId);
     if (!result.success) {
@@ -380,12 +478,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
         type: 'error',
         message: result.error || 'Failed to accept reply'
       });
+      return; // Don't proceed to payment if acceptance failed
     }
+
+    // ✅ Trigger payment flow after successful acceptance
+    this.triggerPaymentFlowForReply(replyId);
   }
 
-  /**
-   * Reject reply
-   */
   async rejectReply(replyId: string): Promise<void> {
     const result = await this.conversationActions.rejectReply(replyId);
     if (!result.success) {
@@ -396,15 +495,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Show reply form
-   */
   showReplyForm(requestId: string): void {
     this.currentRequestId = requestId;
     this.isReplyFormVisible = true;
     this.chatOverlayVisible = true;
 
-    // Reset form data
     this.replyFormData = {
       day: null,
       month: null,
@@ -419,9 +514,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  /**
-   * Hide reply form
-   */
   hideReplyForm(): void {
     this.isReplyFormVisible = false;
     this.chatOverlayVisible = false;
@@ -429,9 +521,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  /**
-   * Handle reply form submission
-   */
   async onReplySubmit(replyData: any): Promise<void> {
     if (!this.currentRequestId) {
       console.error('No current request ID for reply');
@@ -450,16 +539,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Get typed conversation items for template
-   */
   getTypedConversationItems(): any[] {
     return this.messagesState.getTypedConversationItems();
   }
 
-  /**
-   * Type casting methods for template
-   */
   asTypedMessage(itemWrapper: any): MessageDTO {
     return itemWrapper.typed as MessageDTO;
   }
@@ -472,9 +555,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return itemWrapper.typed as ReplyDTO;
   }
 
-  /**
-   * Load current user details
-   */
   private loadCurrentUserDetails(): void {
     this.userService.getUserProfile().subscribe({
       next: (res) => {
@@ -486,7 +566,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 🆕 Keep existing payment flow methods (simplified)
+  // Keep existing payment flow methods...
   private subscribeToPaymentCompletion(): void {
     this.paymentFlowService.paymentCompleted$
       .pipe(takeUntil(this.destroy$))
@@ -505,29 +585,42 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.loadExchanges(false);
   }
 
-  private createServiceTaskFromPayment(paymentDetails: any): void {
-    const paymentFlowState = this.paymentFlowService.getCurrentState();
+  private async createServiceTaskFromPayment(paymentDetails: any): Promise<void> {
+    console.log('🛠️ Creating service task from payment:', paymentDetails);
 
-    if (!paymentFlowState.serviceDetails || !paymentFlowState.specialistDetails || !paymentFlowState.userDetails) {
-      console.error('Missing service details for task creation');
+    if (!this.authService.getUserId()) {
+      console.error('❌ User not authenticated');
+      this.showNotification({
+        type: 'error',
+        message: 'Authentication required to create service task'
+      });
       return;
     }
 
-    this.currentServiceTask = {
-      id: paymentDetails.serviceTaskId,
-      replyId: paymentFlowState.replyId || '',
-      userId: paymentFlowState.userDetails.userId,
-      specialistId: paymentFlowState.specialistDetails.userId,
-      specialistFullName: paymentFlowState.specialistDetails.userFullName,
-      startDate: paymentFlowState.serviceDetails.startDate,
-      endDate: paymentFlowState.serviceDetails.endDate,
-      description: paymentFlowState.serviceDetails.description,
-      address: paymentFlowState.serviceDetails.address,
-      price: paymentFlowState.serviceDetails.price,
-      status: 'Confirmed',
-      completedAt: new Date(),
-      cancelledAt: new Date()
-    };
+    try {
+      // Using firstValueFrom for better async/await support
+      const response = await firstValueFrom(this.taskService.addTaskFromPayment(paymentDetails.id));
+
+      if (response.response?.serviceTask) {
+        this.currentServiceTask = response.response.serviceTask;
+        console.log('✅ Service task created successfully:', this.currentServiceTask);
+      } else {
+        const errorMsg = response.errorMessage?.message || 'Failed to create service task after payment';
+        console.error('❌ Failed to create service task:', response.errorMessage);
+        this.showNotification({
+          type: 'error',
+          message: errorMsg
+        });
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Error creating service task:', error);
+      this.showNotification({
+        type: 'error',
+        message: 'Error creating service task after payment'
+      });
+      return;
+    }
 
     this.cdr.detectChanges();
   }
@@ -566,18 +659,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   openMediaPicker(): void {
     console.log('Open media picker');
-    // this.isReplyFormVisible = true;
   }
 
   ngOnDestroy(): void {
-    // Cleanup SignalR
     this.signalRHandler.cleanup();
     this.signalRService.disconnect();
-
-    // Clear state
     this.messagesState.clearAll();
-
-    // Complete subscriptions
     this.destroy$.next();
     this.destroy$.complete();
   }
