@@ -295,6 +295,16 @@ export interface UserPaymentDetailsDTO {
   email: string;
   phoneNumber: string;
 }
+//
+// {
+//   "replyId": "urn:uuid:17654980-b101-0271-6b83-315612a9fe1b",
+//   "amount": -28767995.184812814,
+//   "currency": "qui aliqua E",
+//   "description": "exercitation sint ad nisi",
+//   "metadata": {
+//   "dolore8a": "reprehenderit sunt"
+// }
+// }
 
 export interface PaymentIntentCreateDTO {
   replyId: string; // Guid
@@ -403,6 +413,8 @@ export interface SpecialistProfileDTO {
     yearsExperience: number;
     description: string;
     categories: CategoryDTO[];
+    portfolio: string[]; // URLs of portfolio images
+    stripeAccountId: string; // Optional, if the specialist has a Stripe account
 }
 
 export interface SpecialistProfileUpdateDTO {
@@ -491,6 +503,25 @@ export interface UserDTO {
     profilePictureUrl?: string;
     contactInfo?: ContactInfoDTO;
     specialist?: SpecialistProfileDTO;
+}
+
+export interface UserProfileDTO {
+  id: string;
+  fullName: string;
+  profilePictureUrl?: string;
+  rating: number;
+  createdAt: string; // Use string for ISO date format from .NET
+  updatedAt: string;
+
+  // Specialist-only fields (null or undefined for clients)
+  email: string;
+  phoneNumber: string;
+  address?: string;
+  yearsExperience?: number;
+  description?: string;
+  stripeAccountId?: string;
+  portfolio?: string[];
+  categories?: string[];
 }
 
 export interface UserDetailsDTO {

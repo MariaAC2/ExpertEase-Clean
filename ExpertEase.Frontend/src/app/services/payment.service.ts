@@ -18,6 +18,8 @@ export class PaymentService {
   constructor(private readonly http: HttpClient, private readonly authService: AuthService) {}
 
   createPaymentIntent(dto: PaymentIntentCreateDTO): Observable<RequestResponse<PaymentIntentResponseDTO>> {
+    console.log('Creating payment intent with data:', dto);
+
     const token = this.authService.getToken();
     const headers = {
       Authorization: `Bearer ${token}`

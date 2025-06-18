@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {DatePipe, NgForOf, NgIf} from '@angular/common';
 import {IconButtonComponent} from '../../shared/icon-button/icon-button.component';
-import {UserDTO, UserRoleEnum} from '../../models/api.models';
+import {UserProfileDTO, UserRoleEnum} from '../../models/api.models';
 import {Router} from '@angular/router';
 import {UserService} from '../../services/user.service';
 import {AuthService} from '../../services/auth.service';
@@ -16,33 +16,34 @@ import {EditUserInfoComponent} from './edit-user-info/edit-user-info.component';
   styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
-  user: UserDTO | null = null;
+  user: UserProfileDTO | undefined | null;
+  userRole: string | undefined | null;
 
   // Modal visibility states
   showEditUserModal = false;
   showEditSpecialistModal = false;
 
-  dummyUser: UserDTO = {
-    id: 'user-001',
-    fullName: 'Elena Georgescu',
-    email: 'elena.georgescu@example.com',
-    role: UserRoleEnum.Specialist,
-    createdAt: new Date('2023-02-10T10:15:00Z'),
-    updatedAt: new Date(),
-    rating: 4.8,
-    contactInfo: {
-      phoneNumber: '0745123456',
-      address: 'Strada Florilor 12, Timișoara'
-    },
-    specialist: {
-      yearsExperience: 6,
-      description: 'Specialist în traduceri juridice și consultanță contractuală.',
-      categories: [
-        { id: 'cat-007', name: 'Traduceri juridice' },
-        { id: 'cat-008', name: 'Consultanță legală' }
-      ]
-    }
-  };
+  // dummyUser: UserDTO = {
+  //   id: 'user-001',
+  //   fullName: 'Elena Georgescu',
+  //   email: 'elena.georgescu@example.com',
+  //   role: UserRoleEnum.Specialist,
+  //   createdAt: new Date('2023-02-10T10:15:00Z'),
+  //   updatedAt: new Date(),
+  //   rating: 4.8,
+  //   contactInfo: {
+  //     phoneNumber: '0745123456',
+  //     address: 'Strada Florilor 12, Timișoara'
+  //   },
+  //   specialist: {
+  //     yearsExperience: 6,
+  //     description: 'Specialist în traduceri juridice și consultanță contractuală.',
+  //     categories: [
+  //       { id: 'cat-007', name: 'Traduceri juridice' },
+  //       { id: 'cat-008', name: 'Consultanță legală' }
+  //     ]
+  //   }
+  // };
 
   constructor(private readonly profileService: UserService,
               private readonly authService: AuthService,
@@ -50,15 +51,15 @@ export class ProfileComponent implements OnInit {
               private readonly route: Router) {}
 
   ngOnInit() {
+    this.userRole = this.authService.getUserRole()
     this.loadUserProfile();
   }
 
   loadUserProfile() {
-    this.user = this.dummyUser; // Use this for testing
+    // this.user = this.dummyUser; // Use this for testing
     this.profileService.getUserProfile().subscribe({
       next: (res) => {
-        const userResult = res.response;
-        this.user = userResult ?? this.dummyUser;
+        this.user = res.response;
         console.log(this.user);
       },
       error: (err) => {
@@ -92,7 +93,7 @@ export class ProfileComponent implements OnInit {
     this.showEditUserModal = false;
   }
 
-  onUserUpdated(updatedUser: UserDTO) {
+  onUserUpdated(updatedUser: UserProfileDTO) {
     this.user = updatedUser;
     console.log('User profile updated:', updatedUser);
     // Optionally show a success message
@@ -108,7 +109,7 @@ export class ProfileComponent implements OnInit {
     this.showEditSpecialistModal = false;
   }
 
-  onSpecialistUpdated(updatedUser: UserDTO) {
+  onSpecialistUpdated(updatedUser: UserProfileDTO) {
     this.user = updatedUser;
     console.log('Specialist profile updated:', updatedUser);
     // Reload the entire profile to ensure all data is fresh

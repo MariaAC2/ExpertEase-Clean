@@ -89,7 +89,7 @@ export class RegisterComponent {
   initializeGoogleSignIn() {
     if (typeof window !== 'undefined' && window.google) {
       window.google.accounts.id.initialize({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your actual Google Client ID
+        client_id: '760852864614-0l1qdais39snht0oo3511r0tpbjdj09f.apps.googleusercontent.com', // Replace with your actual Google Client ID
         callback: (response: any) => this.handleGoogleResponse(response)
       });
     }

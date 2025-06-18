@@ -5,7 +5,7 @@ import {
   PagedResponse,
   RequestResponse, SpecialistDTO,
   UserAddDTO, UserDetailsDTO,
-  UserDTO, UserPaymentDetailsDTO,
+  UserDTO, UserPaymentDetailsDTO, UserProfileDTO,
   UserUpdateDTO, UserUpdateResponseDTO
 } from '../models/api.models';
 import { jwtDecode } from 'jwt-decode';
@@ -31,7 +31,7 @@ export class UserService {
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.get<RequestResponse<UserDTO>>(`${this.baseUrl}/GetProfile`, {headers});
+    return this.http.get<RequestResponse<UserProfileDTO>>(`${this.baseUrl}/GetProfile`, {headers});
   }
 
   getUserDetails(userId: string) {

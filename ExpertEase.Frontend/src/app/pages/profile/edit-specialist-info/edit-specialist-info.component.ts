@@ -1,8 +1,11 @@
-import {PortfolioPictureAddDTO, SpecialistProfileUpdateDTO, UserDTO} from '../../../models/api.models';
+import {
+  PortfolioPictureAddDTO,
+  SpecialistProfileUpdateDTO,
+  UserProfileDTO,
+} from '../../../models/api.models';
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {CategorySelectorComponent} from '../../../shared/category-selector/category-selector.component';
 import {SpecialistProfileService} from '../../../services/specialist-profile.service';
 
 interface SpecialistEditInfo {
@@ -23,15 +26,16 @@ interface PortfolioImage {
 @Component({
   selector: 'app-edit-specialist-info',
   standalone: true,
-  imports: [CommonModule, FormsModule, CategorySelectorComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './edit-specialist-info.component.html',
   styleUrls: ['./edit-specialist-info.component.scss']
 })
 export class EditSpecialistInfoComponent implements OnInit, OnChanges {
   @Input() isVisible = false;
-  @Input() user: UserDTO | null = null;
+  @Input() user: UserProfileDTO | undefined | null = null;
+  @Input() userRole: string | undefined | null = null;
   @Output() close = new EventEmitter<void>();
-  @Output() specialistUpdated = new EventEmitter<UserDTO>();
+  @Output() specialistUpdated = new EventEmitter<UserProfileDTO>();
 
   specialistInfo: SpecialistEditInfo = {
     phoneNumber: '',
@@ -49,32 +53,32 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
   constructor(private readonly specialistService: SpecialistProfileService) {}
 
   ngOnInit() {
-    if (this.user?.specialist) {
+    if (this.user) {
       this.loadSpecialistData();
     }
   }
 
   ngOnChanges() {
-    if (this.user?.specialist && this.isVisible) {
+    if (this.user && this.isVisible) {
       this.loadSpecialistData();
     }
   }
 
   private loadSpecialistData() {
-    // if (this.user?.specialist) {
-    //   this.specialistInfo = {
-    //     phoneNumber: this.user.contactInfo?.phoneNumber || '',
-    //     address: this.user.contactInfo?.address || '',
-    //     categories: this.user.specialist.categories?.map(cat => cat.id) || [],
-    //     yearsExperience: this.user.specialist.yearsExperience || 0,
-    //     description: this.user.specialist.description || ''
-    //   };
-    //
-    //   // Load existing portfolio images if available
-    //   // Note: You may need to adjust this based on your actual API structure
-    //   this.portfolioImages = [];
-    //   this.newPortfolioFiles = [];
-    // }
+    if (this.user) {
+      this.specialistInfo = {
+        phoneNumber: this.user.phoneNumber || '',
+        address: this.user.address || '',
+        categories: this.user.categories || [],
+        yearsExperience: this.user.yearsExperience || 0,
+        description: this.user.description || ''
+      };
+
+      // Load existing portfolio images if available
+      // Note: You may need to adjust this based on your actual API structure
+      this.portfolioImages = [];
+      this.newPortfolioFiles = [];
+    }
   }
 
   updateCategories(categories: string[]) {
@@ -177,7 +181,7 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
     }
   }
 
-  private handleSuccess(updatedUser?: UserDTO) {
+  private handleSuccess(updatedUser?: UserProfileDTO) {
     this.isLoading = false;
     if (updatedUser) {
       this.specialistUpdated.emit(updatedUser);

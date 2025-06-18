@@ -63,7 +63,7 @@ export class LoginComponent {
   initializeGoogleSignIn() {
     if (typeof window !== 'undefined' && window.google) {
       window.google.accounts.id.initialize({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your actual Google Client ID
+        client_id: '760852864614-0l1qdais39snht0oo3511r0tpbjdj09f.apps.googleusercontent.com', // Replace with your actual Google Client ID
         callback: (response: any) => this.handleGoogleResponse(response)
       });
     }
@@ -73,7 +73,7 @@ export class LoginComponent {
     if (typeof window !== 'undefined') {
       (window as any).fbAsyncInit = () => {
         window.FB.init({
-          appId: 'YOUR_FACEBOOK_APP_ID', // Replace with your actual Facebook App ID
+          appId: '734399149543740', // Replace with your actual Facebook App ID
           cookie: true,
           xfbml: true,
           version: 'v18.0'

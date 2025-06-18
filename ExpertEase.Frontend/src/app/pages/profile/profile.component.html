@@ -8,9 +8,10 @@
 
 <!-- Edit Specialist Info Modal (only show if user is specialist) -->
 <app-edit-specialist-info
-  *ngIf="user?.specialist"
+  *ngIf="userRole === 'Specialist'"
   [isVisible]="showEditSpecialistModal"
   [user]="user"
+  [userRole]="userRole"
   (close)="onCloseEditSpecialistModal()"
   (specialistUpdated)="onSpecialistUpdated($event)">
 </app-edit-specialist-info>
@@ -43,7 +44,7 @@
   </div>
 
   <!-- Specialist Info Card (only show if user is specialist) -->
-  <div class="card" *ngIf="user?.specialist">
+  <div class="card" *ngIf="userRole === 'Specialist'">
 <!--  <div class="card">-->
   <div class="info">
       <h2 class="full-name">Anunțul tău</h2>
@@ -51,18 +52,18 @@
         <div class="row">
           <div class="categories">
             <span class="label">Categorii:</span>
-            <span class="tag" *ngFor="let cat of user?.specialist?.categories">{{ cat.name }}</span>
+            <span class="tag" *ngFor="let cat of user?.categories">{{ cat }}</span>
           </div>
 
           <div class="experience">
             <span class="label">Ani experiență:</span>
-            {{ user?.specialist?.yearsExperience }}
+            {{ user?.yearsExperience }}
           </div>
         </div>
 
         <div class="description">
           <span class="label">Descriere:</span>
-          {{ user?.specialist?.description }}
+          {{ user?.description }}
         </div>
       </div>
     </div>

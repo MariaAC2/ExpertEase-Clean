@@ -2,7 +2,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {UserDTO, UserUpdateDTO, UserUpdateResponseDTO} from '../../../models/api.models';
+import {UserDTO, UserProfileDTO, UserUpdateDTO, UserUpdateResponseDTO} from '../../../models/api.models';
 import { UserService } from '../../../services/user.service';
 import {AuthService} from '../../../services/auth.service';
 
@@ -29,9 +29,9 @@ interface PasswordChangeData {
 })
 export class EditUserInfoComponent implements OnInit, OnChanges {
   @Input() isVisible = false;
-  @Input() user: UserDTO | undefined | null = null;
+  @Input() user: UserProfileDTO | undefined | null = null;
   @Output() close = new EventEmitter<void>();
-  @Output() userUpdated = new EventEmitter<UserDTO>();
+  @Output() userUpdated = new EventEmitter<UserProfileDTO>();
 
   userInfo: UserEditInfo = {
     firstName: '',
@@ -72,8 +72,8 @@ export class EditUserInfoComponent implements OnInit, OnChanges {
         firstName,
         lastName,
         email: this.user.email || '',
-        phoneNumber: this.user.contactInfo?.phoneNumber || '',
-        address: this.user.contactInfo?.address || ''
+        phoneNumber: this.user.phoneNumber || '',
+        address: this.user.address || ''
       };
     }
   }
@@ -145,13 +145,11 @@ export class EditUserInfoComponent implements OnInit, OnChanges {
       }
 
       // ✅ UPDATE: Create updated UserDTO from the response
-      const updatedUser: UserDTO = {
+      const updatedUser: UserProfileDTO = {
         ...this.user!,
         fullName: `${this.userInfo.firstName} ${this.userInfo.lastName}`.trim(),
-        contactInfo: {
-          phoneNumber: this.userInfo.phoneNumber,
-          address: this.userInfo.address
-        }
+        phoneNumber: this.userInfo.phoneNumber,
+        address: this.userInfo.address
       };
 
       this.userUpdated.emit(updatedUser);
