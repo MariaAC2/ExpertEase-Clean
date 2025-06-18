@@ -17,3 +17,28 @@ public class UserAddDTO
     [Required]
     public UserRoleEnum Role { get; set; }
 }
+
+public class SocialUserInfo
+{
+    public string Email { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string? Picture { get; set; }
+}
+
+public class FacebookUserResponse
+{
+    public string Id { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public FacebookPicture? Picture { get; set; }
+}
+
+public class FacebookPicture
+{
+    public FacebookPictureData? Data { get; set; }
+}
+
+public class FacebookPictureData
+{
+    public string? Url { get; set; }
+}

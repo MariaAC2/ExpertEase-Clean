@@ -43,7 +43,11 @@ builder.Services.AddSingleton(provider =>
     return FirestoreDb.Create("expertease-1b005", client);
 });
 
-
+builder.Services.AddHttpClient<UserService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "ExpertEase/1.0");
+});
 builder.Services.AddDbContext<WebAppDatabaseContext>(o => 
     o.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));
 

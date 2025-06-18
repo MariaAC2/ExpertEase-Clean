@@ -1,7 +1,7 @@
 ﻿import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {tap} from 'rxjs';
-import {LoginDTO, LoginResponseDTO, RequestResponse, UserRegisterDTO} from '../models/api.models';
+import {LoginDTO, LoginResponseDTO, RequestResponse, SocialLoginDTO, UserRegisterDTO} from '../models/api.models';
 import {jwtDecode} from 'jwt-decode';
 
 export interface DecodedToken {
@@ -27,6 +27,19 @@ export class AuthService {
         const token = result.response?.token;
 
         console.log("Token:", token);
+        if (token) {
+          localStorage.setItem('access_token', token);
+        }
+      })
+    );
+  }
+
+  socialLogin(data: SocialLoginDTO) {
+    return this.http.post<RequestResponse<LoginResponseDTO>>(`${this.baseUrl}/SocialLogin`, data).pipe(
+      tap((result) => {
+        const token = result.response?.token;
+
+        console.log("Social Login Token:", token);
         if (token) {
           localStorage.setItem('access_token', token);
         }

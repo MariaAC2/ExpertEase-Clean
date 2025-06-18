@@ -188,6 +188,11 @@ export interface UserUpdateResponseDTO {
   user: UserUpdateDTO;
 }
 
+export interface SocialLoginDTO {
+  token: string;
+  provider: string; // 'google' or 'facebook'
+}
+
 export enum RejectionReason {
     InvalidSender = "InvalidSender",
     InvalidReceiver = "InvalidReceiver",

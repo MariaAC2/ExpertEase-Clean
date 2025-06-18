@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
@@ -20,7 +21,8 @@ namespace ExpertEase.Infrastructure.Services;
 public class UserService(
     IRepository<WebAppDatabaseContext> repository,
     ILoginService loginService,
-    IMailService mailService) : IUserService
+    IMailService mailService,
+    HttpClient httpClient) : IUserService
 {
     public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
@@ -114,34 +116,48 @@ public class UserService(
             return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
                 new ErrorMessage(HttpStatusCode.BadRequest, "Missing token", ErrorCodes.Invalid));
 
-        if (loginDto.Provider.ToLower() != "google")
-            return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
-                new ErrorMessage(HttpStatusCode.BadRequest, "Unsupported provider", ErrorCodes.Invalid));
-
-        GoogleJsonWebSignature.Payload payload;
+        var provider = loginDto.Provider.ToLower();
+        SocialUserInfo? userInfo = null;
 
         try
         {
-            payload = await GoogleJsonWebSignature.ValidateAsync(loginDto.Token);
+            userInfo = provider switch
+            {
+                "google" => await ValidateGoogleToken(loginDto.Token),
+                "facebook" => await ValidateFacebookToken(loginDto.Token),
+                _ => null
+            };
         }
-        catch
+        catch (Exception ex)
         {
             return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
-                new ErrorMessage(HttpStatusCode.BadRequest, "Invalid Google token", ErrorCodes.Invalid));
+                new ErrorMessage(HttpStatusCode.BadRequest, $"Invalid {provider} token: {ex.Message}", ErrorCodes.Invalid));
         }
 
-        var result = await repository.GetAsync(new UserSpec(payload.Email), cancellationToken);
+        if (userInfo == null)
+            return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                new ErrorMessage(HttpStatusCode.BadRequest, "Unsupported provider or invalid token", ErrorCodes.Invalid));
+
+        var result = await repository.GetAsync(new UserSpec(userInfo.Email), cancellationToken);
 
         if (result == null)
         {
+            var authProvider = provider switch
+            {
+                "google" => AuthProvider.Google,
+                "facebook" => AuthProvider.Facebook,
+                _ => AuthProvider.Local
+            };
+
             var newUser = new User
             {
-                Email = payload.Email,
-                FullName = payload.Name,
-                Role = payload.Email.EndsWith("@admin.com", StringComparison.OrdinalIgnoreCase)
+                Email = userInfo.Email,
+                FullName = userInfo.Name,
+                Role = userInfo.Email.EndsWith("@admin.com", StringComparison.OrdinalIgnoreCase)
                     ? UserRoleEnum.Admin
                     : UserRoleEnum.Client,
-                AuthProvider = AuthProvider.Google,
+                AuthProvider = authProvider,
+                ProfilePictureUrl = userInfo.Picture
             };
 
             await repository.AddAsync(newUser, cancellationToken);
@@ -160,9 +176,44 @@ public class UserService(
         return ServiceResponse.CreateSuccessResponse(new LoginResponseDTO
         {
             User = user,
-            Token = loginService.GetToken(user, DateTime.UtcNow,
-                new TimeSpan(7, 0, 0, 0)) // Get a JWT for the user issued now and that expires in 7 days.
+            Token = loginService.GetToken(user, DateTime.UtcNow, new TimeSpan(7, 0, 0, 0))
         });
+    }
+
+    private async Task<SocialUserInfo?> ValidateGoogleToken(string token)
+    {
+        var payload = await GoogleJsonWebSignature.ValidateAsync(token);
+        return new SocialUserInfo
+        {
+            Email = payload.Email,
+            Name = payload.Name,
+            Picture = payload.Picture
+        };
+    }
+
+    private async Task<SocialUserInfo?> ValidateFacebookToken(string token)
+    {
+        // First, verify the token and get user info from Facebook Graph API
+        var response = await httpClient.GetAsync($"https://graph.facebook.com/me?fields=id,name,email,picture&access_token={token}");
+        
+        if (!response.IsSuccessStatusCode)
+            throw new Exception("Failed to validate Facebook token");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var facebookUser = JsonSerializer.Deserialize<FacebookUserResponse>(content, new JsonSerializerOptions 
+        { 
+            PropertyNameCaseInsensitive = true 
+        });
+
+        if (facebookUser == null || string.IsNullOrEmpty(facebookUser.Email))
+            throw new Exception("Invalid Facebook user data");
+
+        return new SocialUserInfo
+        {
+            Email = facebookUser.Email,
+            Name = facebookUser.Name,
+            Picture = facebookUser.Picture?.Data?.Url
+        };
     }
 
     public async Task<ServiceResponse> AddUser(UserAddDTO user, UserDTO? requestingUser,
