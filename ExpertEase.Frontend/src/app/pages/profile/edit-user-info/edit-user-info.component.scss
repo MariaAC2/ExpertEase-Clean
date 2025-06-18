@@ -13,9 +13,8 @@
 
 .edit-modal {
   background: white;
-  border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  max-width: 600px;
+  max-width: 700px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
@@ -58,6 +57,30 @@
   padding: 24px 32px 32px;
 }
 
+.form-section {
+  margin-bottom: 32px;
+
+  &:not(:last-child) {
+    padding-bottom: 24px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+}
+
+.form-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+}
+
+.section-info {
+  color: #666;
+  font-size: 12px;
+  margin-top: -8px;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
 .form-group-row {
   display: flex;
   gap: 16px;
@@ -66,6 +89,8 @@
 
 .form-group {
   margin-bottom: 20px;
+  flex: 1;
+  min-width: 200px;
 }
 
 .form-group label {
@@ -76,7 +101,8 @@
   font-size: 14px;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
   width: 100%;
   padding: 12px 16px;
   border: 2px solid #c9b7ff;
@@ -85,15 +111,29 @@
   font-size: 14px;
   transition: border-color 0.3s ease;
   box-sizing: border-box;
+  resize: vertical;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group textarea:focus {
   outline: none;
   border-color: #a087ff;
 }
 
-.form-group input.ng-invalid.ng-touched {
+.form-group input.ng-invalid.ng-touched,
+.form-group textarea.ng-invalid.ng-touched {
   border-color: #dc3545;
+}
+
+.form-group input[readonly] {
+  background-color: #f8f8f8;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.form-group textarea {
+  min-height: 80px;
+  line-height: 1.5;
 }
 
 .error-message {
@@ -102,16 +142,17 @@
   margin-top: 4px;
 }
 
+.info-text {
+  color: #666;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 .password-section {
   margin-top: 32px;
   padding-top: 24px;
   border-top: 2px solid #e0caff;
-}
-
-.password-section h3 {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  color: #333;
 }
 
 .form-actions {
@@ -157,15 +198,37 @@
   background-color: #cbb6ff;
 }
 
-.info-text {
-  color: #666;
-  font-size: 12px;
-  margin-top: 4px;
-  font-style: italic;
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.form-group input[readonly] {
-  background-color: #f8f8f8;
-  color: #666;
-  cursor: not-allowed;
+// Responsive design
+@media (max-width: 768px) {
+  .edit-modal {
+    width: 95%;
+    margin: 10px;
+  }
+
+  .edit-header,
+  .edit-form {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .form-group-row {
+    flex-direction: column;
+  }
+
+  .form-group {
+    min-width: auto;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
 }

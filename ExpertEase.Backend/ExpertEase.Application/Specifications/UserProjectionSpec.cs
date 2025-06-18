@@ -30,30 +30,6 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             Email = e.Email,
             FullName = e.FullName,
             Role = e.Role,
-            CreatedAt = e.CreatedAt,
-            UpdatedAt = e.UpdatedAt,
-            Rating = e.Rating,
-            ProfilePictureUrl = e.ProfilePictureUrl,
-            ContactInfo = e.ContactInfo != null
-                ? new ContactInfoDTO
-                {
-                    PhoneNumber = e.ContactInfo.PhoneNumber,
-                    Address = e.ContactInfo.Address
-                }
-                : null,
-            Specialist = e.SpecialistProfile != null
-                ? new SpecialistProfileDTO
-                {
-                    YearsExperience = e.SpecialistProfile.YearsExperience,
-                    Description = e.SpecialistProfile.Description,
-                    Categories = e.SpecialistProfile.Categories.Select(c => new CategoryDTO
-                        {
-                            Id = c.Id,
-                            Name = c.Name,
-                            Description = c.Description,
-                        }).ToList()
-                }
-                : null
         });
 
         if (orderByCreatedAt)
@@ -65,6 +41,23 @@ public class UserProjectionSpec : Specification<User, UserDTO>
     public UserProjectionSpec(Guid id) : this()
     {
         Query.Where(e => e.Id == id);
+    }
+}
+
+public class UserPaymentDetailsProjectionSpec : Specification<User, UserPaymentDetailsDTO>
+{
+    public UserPaymentDetailsProjectionSpec(Guid userId)
+    {
+        Query
+            .Where(u => u.Id == userId)
+            .Include(u => u.ContactInfo);
+        Query.Select(u => new UserPaymentDetailsDTO 
+        {
+            UserId = u.Id,
+            UserFullName = u.FullName,
+            Email = u.Email,
+            PhoneNumber = u.ContactInfo!.PhoneNumber,
+        });
     }
 }
 
@@ -82,29 +75,6 @@ public class AdminUserProjectionSpec: Specification<User, UserDTO>
             Email = e.Email,
             FullName = e.FullName,
             Role = e.Role,
-            CreatedAt = e.CreatedAt,
-            UpdatedAt = e.UpdatedAt,
-            Rating = e.Rating,
-            ContactInfo = e.ContactInfo != null
-                ? new ContactInfoDTO
-                {
-                    PhoneNumber = e.ContactInfo.PhoneNumber,
-                    Address = e.ContactInfo.Address
-                }
-                : null,
-            Specialist = e.SpecialistProfile != null
-                ? new SpecialistProfileDTO
-                {
-                    YearsExperience = e.SpecialistProfile.YearsExperience,
-                    Description = e.SpecialistProfile.Description,
-                    Categories = e.SpecialistProfile.Categories.Select(c => new CategoryDTO
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Description = c.Description,
-                    }).ToList()
-                }
-                : null
         });
 
         if (orderByCreatedAt)

@@ -23,6 +23,22 @@ public class UserDTO
     [Required]
     public UserRoleEnum Role { get; set; }
     [Required]
+    public string ProfilePictureUrl { get; set; } = null!;
+    [Required]
+    public AuthProvider AuthProvider { get; set; } = AuthProvider.Local;
+}
+
+public class UserAdminDetailsDTO
+{
+    [Required]
+    public Guid Id { get; set; }
+    [Required]
+    public string FullName { get; set; } = null!;
+    [Required]
+    public string Email { get; set; } = null!;
+    [Required]
+    public UserRoleEnum Role { get; set; }
+    [Required]
     public AuthProvider AuthProvider { get; set; } = AuthProvider.Local;
     [Required]
     public DateTime CreatedAt { get; set; }
@@ -64,4 +80,16 @@ public class UserDetailsDTO
     public string? Description { get; set; }
     public List<string>? Portfolio { get; set; }
     public List<string>? Categories { get; set; }
+}
+
+public class UserPaymentDetailsDTO
+{
+    [Required]
+    public Guid UserId { get; set; }
+    [Required]
+    public string UserFullName { get; set; } = null!;
+    [Required]
+    public string Email { get; set; } = null!;
+    [Required]
+    public string PhoneNumber { get; set; }
 }

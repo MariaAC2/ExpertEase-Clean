@@ -14,8 +14,14 @@ public record UserUpdateDTO
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public string? Password { get; init; }
-    
-    public SpecialistProfileUpdateDTO? Specialist { get; init; } = null;
+    public string? Address { get; init; }
+    public string? PhoneNumber { get; init; }
+}
+
+public class UserUpdateResponseDTO
+{
+    public string Token { get; init; }
+    public UserUpdateDTO User { get; init; }
 }
 
 public record AdminUserUpdateDTO

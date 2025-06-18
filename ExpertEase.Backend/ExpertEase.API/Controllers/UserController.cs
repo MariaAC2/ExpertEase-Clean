@@ -43,6 +43,17 @@ public class UserController(IUserService userService) : AuthorizedController(use
         return CreateRequestResponseFromServiceResponse(await UserService.GetUserDetails(id));
     }
     
+    [Authorize]
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RequestResponse<UserPaymentDetailsDTO>>> GetPaymentDetails([FromRoute] Guid id)
+    {
+        var currentUser = await GetCurrentUser();
+        
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await UserService.GetUserPaymentDetails(id)) :
+            CreateErrorMessageResult<UserPaymentDetailsDTO>(currentUser.Error);
+    }
+    
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<UserDTO>>>> GetPage([FromQuery] PaginationSearchQueryParams pagination)
@@ -90,7 +101,7 @@ public class UserController(IUserService userService) : AuthorizedController(use
     
     [Authorize]
     [HttpPatch]
-    public async Task<ActionResult<RequestResponse>> Update([FromBody] UserUpdateDTO user)
+    public async Task<ActionResult<RequestResponse<UserUpdateResponseDTO>>> Update([FromBody] UserUpdateDTO user)
     {
         var currentUser = await GetCurrentUser();
 
@@ -99,6 +110,6 @@ public class UserController(IUserService userService) : AuthorizedController(use
             {
                 Password = !string.IsNullOrWhiteSpace(user.Password) ? PasswordUtils.HashPassword(user.Password) : null
             }, currentUser.Result)) :
-            CreateErrorMessageResult(currentUser.Error);
+            CreateErrorMessageResult<UserUpdateResponseDTO>(currentUser.Error);
     }
 }

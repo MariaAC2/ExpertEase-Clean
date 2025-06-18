@@ -33,6 +33,8 @@ import {ServicePaymentComponent} from '../../shared/service-payment/service-paym
 import {NotificationService} from '../../services/notification.service';
 import {NotificationDisplayComponent} from '../../shared/notification-display/notification-display.component';
 import {TaskService} from '../../services/task.service';
+import {RequestService} from '../../services/request.service';
+import {ReplyService} from '../../services/reply.service';
 
 @Component({
   selector: 'app-messages',
@@ -106,9 +108,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
   constructor(
     private readonly exchangeService: ExchangeService,
     private readonly authService: AuthService,
+    private readonly userService: UserService,
     private readonly cdr: ChangeDetectorRef,
     private readonly mockExchangeService: MockExchangeService,
-    private readonly userService: UserService,
     private readonly paymentFlowService: PaymentFlowService,
     protected readonly signalRService: SignalRService,
     private readonly signalRHandler: SignalRHandlerService,
@@ -116,6 +118,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private readonly conversationActions: ConversationActionsService,
     private readonly notificationService: NotificationService,
     private readonly taskService: TaskService,
+    private readonly requestService: RequestService,
+    private readonly replyService: ReplyService
   ) {}
 
   async ngOnInit() {
@@ -182,58 +186,60 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   // 🆕 ADD: Trigger payment flow for accepted reply
-  private triggerPaymentFlowForReply(replyId: string): void {
-    const replyItem = this.getReplyItemById(replyId);
+  private async triggerPaymentFlowForReply(replyId: string): Promise<void> {
+    try {
+      const replyRes = await firstValueFrom(this.replyService.getReply(replyId));
+      if (!replyRes || !replyRes.response) {
+        console.error('Reply not found');
+        this.triggerTestPaymentFlow(replyId);
+        return;
+      }
 
-    if (!replyItem) {
-      console.error('Reply item not found for payment flow');
-      // Fallback: trigger with basic data
+      const reply = replyRes.response;
+
+      const serviceDetails = {
+        replyId: reply.replyId,
+        startDate: reply.startDate,
+        endDate: reply.endDate,
+        description: reply.description,
+        address: reply.address,
+        price: reply.price
+      };
+
+      const clientDetails = await firstValueFrom(this.userService.getUserPaymentDetails(reply.clientId));
+      if (!clientDetails || !clientDetails.response) {
+        console.error('Client details not found');
+        this.triggerTestPaymentFlow(replyId);
+        return;
+      }
+
+      const client = clientDetails.response;
+
+      const specialistDetails = await firstValueFrom(this.userService.getUserPaymentDetails(reply.specialistId));
+      if (!specialistDetails || !specialistDetails.response) {
+        console.error('Specialist details not found');
+        this.triggerTestPaymentFlow(replyId);
+        return;
+      }
+      const specialist = specialistDetails.response;
+      this.paymentFlowService.initiatePaymentFlow(
+        replyId,
+        serviceDetails,
+        clientDetails.response,
+        specialistDetails.response,
+        this.messagesState.selectedUser || ''
+      );
+
+      console.log('✅ Payment flow successfully triggered');
+    } catch (err) {
+      console.error('❌ Error during payment flow setup:', err);
       this.triggerTestPaymentFlow(replyId);
-      return;
     }
+  }
 
-    const reply = this.asTypedReply(replyItem);
-    const selectedUserInfo = this.messagesState.selectedUserInfo;
-
-    if (!reply || !selectedUserInfo || !this.currentUserDetails) {
-      console.error('Missing data for payment flow, using test data');
-      this.triggerTestPaymentFlow(replyId);
-      return;
-    }
-
-    // Create payment flow data from real reply
-    const serviceDetails = {
-      replyId: replyId,
-      startDate: reply.startDate,
-      endDate: reply.endDate,
-      description: 'Service booking',
-      address: 'Service address', // You might need to get this from the request
-      price: reply.price
-    };
-
-    const userDetails = {
-      userId: this.currentUserDetails.id,
-      userFullName: this.currentUserDetails.fullName,
-      email: this.currentUserDetails.email || 'user@example.com',
-      phoneNumber: this.currentUserDetails.contactInfo?.phoneNumber || '1234567890'
-    };
-
-    const specialistDetails = {
-      userId: selectedUserInfo.userId,
-      userFullName: selectedUserInfo.fullName,
-      email: 'specialist@example.com',
-      phoneNumber: '0987654321'
-    };
-
-    this.paymentFlowService.initiatePaymentFlow(
-      replyId,
-      serviceDetails,
-      userDetails,
-      specialistDetails,
-      this.messagesState.selectedUser || ''
-    );
-
-    console.log('🚀 Payment flow triggered with real data for reply:', replyId);
+  private getRequestItemById(requestId: string): any {
+    const items = this.messagesState.getTypedConversationItems();
+    return items.find(item => item.item.id === requestId && item.type === 'request');
   }
 
 // 🆕 ADD: Helper method to find reply by ID

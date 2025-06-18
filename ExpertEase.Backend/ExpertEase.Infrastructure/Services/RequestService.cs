@@ -7,6 +7,7 @@ using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
@@ -97,6 +98,14 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository,
         };
 
         await repository.AddAsync(requestEntity, cancellationToken);
+        
+        sender.ContactInfo ??= new ContactInfo
+        {
+            PhoneNumber = request.PhoneNumber,
+            Address = request.Address
+        };
+        
+        await repository.UpdateAsync(sender, cancellationToken);
 
         var firestoreRequest = new FirestoreConversationItemDTO
         {
@@ -122,9 +131,9 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository,
     }
 
 
-    public async Task<ServiceResponse<RequestDTO>> GetRequest(Specification<Request, RequestDTO> spec, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<RequestDTO>> GetRequest(Guid requestId, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(spec, cancellationToken);
+        var result = await repository.GetAsync(new RequestProjectionSpec(requestId), cancellationToken);
         
         return result == null ? ServiceResponse.CreateErrorResponse<RequestDTO>(new (HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound)) : ServiceResponse.CreateSuccessResponse(result);
     }

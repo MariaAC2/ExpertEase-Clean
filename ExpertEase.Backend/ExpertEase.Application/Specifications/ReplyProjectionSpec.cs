@@ -1,6 +1,8 @@
 ﻿using Ardalis.Specification;
+using ExpertEase.Application.DataTransferObjects.PaymentDTOs;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
+using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +13,7 @@ public class ReplyProjectionSpec : Specification<Reply, ReplyDTO>
     public ReplyProjectionSpec(Guid requestId, bool orderByCreatedAt = false)
     {
         Query.Include(e => e.Request);
-        Query.Where(x => x.RequestId == requestId);
+        Query.Where(x => x.Id == requestId);
         Query.Select(x => new ReplyDTO
         {
             Id = x.Id,
@@ -44,6 +46,26 @@ public class ReplyProjectionSpec : Specification<Reply, ReplyDTO>
             EF.Functions.ILike(r.StartDate.ToString(), searchExpr) ||
             EF.Functions.ILike(r.EndDate.ToString(), searchExpr)
         );
+    }
+}
+
+public class ReplyPaymentProjectionSpec : Specification<Reply, ReplyPaymentDetailsDTO>
+{
+    public ReplyPaymentProjectionSpec(Guid id)
+    {
+        Query.Include(e => e.Request);
+        Query.Where(x => x.Id == id);
+        Query.Select(x => new ReplyPaymentDetailsDTO
+        {
+            ReplyId = x.Id.ToString(),
+            StartDate = x.StartDate,
+            EndDate = x.EndDate,
+            Description = x.Request.Description,
+            Address = x.Request.Address,
+            Price = x.Price,
+            ClientId = x.Request.SenderUserId,
+            SpecialistId = x.Request.ReceiverUserId
+        });
     }
 }
 

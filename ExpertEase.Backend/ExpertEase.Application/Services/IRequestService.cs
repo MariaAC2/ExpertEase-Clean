@@ -9,8 +9,8 @@ using ExpertEase.Domain.Entities;
 namespace ExpertEase.Application.Services;
 
 public interface IRequestService
-{ 
-    Task<ServiceResponse<RequestDTO>> GetRequest(Specification<Request, RequestDTO> spec, CancellationToken cancellationToken = default);
+{
+    Task<ServiceResponse<RequestDTO>> GetRequest(Guid requestId, CancellationToken cancellationToken = default);
     Task<ServiceResponse<PagedResponse<RequestDTO>>> GetRequests(Specification<Request, RequestDTO> spec, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     public Task<ServiceResponse<int>> GetRequestCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddRequest(RequestAddDTO request, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

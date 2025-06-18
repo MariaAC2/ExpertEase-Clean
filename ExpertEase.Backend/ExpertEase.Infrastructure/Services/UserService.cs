@@ -42,6 +42,15 @@ public class UserService(
 
         return ServiceResponse.CreateSuccessResponse(result);
     }
+    
+    public async Task<ServiceResponse<UserPaymentDetailsDTO>> GetUserPaymentDetails(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.GetAsync(new UserPaymentDetailsProjectionSpec(id), cancellationToken);
+        
+        return result == null ? 
+            ServiceResponse.CreateErrorResponse<UserPaymentDetailsDTO>(CommonErrors.UserNotFound) : 
+            ServiceResponse.CreateSuccessResponse(result);
+    }
 
     public async Task<ServiceResponse<UserDTO>> GetUserAdmin(Guid id, Guid adminId,
         CancellationToken cancellationToken = default)
@@ -185,22 +194,22 @@ public class UserService(
 
         // var fullName = $"{user.LastName} {user.FirstName}";
         // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase Team", cancellationToken);
-
+        
         return ServiceResponse.CreateSuccessResponse();
     }
 
-    public async Task<ServiceResponse> UpdateUser(UserUpdateDTO user, UserDTO? requestingUser,
+    public async Task<ServiceResponse<UserUpdateResponseDTO>> UpdateUser(UserUpdateDTO user, UserDTO? requestingUser,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin &&
             requestingUser.Id != user.Id) // Verify who can add the user, you can change this however you se fit.
-            return ServiceResponse.CreateErrorResponse(new ErrorMessage(HttpStatusCode.Forbidden,
+            return ServiceResponse.CreateErrorResponse<UserUpdateResponseDTO>(new ErrorMessage(HttpStatusCode.Forbidden,
                 "Only the admin or the own user can update the user!", ErrorCodes.CannotUpdate));
 
         var entity = await repository.GetAsync(new UserSpec(user.Id), cancellationToken);
 
         if (entity == null)
-            return ServiceResponse.CreateErrorResponse(
+            return ServiceResponse.CreateErrorResponse<UserUpdateResponseDTO>(
                 new ErrorMessage(HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
 
         if (!string.IsNullOrWhiteSpace(entity.FullName))
@@ -212,10 +221,29 @@ public class UserService(
         }
 
         entity.Password = user.Password ?? entity.Password;
+        entity.ContactInfo ??= new ContactInfo
+        {
+            PhoneNumber = user.PhoneNumber ?? string.Empty,
+            Address = user.Address ?? string.Empty
+        };
 
         await repository.UpdateAsync(entity, cancellationToken); // Update the entity and persist the changes.
+        
+        var userDto = new UserDTO
+        {
+            Id = entity.Id,
+            Email = entity.Email,
+            FullName = entity.FullName,
+            Role = entity.Role,
+            AuthProvider = entity.AuthProvider,
+        };
 
-        return ServiceResponse.CreateSuccessResponse();
+        return ServiceResponse.CreateSuccessResponse(new UserUpdateResponseDTO
+        {
+            User = user,
+            Token = loginService.GetToken(userDto, DateTime.UtcNow,
+                new TimeSpan(7, 0, 0, 0)) // Get a JWT for the user issued now and that expires in 7 days.
+        });
     }
 
     public async Task<ServiceResponse> AdminUpdateUser(AdminUserUpdateDTO user, UserDTO? requestingUser,

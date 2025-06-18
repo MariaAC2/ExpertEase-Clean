@@ -1,4 +1,5 @@
 ﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.PaymentDTOs;
 using ExpertEase.Application.DataTransferObjects.ReplyDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
@@ -21,6 +22,17 @@ public class ReplyController(IUserService userService, IReplyService replyServic
         return currentUser.Result != null
             ? CreateRequestResponseFromServiceResponse(await replyService.AddReply(requestId, reply, currentUser.Result))
             : CreateErrorMessageResult(currentUser.Error);
+    }
+    
+    [Authorize]
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RequestResponse<ReplyPaymentDetailsDTO>>> GetById([FromRoute] Guid id)
+    {
+        var currentUser = await GetCurrentUser();
+        
+        return currentUser.Result != null
+            ? CreateRequestResponseFromServiceResponse(await replyService.GetReply(id))
+            : CreateErrorMessageResult<ReplyPaymentDetailsDTO>(currentUser.Error);
     }
     
     [Authorize(Roles = "Client")]

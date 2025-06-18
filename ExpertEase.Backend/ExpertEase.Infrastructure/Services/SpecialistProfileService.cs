@@ -97,26 +97,6 @@ public class SpecialistProfileService(
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
-            ContactInfo = user.ContactInfo != null
-                ? new ContactInfoDTO
-                {
-                    PhoneNumber = user.ContactInfo.PhoneNumber,
-                    Address = user.ContactInfo.Address,
-                }
-                : null,
-            Specialist = user.SpecialistProfile != null
-                ? new SpecialistProfileDTO
-                {
-                    YearsExperience = user.SpecialistProfile.YearsExperience,
-                    Description = user.SpecialistProfile.Description,
-                    Categories = user.SpecialistProfile.Categories.Select(c => new CategoryDTO
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Description = c.Description,
-                    }).ToList()
-                }
-                : null,
         };
         
         await repository.AddAsync(user.SpecialistProfile, cancellationToken);

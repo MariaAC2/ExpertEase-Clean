@@ -22,6 +22,17 @@ public class RequestController(IUserService userService, IRequestService request
             CreateRequestResponseFromServiceResponse(await requestService.AddRequest(request, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
     }
+    
+    [Authorize]
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RequestResponse<RequestDTO>>> GetById([FromRoute] Guid id)
+    {
+        var currentUser = await GetCurrentUser();
+        
+        return currentUser.Result != null ?
+            CreateRequestResponseFromServiceResponse(await requestService.GetRequest(id)) :
+            CreateErrorMessageResult<RequestDTO>(currentUser.Error);
+    }
 
     [Authorize(Roles = "Client")]
     [HttpPatch("{id:guid}")]

@@ -5,11 +5,12 @@ import {
   PagedResponse,
   RequestResponse, SpecialistDTO,
   UserAddDTO, UserDetailsDTO,
-  UserDTO,
-  UserUpdateDTO
+  UserDTO, UserPaymentDetailsDTO,
+  UserUpdateDTO, UserUpdateResponseDTO
 } from '../models/api.models';
 import { jwtDecode } from 'jwt-decode';
 import {AuthService, DecodedToken} from './auth.service';
+import {Observable} from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -40,6 +41,15 @@ export class UserService {
     });
 
     return this.http.get<RequestResponse<UserDetailsDTO>>(`${this.baseUrl}/GetDetails/${userId}`, {headers});
+  }
+
+  getUserPaymentDetails(userId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.get<RequestResponse<UserPaymentDetailsDTO>>(`${this.baseUrl}/GetPaymentDetails/${userId}`, {headers});
   }
 
   getUsers(search: string | undefined, page: number, pageSize: number) {
@@ -79,14 +89,14 @@ export class UserService {
     return this.http.patch(`${this.baseUrl}/Update/${userId}`, user, { headers });
   }
 
-  updateUserProfile(user: UserUpdateDTO) {
+  updateUserProfile(user: UserUpdateDTO): Observable<RequestResponse<UserUpdateResponseDTO>> {
     const token = this.authService.getToken();
 
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
-    return this.http.patch(`${this.baseUrl}`, user, {headers});
+    return this.http.patch(`${this.baseUrl}/Update`, user, {headers});
   }
 
   deleteUser(userId: string) {

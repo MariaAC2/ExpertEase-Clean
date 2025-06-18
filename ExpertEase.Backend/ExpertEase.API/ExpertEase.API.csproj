@@ -109,6 +109,24 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-UEVNZK2Q.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-XIL6MKPX.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-XUWXJGYH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-A3PU6BC5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-C34RQ6TF.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-HHKFO775.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-NFC6HPVP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-NHGRVXD4.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-SVGGZQBM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-2JOSC6B5.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-67H6QKOR.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-AZZ57N4L.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-C2RA2IXX.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-HZP4F7WP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-IK5EGXWV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-K6ZPMPCA.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-MC7DSPCP.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-N44S3T5B.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-SNFK5YPB.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-TTL4NZ5G.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-ZUA5GHHH.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

@@ -6,59 +6,99 @@
     </div>
 
     <form class="edit-form" (ngSubmit)="onSubmit()" #editForm="ngForm">
-      <div class="form-group-row">
-        <div class="form-group">
-          <label for="firstName">Prenume</label>
-          <input
-            id="firstName"
-            type="text"
-            [(ngModel)]="userInfo.firstName"
-            name="firstName"
-            required
-            #firstNameControl="ngModel">
-          <div class="error-message" *ngIf="firstNameControl.invalid && firstNameControl.touched">
-            Prenumele este obligatoriu
+      <!-- Personal Information Section -->
+      <div class="form-section">
+        <h3>Informații personale</h3>
+
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="firstName">Prenume</label>
+            <input
+              id="firstName"
+              type="text"
+              [(ngModel)]="userInfo.firstName"
+              name="firstName"
+              required
+              #firstNameControl="ngModel">
+            <div class="error-message" *ngIf="firstNameControl.invalid && firstNameControl.touched">
+              Prenumele este obligatoriu
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Nume</label>
+            <input
+              id="lastName"
+              type="text"
+              [(ngModel)]="userInfo.lastName"
+              name="lastName"
+              required
+              #lastNameControl="ngModel">
+            <div class="error-message" *ngIf="lastNameControl.invalid && lastNameControl.touched">
+              Numele este obligatoriu
+            </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="lastName">Nume</label>
+          <label for="email">Adresa de email</label>
           <input
-            id="lastName"
-            type="text"
-            [(ngModel)]="userInfo.lastName"
-            name="lastName"
+            id="email"
+            type="email"
+            [(ngModel)]="userInfo.email"
+            name="email"
             required
-            #lastNameControl="ngModel">
-          <div class="error-message" *ngIf="lastNameControl.invalid && lastNameControl.touched">
-            Numele este obligatoriu
-          </div>
+            email
+            readonly
+            #emailControl="ngModel">
+          <small class="info-text">Email-ul nu poate fi modificat din această secțiune</small>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="email">Adresa de email</label>
-        <input
-          id="email"
-          type="email"
-          [(ngModel)]="userInfo.email"
-          name="email"
-          required
-          email
-          readonly
-          #emailControl="ngModel">
-        <small class="info-text">Email-ul nu poate fi modificat din această secțiune</small>
+      <!-- Contact Information Section -->
+      <div class="form-section">
+        <h3>Informații de contact</h3>
+
+        <div class="form-group">
+          <label for="phoneNumber">Număr de telefon</label>
+          <input
+            id="phoneNumber"
+            type="tel"
+            [(ngModel)]="userInfo.phoneNumber"
+            name="phoneNumber"
+            placeholder="Ex: +40 123 456 789"
+            #phoneControl="ngModel">
+          <div class="error-message" *ngIf="phoneControl.invalid && phoneControl.touched">
+            Introduceți un număr de telefon valid
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Adresa</label>
+          <textarea
+            id="address"
+            [(ngModel)]="userInfo.address"
+            name="address"
+            placeholder="Ex: Strada Exemplu nr. 123, București"
+            rows="3"
+            #addressControl="ngModel"></textarea>
+          <small class="info-text">Adresa va fi folosită pentru serviciile la domiciliu</small>
+        </div>
       </div>
 
-      <div class="password-section">
+      <!-- Password Change Section -->
+      <div class="form-section password-section">
         <h3>Schimbă parola</h3>
+        <small class="section-info">Completează doar dacă dorești să îți schimbi parola</small>
+
         <div class="form-group">
           <label for="currentPassword">Parola actuală</label>
           <input
             id="currentPassword"
             type="password"
             [(ngModel)]="passwordData.currentPassword"
-            name="currentPassword">
+            name="currentPassword"
+            autocomplete="current-password">
         </div>
 
         <div class="form-group">
@@ -69,6 +109,7 @@
             [(ngModel)]="passwordData.newPassword"
             name="newPassword"
             minlength="6"
+            autocomplete="new-password"
             #newPasswordControl="ngModel">
           <div class="error-message" *ngIf="newPasswordControl.invalid && newPasswordControl.touched">
             Parola trebuie să aibă cel puțin 6 caractere
@@ -81,7 +122,8 @@
             id="confirmPassword"
             type="password"
             [(ngModel)]="passwordData.confirmPassword"
-            name="confirmPassword">
+            name="confirmPassword"
+            autocomplete="new-password">
           <div class="error-message" *ngIf="passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword">
             Parolele nu coincid
           </div>

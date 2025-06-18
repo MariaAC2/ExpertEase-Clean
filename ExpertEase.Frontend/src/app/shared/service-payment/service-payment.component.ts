@@ -101,7 +101,7 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   private async initializeStripe() {
     try {
       // ✅ TODO: Replace with your actual Stripe publishable key
-      this.stripe = await loadStripe('pk_test_your_actual_publishable_key_here');
+      this.stripe = await loadStripe('pk_test_51RY4TaRP4R8qcMUlWSJwbW6GBjetIiG7jc4fLrsUcl7xMS8uTMcI2mfDHId8YRAku8lllViJiAY0mVPObrvgLYke00QP5RVa7S');
       if (!this.stripe) {
         throw new Error('Failed to load Stripe');
       }

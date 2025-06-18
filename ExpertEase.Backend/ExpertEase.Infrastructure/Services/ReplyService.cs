@@ -107,13 +107,13 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
         return ServiceResponse.CreateSuccessResponse();
     }
 
-    public async Task<ServiceResponse<ReplyDTO>> GetReply(Specification<Reply, ReplyDTO> spec, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<ReplyPaymentDetailsDTO>> GetReply(Guid replyId, CancellationToken cancellationToken = default)
     {
-        var result = await repository.GetAsync(spec, cancellationToken);
+        var result = await repository.GetAsync(new ReplyPaymentProjectionSpec(replyId), cancellationToken);
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 
-            ServiceResponse.CreateErrorResponse<ReplyDTO>(CommonErrors.EntityNotFound);
+            ServiceResponse.CreateErrorResponse<ReplyPaymentDetailsDTO>(CommonErrors.EntityNotFound);
     }
 
     public async Task<ServiceResponse<PagedResponse<ReplyDTO>>> GetReplies(Specification<Reply, ReplyDTO> spec, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)

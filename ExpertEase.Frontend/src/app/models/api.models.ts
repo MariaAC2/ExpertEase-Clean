@@ -183,6 +183,11 @@ export interface LoginResponseDTO {
     user: UserDTO;
 }
 
+export interface UserUpdateResponseDTO {
+  token: string;
+  user: UserUpdateDTO;
+}
+
 export enum RejectionReason {
     InvalidSender = "InvalidSender",
     InvalidReceiver = "InvalidReceiver",
@@ -259,6 +264,17 @@ export interface ServiceTaskDTO {
     cancelledAt: Date;
 }
 
+export interface ReplyPaymentDetailsDTO {
+  replyId: string;
+  startDate: Date;
+  endDate: Date;
+  description: string;
+  address: string;
+  price: number;
+  clientId: string;
+  specialistId: string;
+}
+
 export interface ServicePaymentDetailsDTO {
   replyId: string;
   startDate: Date;
@@ -269,10 +285,10 @@ export interface ServicePaymentDetailsDTO {
 }
 
 export interface UserPaymentDetailsDTO {
-    userId: string;
-    userFullName: string;
-    email: string;
-    phoneNumber: string;
+  userId: string;
+  userFullName: string;
+  email: string;
+  phoneNumber: string;
 }
 
 export interface PaymentIntentCreateDTO {
@@ -561,6 +577,8 @@ export interface UserUpdateDTO {
     firstName?: string | undefined;
     lastName?: string | undefined;
     password?: string | undefined;
+    address?: string | undefined;
+    phoneNumber?: string | undefined;
 }
 
 export interface AdminUserUpdateDTO {

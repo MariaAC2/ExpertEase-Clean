@@ -1,7 +1,15 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
-import {PagedResponse, ReplyAddDTO, ReplyUpdateDTO} from '../models/api.models';
+import {
+  PagedResponse,
+  ReplyAddDTO,
+  ReplyDTO,
+  ReplyPaymentDetailsDTO,
+  ReplyUpdateDTO,
+  RequestResponse
+} from '../models/api.models';
 import {AuthService} from './auth.service';
+import {Observable} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +31,14 @@ export class ReplyService {
     );
   }
 
+  getReply(id: string): Observable<RequestResponse<ReplyPaymentDetailsDTO>> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+    return this.http.get<RequestResponse<ReplyPaymentDetailsDTO>>(`${this.baseUrl}/GetById/${id}`, { headers });
+  }
+
   updateReply(reply: ReplyUpdateDTO){
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
@@ -34,7 +50,6 @@ export class ReplyService {
       { headers }
     );
   }
-
   acceptReply(replyId: string){
     const token = this.authService.getToken();
     const headers = new HttpHeaders({

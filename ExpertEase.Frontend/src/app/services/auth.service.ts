@@ -60,6 +60,13 @@ export class AuthService {
     return decoded?.nameid ?? null;
   }
 
+  setToken(token: string): void {
+    if (token) {
+      localStorage.setItem('access_token', token);
+    }
+  }
+
+
   logout() {
     localStorage.removeItem('access_token');
   }

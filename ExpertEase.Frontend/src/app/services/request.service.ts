@@ -17,14 +17,14 @@ export class RequestService {
   private readonly baseUrl = 'http://localhost:5241/api/Request';
   constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
-  // getRequest(userId: string) {
-  //   const token = this.authService.getToken();
-  //   const headers = new HttpHeaders({
-  //     Authorization: `Bearer ${token}`
-  //   });
-  //
-  //   return this.http.get<RequestResponse<RequestDTO>>(`${this.baseUrl}/${userId}`, {headers});
-  // }
+  getRequest(requestId: string) {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.get<RequestResponse<RequestDTO>>(`${this.baseUrl}/GetById/${requestId}`, {headers});
+  }
   //
   // getRequests(search: string | undefined, page: number, pageSize: number) {
   //   const token = this.authService.getToken();
