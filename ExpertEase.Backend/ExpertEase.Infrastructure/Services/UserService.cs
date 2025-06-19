@@ -45,6 +45,16 @@ public class UserService(
         return ServiceResponse.CreateSuccessResponse(result);
     }
     
+    public async Task<ServiceResponse<UserProfileDTO>> GetUserProfile(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await repository.GetAsync(new UserProfileProjectionSpec(id), cancellationToken);
+        
+        if (result == null)
+            return ServiceResponse.CreateErrorResponse<UserProfileDTO>(CommonErrors.UserNotFound);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+    
     public async Task<ServiceResponse<UserPaymentDetailsDTO>> GetUserPaymentDetails(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await repository.GetAsync(new UserPaymentDetailsProjectionSpec(id), cancellationToken);

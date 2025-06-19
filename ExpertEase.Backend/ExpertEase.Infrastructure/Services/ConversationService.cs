@@ -44,94 +44,171 @@ public class ConversationService(
         await firestoreRepository.AddAsync("conversations", firestoreDto, cancellationToken);
     }
      
-    public async Task<ServiceResponse> AddConversationItem(
-        FirestoreConversationItemAddDTO firestoreMessage,
-        Guid conversationId,
-        UserDTO? requestingUser,
-        CancellationToken cancellationToken = default)
+public async Task<ServiceResponse> AddConversationItem(
+    FirestoreConversationItemAddDTO firestoreMessage,
+    Guid conversationId,
+    UserDTO? requestingUser,
+    CancellationToken cancellationToken = default)
+{
+    if (requestingUser == null)
     {
-        if (requestingUser == null)
+        return ServiceResponse.CreateErrorResponse(
+            new(HttpStatusCode.Forbidden, "User not found", ErrorCodes.CannotAdd));
+    }
+
+    var elementId = Guid.NewGuid().ToString();
+    var senderId = requestingUser.Id.ToString();
+    var type = firestoreMessage.Type.ToLower();
+
+    // Fetch conversation for validation and metadata update
+    var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+        "conversations", conversationId.ToString(), cancellationToken);
+
+    if (conversation == null)
+    {
+        return ServiceResponse.CreateErrorResponse(
+            new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
+    }
+
+    // 🆕 Validate request status for messages and photos
+    if (type == "message" || type == "photo")
+    {
+        var requestValidation = await ValidateRequestStatusForConversation(conversation.RequestId, cancellationToken);
+        if (!requestValidation.IsOk)
         {
-            return ServiceResponse.CreateErrorResponse(
-                new(HttpStatusCode.Forbidden, "User not found", ErrorCodes.CannotAdd));
+            return requestValidation;
         }
+    }
 
-        var elementId = Guid.NewGuid().ToString();
-        var senderId = requestingUser.Id.ToString();
-        var type = firestoreMessage.Type.ToLower();
-
-        // Convert any DateTime entries to Firestore Timestamps
-        var normalizedData = firestoreMessage.Data.ToDictionary(
-            kv => kv.Key,
-            kv =>
-            {
-                if (kv.Value is DateTime dt)
-                    return Timestamp.FromDateTime(dt.ToUniversalTime());
-                return kv.Value;
-            });
-
-        var element = new FirestoreConversationItemDTO
+    // Convert any DateTime entries to Firestore Timestamps
+    var normalizedData = firestoreMessage.Data.ToDictionary(
+        kv => kv.Key,
+        kv =>
         {
-            Id = elementId,
-            ConversationId = conversationId.ToString(),
-            SenderId = senderId,
-            Type = type,
-            Data = normalizedData
-        };
+            if (kv.Value is DateTime dt)
+                return Timestamp.FromDateTime(dt.ToUniversalTime());
+            return kv.Value;
+        });
 
-        await firestoreRepository.AddAsync("conversationElements", element, cancellationToken);
+    var element = new FirestoreConversationItemDTO
+    {
+        Id = elementId,
+        ConversationId = conversationId.ToString(),
+        SenderId = senderId,
+        Type = type,
+        Data = normalizedData
+    };
 
-        // Fetch conversation for metadata update
-        var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
-            "conversations", conversationId.ToString(), cancellationToken);
+    await firestoreRepository.AddAsync("conversationElements", element, cancellationToken);
 
-        if (conversation == null)
-        {
-            return ServiceResponse.CreateErrorResponse(
-                new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
-        }
+    var receiverId = conversation.ParticipantIds.FirstOrDefault(id => id != senderId);
 
-        var receiverId = conversation.ParticipantIds.FirstOrDefault(id => id != senderId);
-
-        // Update metadata if it's a regular message
+    // Update metadata if it's a regular message or photo
+    if (type is "message" or "photo")
+    {
+        string content;
         if (type == "message")
         {
-            var content = normalizedData.TryGetValue("Content", out var c) ? c?.ToString() : "[message]";
-            conversation.LastMessage = content;
-            conversation.LastMessageAt = element.CreatedAt;
-
-            if (!string.IsNullOrEmpty(receiverId))
-            {
-                conversation.UnreadCounts ??= new Dictionary<string, int>();
-                conversation.UnreadCounts.TryAdd(receiverId, 0);
-                conversation.UnreadCounts[receiverId]++;
-            }
-
-            await firestoreRepository.UpdateAsync("conversations", conversation, cancellationToken);
+            content = normalizedData.TryGetValue("Content", out var c) ? c?.ToString() : "[message]";
+        }
+        else // type == "photo"
+        {
+            var caption = normalizedData.TryGetValue("caption", out var cap) ? cap?.ToString() : "";
+            content = string.IsNullOrEmpty(caption) ? "📷 Photo" : $"📷 {caption}";
         }
 
-        // Send notification
-        var payload = new
-        {
-            Type = type,
-            Timestamp = DateTime.UtcNow,
-            ConversationId = conversationId,
-            SenderId = senderId,
-            Message = normalizedData.TryGetValue("Content", out var message) ? message?.ToString() : "[new message]"
-        };
+        conversation.LastMessage = content;
+        conversation.LastMessageAt = element.CreatedAt;
 
-        switch (type)
+        if (!string.IsNullOrEmpty(receiverId))
         {
-            case "request":
-                await notifier.NotifyNewRequest(Guid.Parse(receiverId), payload);
-                break;
-            case "reply":
-                await notifier.NotifyNewReply(Guid.Parse(receiverId), payload);
-                break;
-            default:
-                await notifier.NotifyNewMessage(Guid.Parse(receiverId), payload);
-                break;
+            conversation.UnreadCounts ??= new Dictionary<string, int>();
+            conversation.UnreadCounts.TryAdd(receiverId, 0);
+            conversation.UnreadCounts[receiverId]++;
         }
+
+        await firestoreRepository.UpdateAsync("conversations", conversation, cancellationToken);
+    }
+
+    // Send notification
+    var payload = new
+    {
+        Type = type,
+        Timestamp = DateTime.UtcNow,
+        ConversationId = conversationId,
+        SenderId = senderId,
+        Message = type switch
+        {
+            "message" => normalizedData.TryGetValue("Content", out var message) ? message?.ToString() : "[new message]",
+            "photo" => normalizedData.TryGetValue("caption", out var caption) && !string.IsNullOrEmpty(caption?.ToString()) 
+                ? $"📷 {caption}" : "📷 Photo",
+            _ => "[new message]"
+        }
+    };
+
+    switch (type)
+    {
+        case "request":
+            await notifier.NotifyNewRequest(Guid.Parse(receiverId), payload);
+            break;
+        case "reply":
+            await notifier.NotifyNewReply(Guid.Parse(receiverId), payload);
+            break;
+        default:
+            await notifier.NotifyNewMessage(Guid.Parse(receiverId), payload);
+            break;
+    }
+
+    return ServiceResponse.CreateSuccessResponse();
+}
+
+// 🆕 Add this new validation method to ConversationService
+    private async Task<ServiceResponse> ValidateRequestStatusForConversation(
+        string requestId, 
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(requestId) || !Guid.TryParse(requestId, out var requestGuid))
+        {
+            return ServiceResponse.CreateErrorResponse(
+                new ErrorMessage(HttpStatusCode.BadRequest, "Invalid request ID in conversation", ErrorCodes.CannotAdd));
+        }
+
+        // Get the request from your database (assuming you have a Request entity and specification)
+        var request = await repository.GetAsync(new RequestSpec(requestGuid), cancellationToken);
+        
+        if (request == null)
+        {
+            return ServiceResponse.CreateErrorResponse(
+                new ErrorMessage(HttpStatusCode.NotFound, "Request not found", ErrorCodes.EntityNotFound));
+        }
+
+        // Check if request status allows messaging
+        // Adjust these status checks based on your RequestStatusEnum values
+        if (request.Status == StatusEnum.Pending)
+        {
+            return ServiceResponse.CreateErrorResponse(
+                new ErrorMessage(HttpStatusCode.Forbidden, 
+                    "Cannot send messages or photos while the request is pending approval", 
+                    ErrorCodes.CannotAdd));
+        }
+
+        if (request.Status == StatusEnum.Rejected)
+        {
+            return ServiceResponse.CreateErrorResponse(
+                new ErrorMessage(HttpStatusCode.Forbidden, 
+                    "Cannot send messages or photos for a rejected request", 
+                    ErrorCodes.CannotAdd));
+        }
+
+        // Add any other status checks as needed
+        // For example, if you have a "Completed" status that should also block messaging:
+        // if (request.Status == RequestStatusEnum.Completed)
+        // {
+        //     return ServiceResponse.CreateErrorResponse(
+        //         new ErrorMessage(HttpStatusCode.Forbidden, 
+        //             "Cannot send messages or photos for a completed request", 
+        //             ErrorCodes.CannotAdd));
+        // }
 
         return ServiceResponse.CreateSuccessResponse();
     }

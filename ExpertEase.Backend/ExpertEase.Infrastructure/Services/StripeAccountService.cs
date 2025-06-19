@@ -1,4 +1,7 @@
-﻿using ExpertEase.Application.Services;
+﻿using System.Net;
+using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.Responses;
+using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
 using Stripe;
@@ -36,8 +39,7 @@ public class StripeAccountService : IStripeAccountService
         return account.Id;
     }
 
-
-    public async Task<string> GenerateOnboardingLink(string accountId)
+    public async Task<ServiceResponse<StripeAccountLinkResponseDTO>> GenerateOnboardingLink(string accountId)
     {
         var linkService = new AccountLinkService();
         var link = await linkService.CreateAsync(new AccountLinkCreateOptions
@@ -47,8 +49,17 @@ public class StripeAccountService : IStripeAccountService
             RefreshUrl = $"http://localhost:5241/return/{accountId}",
             Type = "account_onboarding"
         });
+        
+        if (link == null || string.IsNullOrEmpty(link.Url))
+        {
+            return ServiceResponse.CreateErrorResponse<StripeAccountLinkResponseDTO>(
+                new(HttpStatusCode.Forbidden ,"Failed to create account link. Please try again later."));
+        }
 
-        return link.Url;
+        return ServiceResponse.CreateSuccessResponse(new StripeAccountLinkResponseDTO
+        {
+            Url = link.Url
+        });
     }
 
     public async Task<string> CreatePaymentIntent(decimal amount, string stripeAccountId)

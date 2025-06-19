@@ -4,7 +4,7 @@ public class ServiceTaskAddDTO
 {
     public Guid UserId { get; set; }
     public Guid SpecialistId { get; set; }
-    public Guid ReplyId { get; set; }
+    public Guid PaymentId { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string Description { get; set; } = null!;

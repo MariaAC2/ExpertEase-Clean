@@ -6,15 +6,15 @@ namespace ExpertEase.Infrastructure.Services;
 
 public class TransactionSummaryGenerator : ITransactionSummaryGenerator
 {
-    public string GenerateTransferSummary(ServiceTask serviceTask)
-    {
-        return $"User {serviceTask.Reply.Request.SenderUser.FullName} has a problem with the following description: {serviceTask.Description}." +
-               $"{Environment.NewLine}Specialist {serviceTask.Reply.Request.ReceiverUser.FullName} accepted solving the problem." +
-               $"{Environment.NewLine}The service is at address {serviceTask.Address}, from {serviceTask.StartDate:yyyy-MM-dd HH:mm} to {serviceTask.EndDate:yyyy-MM-dd HH:mm} with a price of {serviceTask.Price:C}." +
-               $"{Environment.NewLine}User contact information: {serviceTask.Reply.Request.SenderUser.Email}, {serviceTask.Reply.Request.SenderUser.ContactInfo.PhoneNumber}." +
-               $"{Environment.NewLine}Specialist contact information: {serviceTask.Reply.Request.ReceiverUser.Email}" +
-               (serviceTask.Reply.Request.ReceiverUser.SpecialistProfile != null ? $", {serviceTask.Reply.Request.ReceiverUser.ContactInfo.PhoneNumber}" : "") + ".";
-    }
+    // public string GenerateTransferSummary(ServiceTask serviceTask)
+    // {
+    //     return $"User {serviceTask.Reply.Request.SenderUser.FullName} has a problem with the following description: {serviceTask.Description}." +
+    //            $"{Environment.NewLine}Specialist {serviceTask.Reply.Request.ReceiverUser.FullName} accepted solving the problem." +
+    //            $"{Environment.NewLine}The service is at address {serviceTask.Address}, from {serviceTask.StartDate:yyyy-MM-dd HH:mm} to {serviceTask.EndDate:yyyy-MM-dd HH:mm} with a price of {serviceTask.Price:C}." +
+    //            $"{Environment.NewLine}User contact information: {serviceTask.Reply.Request.SenderUser.Email}, {serviceTask.Reply.Request.SenderUser.ContactInfo.PhoneNumber}." +
+    //            $"{Environment.NewLine}Specialist contact information: {serviceTask.Reply.Request.ReceiverUser.Email}" +
+    //            (serviceTask.Reply.Request.ReceiverUser.SpecialistProfile != null ? $", {serviceTask.Reply.Request.ReceiverUser.ContactInfo.PhoneNumber}" : "") + ".";
+    // }
 
     // public string GenerateTransactionDetails(Transaction transaction)
     // {

@@ -1,30 +1,23 @@
-﻿using ExpertEase.Application.Services;
+﻿using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.Responses;
+using ExpertEase.Application.Services;
+using ExpertEase.Infrastructure.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpertEase.API.Controllers;
 
 [ApiController]
 [Route("api/stripe/account")]
-public class StripeAccountController(IStripeAccountService stripeService) : ControllerBase
+public class StripeAccountController(IUserService userService, IStripeAccountService stripeService) : AuthorizedController(userService)
 {
-    [HttpPost("create")]
-    public async Task<IActionResult> CreateAccount()
-    {
-        var accountId = await stripeService.CreateConnectedAccount("test-specialist@example.com");
-        return Ok(new { accountId });
-    }
-
+    [Authorize]
     [HttpPost("onboarding-link/{accountId}")]
-    public async Task<IActionResult> CreateLink([FromRoute] string accountId)
+    public async Task<ActionResult<RequestResponse<StripeAccountLinkResponseDTO>>> CreateLink([FromRoute] string accountId)
     {
-        var url = await stripeService.GenerateOnboardingLink(accountId);
-        return Ok(new { url });
-    }
-    
-    [HttpPost("create-payment-intent")]
-    public async Task<IActionResult> CreatePaymentIntent()
-    {
-        var clientSecret = await stripeService.CreatePaymentIntent(350, "acct_1RY5dMIEuydUWNaj"); // Replace with test account
-        return Ok(new { clientSecret });
+        var currentUser = await GetCurrentUser();
+        return currentUser.Result != null
+            ? CreateRequestResponseFromServiceResponse(await stripeService.GenerateOnboardingLink(accountId))
+            : CreateErrorMessageResult<StripeAccountLinkResponseDTO>();
     }
 }

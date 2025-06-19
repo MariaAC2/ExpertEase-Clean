@@ -119,10 +119,46 @@ public class UserDetailsProjectionSpec : Specification<User, UserDetailsDTO>
                 Address = u.Role == UserRoleEnum.Specialist ? u.ContactInfo!.Address : null,
                 YearsExperience = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.YearsExperience : null,
                 Description = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Description : null,
-                // Portfolio = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Portfolio : null,
+                Portfolio = u.Role == UserRoleEnum.Specialist ? 
+                    u.SpecialistProfile!.Portfolio.Select(p => p.Url).ToList() 
+                    : null,
                 Categories = u.Role == UserRoleEnum.Specialist
                     ? u.SpecialistProfile!.Categories.Select(c => c.Name).ToList()
                     : null
             });
+    }
+}
+
+public class UserProfileProjectionSpec : Specification<User, UserProfileDTO>
+{
+    public UserProfileProjectionSpec(Guid userId)
+    {
+        Query
+            .Where(u => u.Id == userId)
+            .Include(u => u.ContactInfo)
+            .Include(u => u.SpecialistProfile!)
+            .ThenInclude(sp => sp.Categories);
+        Query.Select(u => new UserProfileDTO
+        {
+            FullName = u.FullName,
+            ProfilePictureUrl = u.ProfilePictureUrl,
+            Rating = u.Rating,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt,
+
+            // Include these only for specialists
+            Email = u.Email,
+            PhoneNumber = u.ContactInfo!.PhoneNumber,
+            Address = u.ContactInfo!.Address,
+            YearsExperience = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.YearsExperience : null,
+            Description = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Description : null,
+            StripeAccountId = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.StripeAccountId : null,
+            Portfolio = u.Role == UserRoleEnum.Specialist ? 
+                u.SpecialistProfile!.Portfolio.Select(p => p.Url).ToList() 
+                : null,
+            Categories = u.Role == UserRoleEnum.Specialist
+                ? u.SpecialistProfile!.Categories.Select(c => c.Name).ToList()
+                : null
+        });
     }
 }

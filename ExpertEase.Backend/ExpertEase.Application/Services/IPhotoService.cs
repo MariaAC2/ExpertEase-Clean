@@ -1,4 +1,5 @@
-﻿using ExpertEase.Application.DataTransferObjects.PhotoDTOs;
+﻿using ExpertEase.Application.DataTransferObjects.FirestoreDTOs;
+using ExpertEase.Application.DataTransferObjects.PhotoDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Responses;
 
@@ -26,5 +27,12 @@ public interface IPhotoService
         CancellationToken cancellationToken = default);
 
     Task<ServiceResponse> DeletePortfolioPicture(string photoId, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default);
+
+    Task<ServiceResponse> AddPhotoToConversation(
+        Guid conversationId,
+        ConversationPhotoUploadDTO photoUpload,
+        UserDTO? sender,
+        string? caption = null,
         CancellationToken cancellationToken = default);
 }

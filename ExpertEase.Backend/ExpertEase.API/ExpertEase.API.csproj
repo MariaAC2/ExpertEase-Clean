@@ -11,7 +11,7 @@
     <ItemGroup>
       <PackageReference Include="Ardalis.EFCore.Extensions" Version="6.0.0" />
       <PackageReference Include="FirebaseAdmin" Version="3.2.0" />
-      <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
+      <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
       <PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14" />
@@ -127,6 +127,10 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-SNFK5YPB.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-TTL4NZ5G.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-ZUA5GHHH.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-4MX2UZA6.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-Z6AS26ZI.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-3HEL6IS4.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-66TQS6JV.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

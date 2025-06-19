@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using ExpertEase.Application.DataTransferObjects.FirestoreDTOs;
 using ExpertEase.Application.DataTransferObjects.PhotoDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Responses;
@@ -73,5 +74,34 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
         return currentUser.Result != null ?
             CreateRequestResponseFromServiceResponse(await photoService.DeletePortfolioPicture(photoId, currentUser.Result)) :
             CreateErrorMessageResult(currentUser.Error);
+    }
+    
+    [Authorize]
+    [HttpPost("{conversationId:guid}")]
+    public async Task<ActionResult<RequestResponse>> AddConversationPhoto([FromForm] UploadPhotoDTO photoDTO, [FromRoute] Guid conversationId)
+    {
+        var currentUser = await GetCurrentUser();
+    
+        if (currentUser.Result == null)
+            return CreateErrorMessageResult(currentUser.Error);
+
+        if (photoDTO.file == null || photoDTO.file.Length == 0)
+            return CreateErrorMessageResult(new ErrorMessage(HttpStatusCode.BadRequest, "No file uploaded.", ErrorCodes.CannotAdd));
+
+        var photoUpload = new ConversationPhotoUploadDTO
+        {
+            Caption = "",
+            ContentType = photoDTO.file.ContentType,
+            FileStream = photoDTO.file.OpenReadStream(),
+            FileName = photoDTO.file.FileName,
+        };
+
+        var result = await photoService.AddPhotoToConversation(
+            conversationId,
+            photoUpload,
+            currentUser.Result,
+            photoUpload.Caption);
+
+        return CreateRequestResponseFromServiceResponse(result);
     }
 }

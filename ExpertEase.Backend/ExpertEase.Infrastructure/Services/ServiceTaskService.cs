@@ -41,12 +41,12 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
             {
                 UserId = request.SenderUserId,
                 SpecialistId = request.ReceiverUserId,
-                ReplyId = reply.Id,
                 StartDate = reply.StartDate,
                 EndDate = reply.EndDate,
                 Description = request.Description,
                 Address = request.Address,
-                Price = reply.Price
+                Price = reply.Price,
+                PaymentId = paymentId,
             };
 
             var result = await AddServiceTask(serviceTask, cancellationToken);
@@ -69,17 +69,16 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
     
     public async Task<ServiceResponse<ServiceTask>> AddServiceTask(ServiceTaskAddDTO service, CancellationToken cancellationToken = default)
     {
-        var reply = await repository.GetAsync(new ReplySpec(service.ReplyId), cancellationToken);
-        
-        if (reply == null)
-            return ServiceResponse.CreateErrorResponse<ServiceTask>(new(HttpStatusCode.NotFound, "Reply with this id not found!", ErrorCodes.EntityNotFound));
+        var payment = await repository.GetAsync(new PaymentSpec(service.PaymentId), cancellationToken);
+        if (payment == null)
+        {
+            return ServiceResponse.CreateErrorResponse<ServiceTask>(new (HttpStatusCode.NotFound, "Payment not found", ErrorCodes.EntityNotFound));
+        }
         
         var serviceTask = new ServiceTask 
         {
             UserId = service.UserId,
             SpecialistId = service.SpecialistId,
-            ReplyId = service.ReplyId,
-            Reply = reply,
             StartDate = service.StartDate,
             EndDate = service.EndDate,
             Address = service.Address,

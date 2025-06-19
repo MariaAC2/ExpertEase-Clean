@@ -16,7 +16,10 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class PhotoService(IRepository<WebAppDatabaseContext> repository, IFirestoreRepository firestoreRepository, IFirebaseStorageService firebaseStorageService): IPhotoService
+public class PhotoService(IRepository<WebAppDatabaseContext> repository, 
+    IFirestoreRepository firestoreRepository, 
+    IFirebaseStorageService firebaseStorageService,
+    IConversationService conversationService): IPhotoService
 {
     // Maximum file size for conversation photos (e.g., 10MB)
     private const long MaxConversationPhotoSize = 10 * 1024 * 1024;
@@ -220,10 +223,10 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository, IFirest
         return ServiceResponse.CreateSuccessResponse();
     }
     
-    public async Task<ServiceResponse<FirestoreConversationItemDTO>> AddPhotoToConversation(
-        string conversationId,
+    public async Task<ServiceResponse> AddPhotoToConversation(
+        Guid conversationId,
         ConversationPhotoUploadDTO photoUpload,
-        UserDTO sender,
+        UserDTO? sender,
         string? caption = null,
         CancellationToken cancellationToken = default)
     {
@@ -235,44 +238,69 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository, IFirest
                 photoUpload.ContentType, 
                 photoUpload.FileStream.Length);
             if (!validationResult.IsOk)
-                return ServiceResponse.CreateErrorResponse<FirestoreConversationItemDTO>(validationResult.Error);
+                return validationResult;
 
-            // 2. Generate unique filename and upload to storage
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(photoUpload.FileName)}";
-            var folder = $"conversations/{conversationId}";
-
-            var photoUrl = await firebaseStorageService.UploadImageAsync(
-                photoUpload.FileStream,
-                folder,
-                fileName,
-                photoUpload.ContentType);
-
-            // 3. Create conversation item with photo data embedded in Data field
-            var conversationItem = new FirestoreConversationItemDTO
+            var photoDto = new PhotoAddDTO
             {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversationId,
-                Type = "photo", // This tells us it's a photo
-                SenderId = sender.Id.ToString(),
-                Data = new Dictionary<string, object> // Photo info goes here
-                {
-                    ["fileName"] = photoUpload.FileName,
-                    ["url"] = photoUrl,
-                    ["contentType"] = photoUpload.ContentType,
-                    ["sizeInBytes"] = photoUpload.FileStream.Length,
-                    ["uploadedAt"] = DateTime.UtcNow,
-                    ["caption"] = caption ?? ""
-                },
+                ContentType = photoUpload.ContentType,
+                Folder = "conversations/" + conversationId,
+                FileName = photoUpload.FileName,
+                FileStream = photoUpload.FileStream,
+                IsProfilePicture = false,
+                UserId = sender.Id.ToString()
             };
 
-            // 4. Save to Firestore
-            await firestoreRepository.AddAsync("conversation_items", conversationItem, cancellationToken);
+            // 2. Generate unique filename and upload to storage
+            var newUrl = await AddPhoto(photoDto, cancellationToken);
 
-            return ServiceResponse<FirestoreConversationItemDTO>.CreateSuccessResponse(conversationItem);
+            // Set the URL in the photo data (we'll handle this in AddPhotoMessage)
+            var photoData = new Dictionary<string, object>
+            {
+                ["fileName"] = photoUpload.FileName,
+                ["url"] = newUrl,
+                ["contentType"] = photoUpload.ContentType,
+                ["sizeInBytes"] = photoUpload.FileStream.Length,
+                ["uploadedAt"] = DateTime.UtcNow,
+                ["caption"] = caption ?? photoUpload.Caption ?? ""
+            };
+
+            var conversationItemAdd = new FirestoreConversationItemAddDTO
+            {
+                Type = "photo",
+                Data = photoData
+            };
+
+            // 4. Use the conversation service to add the item directly
+            var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+                "conversations", conversationId.ToString(), cancellationToken);
+            var addResult = await conversationService.AddConversationItem(
+                conversationItemAdd,
+                Guid.Parse(conversationId.ToString()),
+                sender,
+                cancellationToken);
+
+            if (!addResult.IsOk)
+            {
+                // If adding to conversation failed, clean up the uploaded image
+                try
+                {
+                    var objectName = new Uri(newUrl).AbsolutePath.TrimStart('/');
+                    await firebaseStorageService.DeleteImageAsync(objectName, cancellationToken);
+                }
+                catch (Exception cleanupEx)
+                {
+                    // Log cleanup failure but don't throw
+                    // Logger should be injected for proper logging
+                }
+                
+                return addResult;
+            }
+
+            return ServiceResponse.CreateSuccessResponse();
         }
         catch (Exception ex)
         {
-            return ServiceResponse.CreateErrorResponse<FirestoreConversationItemDTO>(
+            return ServiceResponse.CreateErrorResponse(
                 new ErrorMessage(HttpStatusCode.InternalServerError, $"Failed to add photo: {ex.Message}"));
         }
     }
