@@ -6,7 +6,7 @@ import {
   MessageDTO,
   RequestDTO,
   ReplyDTO,
-  ConversationItemDTO // Updated import
+  ConversationItemDTO, UserProfileDTO // Updated import
 } from '../../models/api.models';
 import { AuthService } from '../../services/auth.service';
 import { ExchangeService } from '../../services/exchange.service';
@@ -35,6 +35,8 @@ import {NotificationDisplayComponent} from '../../shared/notification-display/no
 import {TaskService} from '../../services/task.service';
 import {RequestService} from '../../services/request.service';
 import {ReplyService} from '../../services/reply.service';
+import {PhotoBubbleComponent} from '../../shared/photo-bubble/photo-bubble.component';
+import {PhotoService} from '../../services/photo.service';
 
 @Component({
   selector: 'app-messages',
@@ -55,7 +57,8 @@ import {ReplyService} from '../../services/reply.service';
     SlicePipe,
     ServicePaymentComponent,
     NgClass,
-    NotificationDisplayComponent
+    NotificationDisplayComponent,
+    PhotoBubbleComponent
   ],
   styleUrl: './messages.component.scss'
 })
@@ -70,7 +73,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   // UI state
   messageContent: string = '';
   userId: string | null = null;
-  currentUserDetails: UserDTO | null = null;
+  currentUserDetails: UserProfileDTO | null = null;
   isSendingMessage: boolean = false;
 
   // Reply form state
@@ -93,6 +96,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
   currentPaymentDetails: any;
   currentServiceTask: any;
   showPaymentFlow: boolean = false;
+
+  isUploadingPhoto: boolean = false;
+  selectedPhotoFile: File | null = null;
+  photoCaption: string = '';
 
   // Updated observables to use ConversationItemDTO
   exchanges$: Observable<UserConversationDTO[]> | undefined;
@@ -118,7 +125,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private readonly conversationActions: ConversationActionsService,
     private readonly notificationService: NotificationService,
     private readonly taskService: TaskService,
-    private readonly requestService: RequestService,
+    private readonly photoService: PhotoService,
     private readonly replyService: ReplyService
   ) {}
 
@@ -653,7 +660,92 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   openMediaPicker(): void {
-    console.log('Open media picker');
+    // Create file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/jpeg,image/jpg,image/png,image/gif,image/webp';
+    fileInput.style.display = 'none';
+
+    fileInput.onchange = (event: any) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        this.handlePhotoSelection(file);
+      }
+    };
+
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+  }
+
+  /**
+   * Handle photo file selection
+   */
+  private handlePhotoSelection(file: File): void {
+    // Validate file
+    const validation = this.photoService.validatePhotoFile(file);
+    if (!validation.isValid) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: validation.error || 'Invalid file selected'
+      });
+      return;
+    }
+
+    this.selectedPhotoFile = file;
+    this.showPhotoCaptionDialog();
+  }
+
+  /**
+   * Show photo caption dialog (simple prompt for now)
+   */
+  private showPhotoCaptionDialog(): void {
+    const caption = prompt('Enter a caption for your photo (optional):');
+    this.uploadSelectedPhoto(caption || undefined);
+  }
+
+  /**
+   * Upload selected photo
+   */
+  private async uploadSelectedPhoto(caption?: string): Promise<void> {
+    if (!this.selectedPhotoFile || !this.messagesState.selectedUser) {
+      return;
+    }
+
+    this.isUploadingPhoto = true;
+    this.cdr.detectChanges();
+
+    try {
+      const response = await this.photoService.uploadPhotoToConversation(
+        this.messagesState.selectedUser,
+        this.selectedPhotoFile,
+        caption
+      ).toPromise();
+
+      if (response?.response) {
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Photo uploaded successfully!'
+        });
+
+        // Refresh conversation to show new photo
+        this.refreshCurrentConversation();
+        this.loadExchanges(false);
+      } else {
+        throw new Error(response?.errorMessage?.message || 'Failed to upload photo');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to upload photo. Please try again.'
+      });
+    } finally {
+      this.isUploadingPhoto = false;
+      this.selectedPhotoFile = null;
+      this.photoCaption = '';
+      this.cdr.detectChanges();
+    }
   }
 
   ngOnDestroy(): void {

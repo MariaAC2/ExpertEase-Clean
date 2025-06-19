@@ -1,0 +1,34 @@
+<div class="photo-bubble" [ngClass]="{'bubble-left': !isOwnMessage, 'bubble-right': isOwnMessage}">
+  <div class="photo-content" [ngClass]="{ 'left': !isOwnMessage, 'right': isOwnMessage }">
+    <div class="photo-container">
+      <img
+        [src]="photoItem.data['url']"
+        [alt]="photoItem.data['fileName']"
+        class="photo-image"
+        (click)="openPhotoViewer()"
+        (error)="onImageError($event)"
+        (load)="onImageLoad()"
+        loading="lazy">
+
+      <!-- Photo loading placeholder -->
+      <div class="photo-placeholder" *ngIf="imageLoading">
+        <div class="loading-spinner"></div>
+        <span>Loading photo...</span>
+      </div>
+
+      <!-- Photo error placeholder -->
+      <div class="photo-error" *ngIf="imageError">
+        <span>📷</span>
+        <span>Failed to load photo</span>
+      </div>
+    </div>
+
+    <!-- Caption -->
+    <div class="photo-caption" *ngIf="photoItem.data['caption']">
+      {{ photoItem.data['caption'] }}
+    </div>
+
+    <!-- Timestamp -->
+    <div class="timestamp">{{ photoItem.createdAt | date:'shortTime' }}</div>
+  </div>
+</div>

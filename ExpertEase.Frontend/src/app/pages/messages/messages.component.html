@@ -104,6 +104,13 @@
               [currentUserId]="userId">
             </app-message-bubble>
 
+            <!-- Photo bubble - NEW (uses ConversationItemDTO directly) -->
+            <app-photo-bubble
+              *ngSwitchCase="'photo'"
+              [photoItem]="itemWrapper.item"
+              [currentUserId]="userId">
+            </app-photo-bubble>
+
             <!-- Request message -->
             <app-request-message
               *ngSwitchCase="'request'"
@@ -156,19 +163,25 @@
 
       <!-- Chat Input -->
       <div class="chat-input">
-        <button [disabled]="(loading$ | async) === true">
-          <img src="assets/icons/photo_media.svg" alt="photo_media" title="Adaugă o poză" (click)="openMediaPicker()">
+        <button
+          [disabled]="(loading$ | async) === true || isUploadingPhoto"
+          (click)="openMediaPicker()"
+          title="Adaugă o poză">
+          <img src="assets/icons/photo_media.svg" alt="photo_media">
+          <div *ngIf="isUploadingPhoto" class="upload-indicator">
+            <div class="inline-spinner small"></div>
+          </div>
         </button>
         <input
           type="text"
           placeholder="Scrie un mesaj aici"
           [(ngModel)]="messageContent"
           (keydown.enter)="sendMessage(messageContent)"
-          [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible || (signalRService.connectionState$ | async) === false">
+          [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible || isUploadingPhoto || (signalRService.connectionState$ | async) === false">
         <button
           class="send-btn" title="Trimite mesaj"
           (click)="sendMessage(messageContent)"
-          [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage || (signalRService.connectionState$ | async) === false">
+          [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage || isUploadingPhoto || (signalRService.connectionState$ | async) === false">
           <span *ngIf="!isSendingMessage">→</span>
           <div *ngIf="isSendingMessage" class="inline-spinner small"></div>
         </button>

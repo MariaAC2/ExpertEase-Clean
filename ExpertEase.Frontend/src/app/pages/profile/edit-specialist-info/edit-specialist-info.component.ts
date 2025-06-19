@@ -7,6 +7,7 @@ import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angula
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {SpecialistProfileService} from '../../../services/specialist-profile.service';
+import {CategorySelectorComponent} from '../../../shared/category-selector/category-selector.component';
 
 interface SpecialistEditInfo {
   phoneNumber: string;
@@ -26,7 +27,7 @@ interface PortfolioImage {
 @Component({
   selector: 'app-edit-specialist-info',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CategorySelectorComponent],
   templateUrl: './edit-specialist-info.component.html',
   styleUrls: ['./edit-specialist-info.component.scss']
 })

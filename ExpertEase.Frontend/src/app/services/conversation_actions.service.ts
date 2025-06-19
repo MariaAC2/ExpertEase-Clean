@@ -3,7 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { MessageService } from './message.service';
 import { RequestService } from './request.service';
 import { ReplyService } from './reply.service';
-import { UserDTO } from '../models/api.models';
+import {UserDTO, UserProfileDTO} from '../models/api.models';
 import {SignalRHandlerService} from './signalr_handler.service';
 import {MessagesStateService} from './messages_state.service';
 
@@ -11,15 +11,15 @@ import {MessagesStateService} from './messages_state.service';
   providedIn: 'root'
 })
 export class ConversationActionsService {
-  private refreshTrigger = new Subject<void>();
+  private readonly refreshTrigger = new Subject<void>();
   public refresh$ = this.refreshTrigger.asObservable();
 
   constructor(
-    private messageService: MessageService,
-    private requestService: RequestService,
-    private replyService: ReplyService,
-    private signalRHandler: SignalRHandlerService,
-    private messagesState: MessagesStateService
+    private readonly messageService: MessageService,
+    private readonly requestService: RequestService,
+    private readonly replyService: ReplyService,
+    private readonly signalRHandler: SignalRHandlerService,
+    private readonly messagesState: MessagesStateService
   ) {}
 
   /**
@@ -28,7 +28,7 @@ export class ConversationActionsService {
   public async sendMessage(
     content: string,
     recipientId: string,
-    currentUser: UserDTO
+    currentUser: UserProfileDTO
   ): Promise<{ success: boolean; error?: string }> {
     if (!content.trim()) {
       return { success: false, error: 'Message content cannot be empty' };
