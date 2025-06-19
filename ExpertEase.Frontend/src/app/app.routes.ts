@@ -21,6 +21,7 @@ import {ServicePaymentComponent} from './shared/service-payment/service-payment.
 import {ContactUsComponent} from './pages/contact-us/contact-us.component';
 import {TermsComponent} from './pages/terms/terms.component';
 import {PrivacyComponent} from './pages/privacy/privacy.component';
+import {SpecialistMapComponent} from './pages/specialist-map/specialist-map.component';
 
 export const routes: Routes = [
   {
@@ -47,6 +48,11 @@ export const routes: Routes = [
     path: 'profile',
     component: ProfileComponent,
     // canActivate: [AuthGuard]
+  },
+  {
+    path: 'specialist-map',
+    component: SpecialistMapComponent,
+    // canActivate: [AuthGuard] // Only for authenticated users
   },
   {
     path: 'home/:id',

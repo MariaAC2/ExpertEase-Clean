@@ -646,17 +646,17 @@ export interface PortfolioPictureAddDTO
   fileName: string;
 }
 
-export interface MapMarker {
+export interface MapMarkerInfo {
   position: google.maps.LatLngLiteral;
   title: string;
-  specialist: UserDTO;
+  specialist: SpecialistDTO;
   info?: {
     name: string;
     description: string;
     rating: number;
-    categories: string[];
     profilePicture?: string;
     distance?: number;
+    address: string;
   };
 }
 

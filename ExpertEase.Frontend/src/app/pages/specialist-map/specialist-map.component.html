@@ -1,0 +1,199 @@
+<div class="map-container">
+  <!-- Beautiful Header -->
+  <div class="map-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon">🗺️</div>
+        <div class="header-text">
+          <h1>Harta Specialiștilor</h1>
+          <p>Găsește experți în apropierea ta</p>
+        </div>
+      </div>
+      <button class="back-button" routerLink="/home">
+        <span class="back-icon">←</span>
+        Înapoi la listă
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!isLoadingLocation && !locationError">
+    <div class="stat-item">
+      <span class="stat-number">{{ specialistMarkers.length }}</span>
+      <span class="stat-label">Specialiști găsiți</span>
+    </div>
+    <div class="stat-item" *ngIf="userLocation">
+      <span class="stat-number">{{ getNearbyCount() }}</span>
+      <span class="stat-label">În raza de 10km</span>
+    </div>
+    <div class="stat-item" *ngIf="averageRating > 0">
+      <span class="stat-number">{{ averageRating }}⭐</span>
+      <span class="stat-label">Rating mediu</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoadingLocation" class="loading-overlay">
+    <div class="loading-card">
+      <div class="loading-animation">
+        <div class="pulse-ring"></div>
+        <div class="location-icon">📍</div>
+      </div>
+      <h3>Se obține locația ta</h3>
+      <p>Te rugăm să acorzi permisiunea pentru locație</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="locationError" class="error-overlay">
+    <div class="error-card">
+      <div class="error-icon">⚠️</div>
+      <h3>Nu s-a putut obține locația</h3>
+      <p>{{ locationError }}</p>
+      <div class="error-actions">
+        <button (click)="useDefaultLocation()" class="btn-primary">
+          📍 Folosește București
+        </button>
+        <button (click)="getCurrentLocation()" class="btn-secondary">
+          🔄 Încearcă din nou
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Beautiful Map -->
+  <google-map
+    *ngIf="!isLoadingLocation && mapOptions"
+    [center]="mapCenter"
+    [zoom]="mapZoom"
+    [options]="mapOptions"
+    class="map">
+
+    <!-- User Location Marker -->
+    <map-marker
+      *ngIf="userLocation"
+      [position]="userLocation"
+      [options]="userMarkerOptions"
+      [title]="'Tu ești aici'">
+    </map-marker>
+
+    <!-- Specialist Markers -->
+    <map-marker
+      *ngFor="let marker of specialistMarkers; trackBy: trackBySpecialist"
+      [position]="marker.position"
+      [title]="marker.title"
+      [options]="getMarkerOptions(marker)"
+      (mapClick)="onMarkerClick(marker)">
+    </map-marker>
+
+    <!-- Beautiful Info Window -->
+    <map-info-window
+      *ngIf="selectedMarker"
+      [position]="selectedMarker.position"
+      [options]="infoWindowOptions">
+      <div class="beautiful-info-window">
+        <div class="info-header">
+          <img [src]="selectedMarker.specialist.profilePictureUrl || 'assets/avatar.svg'"
+               class="specialist-avatar"
+               [alt]="selectedMarker.info?.name">
+          <div class="info-title">
+            <h3>{{ selectedMarker.info?.name }}</h3>
+            <div class="rating-container">
+              <div class="stars">{{ getStars(selectedMarker.info?.rating || 0) }}</div>
+              <span class="rating-text">({{ selectedMarker.info?.rating || 0 }})</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-content">
+          <p class="description">{{ selectedMarker.info?.description }}</p>
+
+          <div class="info-details">
+            <div class="detail-item">
+              <span class="detail-icon">📍</span>
+              <span class="detail-text">{{ selectedMarker.info?.address }}</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedMarker.info?.distance">
+              <span class="detail-icon">🚗</span>
+              <span class="detail-text">{{ selectedMarker.info?.distance }}km depărtare</span>
+            </div>
+<!--            <div class="detail-item" *ngIf="selectedMarker.info?.categories?.length">-->
+<!--              <span class="detail-icon">🏷️</span>-->
+<!--              <span class="detail-text">{{ getCategoriesText(selectedMarker.info.categories) }}</span>-->
+<!--            </div>-->
+          </div>
+        </div>
+
+        <div class="info-actions">
+          <button
+            class="action-btn primary"
+            [routerLink]="['/specialist', selectedMarker.specialist.id]">
+            👤 Vezi profilul
+          </button>
+          <button class="action-btn secondary" (click)="closeInfoWindow()">
+            ✕ Închide
+          </button>
+        </div>
+      </div>
+    </map-info-window>
+  </google-map>
+
+  <!-- Floating Action Buttons -->
+  <div class="floating-controls" *ngIf="!isLoadingLocation">
+    <button
+      class="fab"
+      (click)="centerOnUser()"
+      [disabled]="!userLocation"
+      [class.disabled]="!userLocation"
+      title="Centrează pe locația ta">
+      <span class="fab-icon">📍</span>
+      <span class="fab-label">Locația mea</span>
+    </button>
+
+    <button
+      class="fab"
+      (click)="loadSpecialists()"
+      [disabled]="isLoadingSpecialists"
+      [class.loading]="isLoadingSpecialists"
+      title="Reîncarcă specialiștii">
+      <span class="fab-icon" *ngIf="!isLoadingSpecialists">🔄</span>
+      <div class="fab-spinner" *ngIf="isLoadingSpecialists"></div>
+      <span class="fab-label">{{ isLoadingSpecialists ? 'Se încarcă...' : 'Reîncarcă' }}</span>
+    </button>
+
+    <button
+      class="fab"
+      (click)="toggleSatelliteView()"
+      title="Comută vedere satelit">
+      <span class="fab-icon">🛰️</span>
+      <span class="fab-label">{{ mapTypeId === 'satellite' ? 'Hartă' : 'Satelit' }}</span>
+    </button>
+  </div>
+
+  <!-- Side Panel for Mobile -->
+  <div class="side-panel" [class.open]="sidePanelOpen">
+    <div class="panel-header">
+      <h3>Specialiști aproape de tine</h3>
+      <button class="panel-toggle" (click)="toggleSidePanel()">
+        {{ sidePanelOpen ? '←' : '→' }}
+      </button>
+    </div>
+    <div class="specialists-list">
+      <div *ngFor="let marker of getSortedSpecialists(); let i = index"
+           class="specialist-item"
+           [class.selected]="selectedMarker === marker"
+           (click)="selectSpecialistFromList(marker)">
+        <img [src]="marker.specialist.profilePictureUrl || 'assets/avatar.svg'"
+             class="specialist-thumb"
+             [alt]="marker.specialist.fullName">
+        <div class="specialist-info">
+          <h4>{{ marker.specialist.fullName }}</h4>
+          <div class="specialist-rating">{{ getStars(marker.info?.rating || 0) }}</div>
+          <p class="specialist-distance" *ngIf="marker.info?.distance">
+            {{ marker.info?.distance }}km
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

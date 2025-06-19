@@ -15,6 +15,14 @@
         <a routerLink="profile/user/become-specialist" routerLinkActive="active">Devino specialist!</a>
       </li>
 
+      <li>
+<!--      <li *ngIf="authService.getUserRole() === 'Client'">-->
+        <a routerLink="/specialist-map" routerLinkActive="active" class="map-link">
+          <span class="map-icon">🗺️</span>
+          Harta specialiști
+        </a>
+      </li>
+
       <li><a routerLink="/about" routerLinkActive="active">Despre noi</a></li>
       <li>
       <li *ngIf="authService.getUserRole() === 'Client' || authService.getUserRole() === 'Specialist'">
