@@ -48,6 +48,9 @@ export class MessagesStateService {
   public conversationListMeta: PaginationMeta = { totalCount: 0, hasMore: false };
   public messagesMeta: PaginationMeta = { totalCount: 0, hasMore: false };
 
+  private readonly selectedConversationIdSubject = new BehaviorSubject<string | null>(null);
+  public selectedConversationId$ = this.selectedConversationIdSubject.asObservable();
+
   // Getters for current values
   get exchanges(): UserConversationDTO[] {
     return this.exchangesSubject.value;
@@ -67,6 +70,10 @@ export class MessagesStateService {
 
   get isLoading(): boolean {
     return this.loadingSubject.value;
+  }
+
+  get selectedConversationId(): string | null {
+    return this.selectedConversationIdSubject.value;
   }
 
   /**
@@ -146,6 +153,12 @@ export class MessagesStateService {
     this.selectedUserSubject.next(userId);
   }
 
+  public setSelectedConversation(conversationId: string, userId: string, userInfo: SelectedUserInfo): void {
+    this.selectedConversationIdSubject.next(conversationId);
+    this.selectedUserSubject.next(userId);
+    this.selectedUserInfoSubject.next(userInfo);
+  }
+
   /**
    * Set selected user info
    */
@@ -173,6 +186,7 @@ export class MessagesStateService {
   public clearAll(): void {
     this.exchangesSubject.next([]);
     this.conversationItemsSubject.next([]);
+    this.selectedConversationIdSubject.next(null); // ← ADD THIS
     this.selectedUserSubject.next(null);
     this.selectedUserInfoSubject.next(null);
     this.loadingSubject.next(false);
@@ -189,7 +203,7 @@ export class MessagesStateService {
 
     return items.map(item => {
       const typed = this.deserializeItem(item);
-      const type = typed ? item.type as ('message' | 'request' | 'reply') : 'unknown';
+      const type = typed ? item.type : 'unknown';
       return { item, typed, type };
     });
   }
@@ -198,7 +212,7 @@ export class MessagesStateService {
    * Deserialize conversation item
    */
   private deserializeItem(item: ConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
-    if (!item || !item.data || !item.type) {
+    if (!item.data || !item.type) {
       return null;
     }
 

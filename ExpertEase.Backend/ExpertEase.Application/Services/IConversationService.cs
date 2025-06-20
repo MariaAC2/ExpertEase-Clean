@@ -14,9 +14,9 @@ public interface IConversationService
         CancellationToken cancellationToken = default);
 
     Task<ServiceResponse<PagedResponse<ConversationItemDTO>>> GetConversationByUsers(
-        Guid currentUserId,
-        Guid userId,
+        Guid receiverId,
         PaginationQueryParams pagination,
+        UserDTO? user = null,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResponse<PagedResponse<UserConversationDTO>>> GetConversationsByUsers(
@@ -24,7 +24,10 @@ public interface IConversationService
         PaginationQueryParams pagination,
         CancellationToken cancellationToken = default);
 
-    Task<ServiceResponse> AddConversationItem(FirestoreConversationItemAddDTO firestoreMessage, Guid conversationId,
-        UserDTO? requestingUser, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> AddConversationItem(
+        FirestoreConversationItemAddDTO firestoreMessage,
+        Guid receiverId,
+        UserDTO? requestingUser,
+        CancellationToken cancellationToken = default);
 
 }

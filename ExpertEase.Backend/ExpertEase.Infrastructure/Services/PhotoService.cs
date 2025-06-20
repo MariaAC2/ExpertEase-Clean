@@ -183,21 +183,19 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Photo not found or unauthorized"));
 
         var objectName = new Uri(photo.Url).AbsolutePath.TrimStart('/');
+        var user = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+        if (user?.SpecialistProfile?.Portfolio == null) return ServiceResponse.CreateErrorResponse(new ErrorMessage(HttpStatusCode.Conflict, "User can't remove a non existent photo", ErrorCodes.CannotDelete));
         await firebaseStorageService.DeleteImageAsync(objectName, cancellationToken);
 
         await firestoreRepository.DeleteAsync<FirestorePhotoDTO>("photos", photoId, cancellationToken);
-
-        // var user = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
-        // if (user?.SpecialistProfile?.Portfolio != null)
-        // {
-        //     user.SpecialistProfile.Portfolio.Remove(photo.Url);
-        //     await repository.UpdateAsync(user, cancellationToken);
-        // }
+        
+        user.SpecialistProfile.Portfolio.Remove(photo.Url);
+        await repository.UpdateAsync(user, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse();
     }
-    
-    public async Task<ServiceResponse> ValidateConversationPhoto(
+
+    private static async Task<ServiceResponse> ValidateConversationPhoto(
         Stream fileStream, 
         string contentType, 
         long fileSize)
@@ -224,10 +222,9 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
     }
     
     public async Task<ServiceResponse> AddPhotoToConversation(
-        Guid conversationId,
+        Guid receiverId,
         ConversationPhotoUploadDTO photoUpload,
         UserDTO? sender,
-        string? caption = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -243,7 +240,7 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
             var photoDto = new PhotoAddDTO
             {
                 ContentType = photoUpload.ContentType,
-                Folder = "conversations/" + conversationId,
+                Folder = "conversations",
                 FileName = photoUpload.FileName,
                 FileStream = photoUpload.FileStream,
                 IsProfilePicture = false,
@@ -261,7 +258,6 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
                 ["contentType"] = photoUpload.ContentType,
                 ["sizeInBytes"] = photoUpload.FileStream.Length,
                 ["uploadedAt"] = DateTime.UtcNow,
-                ["caption"] = caption ?? photoUpload.Caption ?? ""
             };
 
             var conversationItemAdd = new FirestoreConversationItemAddDTO
@@ -271,11 +267,9 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
             };
 
             // 4. Use the conversation service to add the item directly
-            var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
-                "conversations", conversationId.ToString(), cancellationToken);
             var addResult = await conversationService.AddConversationItem(
                 conversationItemAdd,
-                Guid.Parse(conversationId.ToString()),
+                receiverId,
                 sender,
                 cancellationToken);
 

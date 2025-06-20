@@ -51,17 +51,13 @@ export class PhotoService {
   }
 
   uploadPhotoToConversation(
-    conversationId: string,
-    file: File,
-    caption?: string
+    receiverId: string,
+    file: File
   ): Observable<RequestResponse<any>> {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('conversationId', conversationId);
 
-    if (caption) {
-      formData.append('caption', caption);
-    }
+    console.log("Form Data: ", formData);
 
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
@@ -69,7 +65,7 @@ export class PhotoService {
     });
 
     return this.http.post<RequestResponse<any>>(
-      `${this.baseUrl}/AddConversationPhoto/${conversationId}`,
+      `${this.baseUrl}/AddConversationPhoto/${receiverId}`,
       formData,
       { headers }
     );

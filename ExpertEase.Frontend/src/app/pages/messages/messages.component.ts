@@ -424,15 +424,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   async sendMessage(content: string): Promise<void> {
-    const selectedUser = this.messagesState.selectedUser;
-    if (!content.trim() || !selectedUser || this.isSendingMessage || !this.currentUserDetails) return;
+    const receiverId = this.messagesState.selectedUser; // ← This is the receiver's user ID
+    if (!content.trim() || !receiverId || this.isSendingMessage || !this.currentUserDetails) return;
 
     this.isSendingMessage = true;
     this.cdr.detectChanges();
 
     const result = await this.conversationActions.sendMessage(
       content.trim(),
-      selectedUser,
+      receiverId, // ← Pass receiver ID directly
       this.currentUserDetails
     );
 
@@ -685,6 +685,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     // Validate file
     const validation = this.photoService.validatePhotoFile(file);
     if (!validation.isValid) {
+      console.log("Poza invalida");
       this.notificationService.showNotification({
         type: 'error',
         message: validation.error || 'Invalid file selected'
@@ -693,21 +694,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
 
     this.selectedPhotoFile = file;
-    this.showPhotoCaptionDialog();
-  }
-
-  /**
-   * Show photo caption dialog (simple prompt for now)
-   */
-  private showPhotoCaptionDialog(): void {
-    const caption = prompt('Enter a caption for your photo (optional):');
-    this.uploadSelectedPhoto(caption || undefined);
+    this.uploadSelectedPhoto();
   }
 
   /**
    * Upload selected photo
    */
-  private async uploadSelectedPhoto(caption?: string): Promise<void> {
+  private async uploadSelectedPhoto(): Promise<void> {
     if (!this.selectedPhotoFile || !this.messagesState.selectedUser) {
       return;
     }
@@ -718,8 +711,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     try {
       const response = await this.photoService.uploadPhotoToConversation(
         this.messagesState.selectedUser,
-        this.selectedPhotoFile,
-        caption
+        this.selectedPhotoFile
       ).toPromise();
 
       if (response?.response) {

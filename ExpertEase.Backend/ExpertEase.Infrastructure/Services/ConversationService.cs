@@ -46,7 +46,7 @@ public class ConversationService(
      
 public async Task<ServiceResponse> AddConversationItem(
     FirestoreConversationItemAddDTO firestoreMessage,
-    Guid conversationId,
+    Guid receiverId,
     UserDTO? requestingUser,
     CancellationToken cancellationToken = default)
 {
@@ -61,8 +61,19 @@ public async Task<ServiceResponse> AddConversationItem(
     var type = firestoreMessage.Type.ToLower();
 
     // Fetch conversation for validation and metadata update
+    var user = await repository.GetAsync(new UserSpec(requestingUser.Id), cancellationToken);
+    if (user is { Role: UserRoleEnum.Admin })
+        return ServiceResponse.CreateErrorResponse<PagedResponse<ConversationItemDTO>>(CommonErrors.NotAllowed);
+
+    var conversationKey = user.Role == UserRoleEnum.Client
+        ? $"{requestingUser.Id}_{receiverId}"
+        : $"{receiverId}_{requestingUser.Id}";
+    
+    // 2. Get conversation metadata
     var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
-        "conversations", conversationId.ToString(), cancellationToken);
+        "conversations",
+        q => q.WhereEqualTo("Participants", conversationKey),
+        cancellationToken);
 
     if (conversation == null)
     {
@@ -71,7 +82,7 @@ public async Task<ServiceResponse> AddConversationItem(
     }
 
     // 🆕 Validate request status for messages and photos
-    if (type == "message" || type == "photo")
+    if (type is "message" or "photo")
     {
         var requestValidation = await ValidateRequestStatusForConversation(conversation.RequestId, cancellationToken);
         if (!requestValidation.IsOk)
@@ -93,15 +104,13 @@ public async Task<ServiceResponse> AddConversationItem(
     var element = new FirestoreConversationItemDTO
     {
         Id = elementId,
-        ConversationId = conversationId.ToString(),
+        ConversationId = conversation.Id,
         SenderId = senderId,
         Type = type,
         Data = normalizedData
     };
 
     await firestoreRepository.AddAsync("conversationElements", element, cancellationToken);
-
-    var receiverId = conversation.ParticipantIds.FirstOrDefault(id => id != senderId);
 
     // Update metadata if it's a regular message or photo
     if (type is "message" or "photo")
@@ -120,11 +129,11 @@ public async Task<ServiceResponse> AddConversationItem(
         conversation.LastMessage = content;
         conversation.LastMessageAt = element.CreatedAt;
 
-        if (!string.IsNullOrEmpty(receiverId))
+        if (!string.IsNullOrEmpty(receiverId.ToString()))
         {
             conversation.UnreadCounts ??= new Dictionary<string, int>();
-            conversation.UnreadCounts.TryAdd(receiverId, 0);
-            conversation.UnreadCounts[receiverId]++;
+            conversation.UnreadCounts.TryAdd(receiverId.ToString(), 0);
+            conversation.UnreadCounts[receiverId.ToString()]++;
         }
 
         await firestoreRepository.UpdateAsync("conversations", conversation, cancellationToken);
@@ -135,7 +144,7 @@ public async Task<ServiceResponse> AddConversationItem(
     {
         Type = type,
         Timestamp = DateTime.UtcNow,
-        ConversationId = conversationId,
+        ConversationId = conversation.Id,
         SenderId = senderId,
         Message = type switch
         {
@@ -149,13 +158,13 @@ public async Task<ServiceResponse> AddConversationItem(
     switch (type)
     {
         case "request":
-            await notifier.NotifyNewRequest(Guid.Parse(receiverId), payload);
+            await notifier.NotifyNewRequest(Guid.Parse(receiverId.ToString()), payload);
             break;
         case "reply":
-            await notifier.NotifyNewReply(Guid.Parse(receiverId), payload);
+            await notifier.NotifyNewReply(Guid.Parse(receiverId.ToString()), payload);
             break;
         default:
-            await notifier.NotifyNewMessage(Guid.Parse(receiverId), payload);
+            await notifier.NotifyNewMessage(Guid.Parse(receiverId.ToString()), payload);
             break;
     }
 
@@ -274,19 +283,19 @@ public async Task<ServiceResponse> AddConversationItem(
         await firestoreRepository.UpdateAsync("conversations", dto, cancellationToken);
     }
     public async Task<ServiceResponse<PagedResponse<ConversationItemDTO>>> GetConversationByUsers(
-        Guid currentUserId,
-        Guid userId,
+        Guid receiverId,
         PaginationQueryParams pagination,
+        UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
         
         // Validate pagination parameters
         if (pagination.Page < 1) pagination.Page = 1;
-        if (pagination.PageSize < 1 || pagination.PageSize > 100) 
+        if (pagination.PageSize is < 1 or > 100) 
             pagination.PageSize = 50;
 
-        var cacheKey = $"conversation_items_{currentUserId}_{userId}_p{pagination.Page}_s{pagination.PageSize}";
+        var cacheKey = $"conversation_items_{requestingUser.Id}_{receiverId}_p{pagination.Page}_s{pagination.PageSize}";
 
         // 1. Try cache first
         if (cache.TryGetValue(cacheKey, out PagedResponse<ConversationItemDTO> cachedResult))
@@ -295,13 +304,12 @@ public async Task<ServiceResponse> AddConversationItem(
             return ServiceResponse.CreateSuccessResponse(cachedResult);
         }
 
-        var user = await repository.GetAsync(new UserSpec(currentUserId), cancellationToken);
-        if (user is { Role: UserRoleEnum.Admin })
+        if (requestingUser.Role is UserRoleEnum.Admin)
             return ServiceResponse.CreateErrorResponse<PagedResponse<ConversationItemDTO>>(CommonErrors.NotAllowed);
 
-        var conversationKey = user.Role == UserRoleEnum.Client
-            ? $"{currentUserId}_{userId}"
-            : $"{userId}_{currentUserId}";
+        var conversationKey = requestingUser.Role == UserRoleEnum.Client
+            ? $"{requestingUser.Id}_{receiverId}"
+            : $"{receiverId}_{requestingUser.Id}";
 
         // 2. Get conversation metadata
         var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
@@ -361,7 +369,7 @@ public async Task<ServiceResponse> AddConversationItem(
         }).ToList();
 
         // 7. Process unread messages (background task)
-        _ = ProcessUnreadMessagesAsync(elements, currentUserId, conversation, cancellationToken);
+        _ = ProcessUnreadMessagesAsync(elements, requestingUser.Id, conversation, cancellationToken);
 
         // 8. Create PagedResponse with ConversationItemDTO
         var pagedResult = new PagedResponse<ConversationItemDTO>(
@@ -535,54 +543,54 @@ public async Task<ServiceResponse> AddConversationItem(
     }
 
     // Keep legacy method for backward compatibility
-    public async Task<ServiceResponse<ConversationDTO>> GetConversationByUsersLegacy(
-        Guid currentUserId,
-        Guid userId,
-        CancellationToken cancellationToken = default)
-    {
-        // Use the new paginated method with default pagination
-        var paginationParams = new PaginationQueryParams { Page = 1, PageSize = 50 };
-        var pagedResult = await GetConversationByUsers(currentUserId, userId, paginationParams, cancellationToken);
-        
-        if (!pagedResult.IsOk)
-        {
-            return ServiceResponse.CreateErrorResponse<ConversationDTO>(pagedResult.Error);
-        }
-
-        // Convert PagedResponse back to ConversationDTO for legacy compatibility
-        var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
-            "conversations",
-            q => q.WhereEqualTo("Participants", $"{currentUserId}_{userId}"),
-            cancellationToken);
-
-        if (conversation == null) 
-        {
-            return ServiceResponse.CreateErrorResponse<ConversationDTO>(
-                new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
-        }
-
-        var isClient = conversation.ClientData.UserId == currentUserId.ToString();
-        var other = isClient ? conversation.SpecialistData : conversation.ClientData;
-
-        var legacyResult = new ConversationDTO
-        {
-            ConversationId = Guid.Parse(conversation.Id),
-            UserId = Guid.Parse(other.UserId),
-            UserFullName = other.UserFullName,
-            UserProfilePictureUrl = other.UserProfilePictureUrl,
-            ConversationItems = pagedResult.Result.Data.Select(item => new FirestoreConversationItemDTO
-            {
-                Id = item.Id.ToString(),
-                ConversationId = item.ConversationId,
-                SenderId = item.SenderId,
-                Type = item.Type,
-                Data = item.Data.ToDictionary(kv => kv.Key, kv => kv.Value),
-                CreatedAt = Timestamp.FromDateTime(item.CreatedAt.ToUniversalTime())
-            }).ToList()
-        };
-
-        return ServiceResponse.CreateSuccessResponse(legacyResult);
-    }
+    // public async Task<ServiceResponse<ConversationDTO>> GetConversationByUsersLegacy(
+    //     Guid currentUserId,
+    //     Guid userId,
+    //     CancellationToken cancellationToken = default)
+    // {
+    //     // Use the new paginated method with default pagination
+    //     var paginationParams = new PaginationQueryParams { Page = 1, PageSize = 50 };
+    //     var pagedResult = await GetConversationByUsers(userId, paginationParams, req, cancellationToken);
+    //     
+    //     if (!pagedResult.IsOk)
+    //     {
+    //         return ServiceResponse.CreateErrorResponse<ConversationDTO>(pagedResult.Error);
+    //     }
+    //
+    //     // Convert PagedResponse back to ConversationDTO for legacy compatibility
+    //     var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
+    //         "conversations",
+    //         q => q.WhereEqualTo("Participants", $"{currentUserId}_{userId}"),
+    //         cancellationToken);
+    //
+    //     if (conversation == null) 
+    //     {
+    //         return ServiceResponse.CreateErrorResponse<ConversationDTO>(
+    //             new ErrorMessage(HttpStatusCode.NotFound, "Conversation not found", ErrorCodes.EntityNotFound));
+    //     }
+    //
+    //     var isClient = conversation.ClientData.UserId == currentUserId.ToString();
+    //     var other = isClient ? conversation.SpecialistData : conversation.ClientData;
+    //
+    //     var legacyResult = new ConversationDTO
+    //     {
+    //         ConversationId = Guid.Parse(conversation.Id),
+    //         UserId = Guid.Parse(other.UserId),
+    //         UserFullName = other.UserFullName,
+    //         UserProfilePictureUrl = other.UserProfilePictureUrl,
+    //         ConversationItems = pagedResult.Result.Data.Select(item => new FirestoreConversationItemDTO
+    //         {
+    //             Id = item.Id.ToString(),
+    //             ConversationId = item.ConversationId,
+    //             SenderId = item.SenderId,
+    //             Type = item.Type,
+    //             Data = item.Data.ToDictionary(kv => kv.Key, kv => kv.Value),
+    //             CreatedAt = Timestamp.FromDateTime(item.CreatedAt.ToUniversalTime())
+    //         }).ToList()
+    //     };
+    //
+    //     return ServiceResponse.CreateSuccessResponse(legacyResult);
+    // }
 
     public async Task<ServiceResponse> AddConvElement(
         FirestoreConversationItemAddDTO firestoreMessage,

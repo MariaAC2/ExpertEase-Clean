@@ -23,44 +23,41 @@ export class ConversationActionsService {
   ) {}
 
   /**
-   * Send a message
+   * Send a message using receiver ID (the other participant)
    */
   public async sendMessage(
     content: string,
-    recipientId: string,
+    receiverId: string, // ← This is now the receiver's user ID
     currentUser: UserProfileDTO
   ): Promise<{ success: boolean; error?: string }> {
     if (!content.trim()) {
       return { success: false, error: 'Message content cannot be empty' };
     }
 
-    // Add optimistic update
     const tempMessage = this.messagesState.addOptimisticMessage(content.trim(), currentUser.id);
 
     try {
-      const response = await this.messageService.sendMessage(recipientId, { content: content.trim() }).toPromise();
+      // Use receiver ID to send message
+      const response = await this.messageService.sendMessage(receiverId, { content: content.trim() }).toPromise();
 
       if (response?.response?.id) {
-        // Send SignalR notification
+        // For SignalR notification, use receiver ID
         await this.signalRHandler.sendMessageNotification(
-          recipientId,
+          receiverId,
           response.response.id,
           content.trim(),
           currentUser.fullName || 'Someone',
           currentUser.id
         );
 
-        // Trigger refresh
         this.triggerRefresh();
         return { success: true };
       } else {
-        // Remove optimistic update on failure
         this.messagesState.removeOptimisticMessage(tempMessage.id);
         return { success: false, error: 'Failed to send message' };
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      // Remove optimistic update on error
       this.messagesState.removeOptimisticMessage(tempMessage.id);
       return { success: false, error: 'Failed to send message' };
     }

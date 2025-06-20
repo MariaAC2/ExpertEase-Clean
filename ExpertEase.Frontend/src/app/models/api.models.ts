@@ -568,6 +568,7 @@ export interface ConversationDTO {
 }
 
 export interface UserConversationDTO {
+  conversationId: string;
   userId: string;
   userFullName: string;
   userProfilePictureUrl?: string;

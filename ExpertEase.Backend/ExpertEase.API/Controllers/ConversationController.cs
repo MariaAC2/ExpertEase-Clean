@@ -20,7 +20,7 @@ public class ConversationController(IUserService userService, IConversationServi
     {
         var currentUser = await GetCurrentUser();
         return currentUser.Result != null ? 
-            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationByUsers(currentUser.Result.Id, senderId, pagination)) : 
+            CreateRequestResponseFromServiceResponse(await conversationService.GetConversationByUsers(senderId, pagination, currentUser.Result)) : 
             CreateErrorMessageResult<PagedResponse<ConversationItemDTO>>(currentUser.Error);
     }
 

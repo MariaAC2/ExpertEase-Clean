@@ -30,9 +30,8 @@ public interface IPhotoService
         CancellationToken cancellationToken = default);
 
     Task<ServiceResponse> AddPhotoToConversation(
-        Guid conversationId,
+        Guid receiverId,
         ConversationPhotoUploadDTO photoUpload,
         UserDTO? sender,
-        string? caption = null,
         CancellationToken cancellationToken = default);
 }

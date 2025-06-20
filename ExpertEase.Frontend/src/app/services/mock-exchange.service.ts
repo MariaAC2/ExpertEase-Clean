@@ -16,6 +16,7 @@ export class MockExchangeService {
 
   private mockConversations: UserConversationDTO[] = [
     {
+      conversationId: "convo1",
       userId: "user_specialist_456",
       userFullName: "Ana Popescu",
       userProfilePictureUrl: "assets/avatar.svg",
@@ -24,6 +25,7 @@ export class MockExchangeService {
       unreadCount: 1,
     },
     {
+      conversationId: "convo2",
       userId: "user_specialist_789",
       userFullName: "Ion Vasile",
       userProfilePictureUrl: "assets/avatar.svg",

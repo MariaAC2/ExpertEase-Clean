@@ -1,10 +1,24 @@
-.grid-form {
-  position: absolute;
-  top: calc(50vh - 250px);    /* Adjust this offset to half the form's height */
-  left: calc(50vw - 400px);   /* Adjust this offset to half the form's width */
+// Updated admin.component.scss using flexbox instead of absolute positioning
 
-  width: 800px;               /* Fixed width used in the left calc() above */
-  height: 500px;              /* Fixed height used in the top calc() above */
+// Container for the entire admin page
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px; // Add some padding for mobile
+  box-sizing: border-box;
+}
+
+.grid-form {
+  // Remove absolute positioning
+  // position: absolute;
+  // top: calc(50vh - 250px);
+  // left: calc(50vw - 400px);
+
+  width: 800px;
+  height: 500px;
+  max-width: 100%; // Responsive for smaller screens
 
   display: flex;
   flex-direction: column;
@@ -28,8 +42,8 @@
 }
 
 .admin-button {
-  width: calc(100%);   /* ~4 buttons per row with spacing (adjust as needed) */
-  height: calc(25vw / 5);    /* or use 10vh if you want height based on screen height */
+  width: 100%;
+  height: calc(25vw / 5);
 
   background-color: #e6dfff;
   color: black;
@@ -47,13 +61,29 @@
 }
 
 .admin-button:hover {
-  text-decoration: underline;       /* slightly darker on hover */
+  text-decoration: underline;
 }
 
+// Responsive adjustments
+@media (max-width: 900px) {
+  .grid-form {
+    width: 90%;
+    padding: 30px 40px;
+  }
+}
 
-///* Optional tweaks for small screens */
-//@media (max-width: 480px) {
-//  .grid-form {
-//    padding: 16px 20px;   /* reduce padding on small devices */
-//  }
-//}
+@media (max-width: 600px) {
+  .grid-form {
+    padding: 20px 30px;
+    height: auto; // Allow height to be flexible on mobile
+  }
+
+  .button-group {
+    grid-template-columns: repeat(2, 1fr); // 2 columns on mobile
+    gap: 20px;
+  }
+
+  .admin-button {
+    height: 60px; // Fixed height on mobile instead of viewport-based
+  }
+}

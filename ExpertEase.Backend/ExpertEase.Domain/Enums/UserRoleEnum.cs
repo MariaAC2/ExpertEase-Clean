@@ -8,5 +8,4 @@ public enum UserRoleEnum
     Admin,
     Specialist,
     Client,
-    SuperAdmin,
 }

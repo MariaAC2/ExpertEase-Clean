@@ -47,7 +47,7 @@ export const routes: Routes = [
   {
     path: 'profile',
     component: ProfileComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'specialist-map',
@@ -67,22 +67,22 @@ export const routes: Routes = [
   {
     path: 'messages',
     component: MessagesComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user/become-specialist',
     component: BecomeSpecialistComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user-settings',
     component: SettingsComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'profile/user-reviews',
     component: ReviewsComponent,
-    // canActivate: [AuthGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'request-form',

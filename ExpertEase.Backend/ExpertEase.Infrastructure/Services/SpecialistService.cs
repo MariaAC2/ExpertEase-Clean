@@ -13,7 +13,8 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : ISpecialistService
+public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
+    IStripeAccountService stripeAccountService) : ISpecialistService
 {
     public async Task<ServiceResponse> AddSpecialist(SpecialistAddDTO user, UserDTO? requestingUser,
         CancellationToken cancellationToken = default)
@@ -29,6 +30,8 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
         if (result != null)
             return ServiceResponse.CreateErrorResponse(new ErrorMessage(HttpStatusCode.Conflict,
                 "The user already exists!", ErrorCodes.UserAlreadyExists));
+        
+        var stripeAccountId = await stripeAccountService.CreateConnectedAccount(user.Email);
 
         var newUser = new User
         {
@@ -45,6 +48,7 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository) : 
             {
                 YearsExperience = user.YearsExperience,
                 Description = user.Description,
+                StripeAccountId = stripeAccountId,
                 Categories = new List<Category>()
             }
         };

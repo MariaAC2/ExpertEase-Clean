@@ -120,7 +120,7 @@ public class UserDetailsProjectionSpec : Specification<User, UserDetailsDTO>
                 YearsExperience = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.YearsExperience : null,
                 Description = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Description : null,
                 Portfolio = u.Role == UserRoleEnum.Specialist ? 
-                    u.SpecialistProfile!.Portfolio.Select(p => p.Url).ToList() 
+                    u.SpecialistProfile!.Portfolio.ToList() 
                     : null,
                 Categories = u.Role == UserRoleEnum.Specialist
                     ? u.SpecialistProfile!.Categories.Select(c => c.Name).ToList()
@@ -154,7 +154,7 @@ public class UserProfileProjectionSpec : Specification<User, UserProfileDTO>
             Description = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.Description : null,
             StripeAccountId = u.Role == UserRoleEnum.Specialist ? u.SpecialistProfile!.StripeAccountId : null,
             Portfolio = u.Role == UserRoleEnum.Specialist ? 
-                u.SpecialistProfile!.Portfolio.Select(p => p.Url).ToList() 
+                u.SpecialistProfile!.Portfolio.ToList() 
                 : null,
             Categories = u.Role == UserRoleEnum.Specialist
                 ? u.SpecialistProfile!.Categories.Select(c => c.Name).ToList()

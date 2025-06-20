@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using ExpertEase.Application.Constants;
 using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
+using ExpertEase.Application.DataTransferObjects.PhotoDTOs;
 using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
@@ -20,6 +21,7 @@ public class SpecialistProfileService(
     IRepository<WebAppDatabaseContext> repository,
     IStripeAccountService stripeAccountService,
     ILoginService loginService,
+    IPhotoService photoService,
     IMailService mailService): ISpecialistProfileService
 {
     public async Task<ServiceResponse<BecomeSpecialistResponseDTO>> AddSpecialistProfile(BecomeSpecialistDTO becomeSpecialistProfile, UserDTO? requestingUser = null,
@@ -89,6 +91,20 @@ public class SpecialistProfileService(
             }
 
             user.SpecialistProfile.Categories = validCategories;
+        }
+        
+        if (becomeSpecialistProfile.PortfolioPhotos != null)
+        {
+            var validPhotos = new List<string?>();
+
+            foreach (var photoDTO in becomeSpecialistProfile.PortfolioPhotos)
+            {
+                var urlResponse = await photoService.AddPortfolioPicture(photoDTO, requestingUser, cancellationToken);
+
+                validPhotos.Add(urlResponse.ToString());
+            }
+
+            user.SpecialistProfile.Portfolio = validPhotos;
         }
 
         var userDTO = new UserDTO

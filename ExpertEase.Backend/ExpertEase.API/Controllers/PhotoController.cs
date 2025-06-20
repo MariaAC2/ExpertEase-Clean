@@ -77,8 +77,8 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
     }
     
     [Authorize]
-    [HttpPost("{conversationId:guid}")]
-    public async Task<ActionResult<RequestResponse>> AddConversationPhoto([FromForm] UploadPhotoDTO photoDTO, [FromRoute] Guid conversationId)
+    [HttpPost("{receiverId:guid}")]
+    public async Task<ActionResult<RequestResponse>> AddConversationPhoto([FromForm] UploadPhotoDTO photoDTO, [FromRoute] Guid receiverId)
     {
         var currentUser = await GetCurrentUser();
     
@@ -90,17 +90,15 @@ public class PhotoController(IUserService userService, IPhotoService photoServic
 
         var photoUpload = new ConversationPhotoUploadDTO
         {
-            Caption = "",
             ContentType = photoDTO.file.ContentType,
             FileStream = photoDTO.file.OpenReadStream(),
             FileName = photoDTO.file.FileName,
         };
 
         var result = await photoService.AddPhotoToConversation(
-            conversationId,
+            receiverId,
             photoUpload,
-            currentUser.Result,
-            photoUpload.Caption);
+            currentUser.Result);
 
         return CreateRequestResponseFromServiceResponse(result);
     }
