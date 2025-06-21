@@ -22,7 +22,6 @@ public class PaymentIntentResponseDTO
     public string PaymentIntentId { get; set; } = null!;
 }
 
-// PaymentConfirmationDTO.cs
 public class PaymentConfirmationDTO
 {
     public string PaymentIntentId { get; set; } = null!;
