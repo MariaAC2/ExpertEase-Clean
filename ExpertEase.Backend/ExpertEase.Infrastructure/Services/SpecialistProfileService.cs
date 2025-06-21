@@ -122,7 +122,8 @@ public class SpecialistProfileService(
         return ServiceResponse.CreateSuccessResponse(new BecomeSpecialistResponseDTO
         {
             Token = loginService.GetToken(userDTO, DateTime.UtcNow, new(7, 0, 0, 0)), // Get a JWT for the user issued now and that expires in 7 days.
-            User = userDTO
+            User = userDTO,
+            StripeAccountId = stripeAccountId
         });
     }
     

@@ -260,7 +260,6 @@ export class MessagesStateService {
             rejectedAt: data['RejectedAt'] ? this.convertTimestamp(data['RejectedAt']) : undefined
           } as ReplyDTO;
 
-        // ✅ ADD PHOTO CASE
         case 'photo':
           return {
             ...baseFields,

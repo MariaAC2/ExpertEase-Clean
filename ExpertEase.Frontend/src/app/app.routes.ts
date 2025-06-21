@@ -85,6 +85,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'profile/stripe-account',
+    component: ReviewsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['Specialist'] }
+  },
+  {
     path: 'request-form',
     component: RequestFormComponent
   },

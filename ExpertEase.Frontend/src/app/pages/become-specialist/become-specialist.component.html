@@ -1,5 +1,26 @@
 <h2>Devino specialist!</h2>
-<div class="modal-overlay" *ngIf="showStep2BackAlert || showStep3BackAlert">
+
+<!-- Step Progress Indicator -->
+<div class="step-progress">
+  <div class="step-item" [class.active]="step === 1" [class.completed]="step > 1">
+    <div class="step-number">1</div>
+    <div class="step-label">Introducere detalii specialist</div>
+  </div>
+  <div class="step-item" [class.active]="step === 2" [class.completed]="step > 2">
+    <div class="step-number">2</div>
+    <div class="step-label">Alegerea categoriilor</div>
+  </div>
+  <div class="step-item" [class.active]="step === 3" [class.completed]="step > 3">
+    <div class="step-number">3</div>
+    <div class="step-label">Crearea portofoliului</div>
+  </div>
+  <div class="step-item" [class.active]="step === 4" [class.completed]="step > 4">
+    <div class="step-number">4</div>
+    <div class="step-label">Activarea contului ExpertEase</div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showStep2BackAlert || showStep3BackAlert || showStep4BackAlert">
   <app-alert
     type="warning"
     title="Confirmare"
@@ -11,11 +32,13 @@
     (cancel)="handleAlertCancel()">
   </app-alert>
 </div>
+
 <div class="form-wrapper">
   <div class="form-box">
     <button *ngIf="step > 1" (click)="showBackConfirmation()" class="close-button" title="Înapoi">
       ←
     </button>
+
     <ng-container [ngSwitch]="step">
       <!-- Step 1: Basic Information -->
       <app-dynamic-form *ngSwitchCase="1"
@@ -26,6 +49,13 @@
 
       <!-- Step 2: Category Selection -->
       <div *ngSwitchCase="2" class="form-layout">
+        <div class="step-header">
+          <h3>Alegerea categoriilor</h3>
+          <p class="step-description">
+            Selectează categoriile de servicii pe care le oferi. Această secțiune este opțională - poți adăuga categorii și mai târziu.
+          </p>
+        </div>
+
         <app-category-selector
           [selectedCategoryIds]="specialistData.categories || []"
           (categoryChange)="updateCategories($event)">
@@ -33,13 +63,26 @@
 
         <div class="form-group full-width">
           <div class="button-wrapper">
-            <button (click)="handleStep2()" class="send-button" title="Treci la pasul următor">Treci la pasul următor</button>
+            <button (click)="handleStep2()" class="send-button" title="Treci la pasul următor">
+              Continuă cu categoriile selectate
+            </button>
+
+            <button (click)="skipCategories()" class="skip-button" title="Sari peste această etapă">
+              Sari peste (voi adăuga categorii mai târziu)
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Step 3: Portfolio Upload -->
       <div *ngSwitchCase="3" class="form-layout">
+        <div class="step-header">
+          <h3>Crearea portofoliului</h3>
+          <p class="step-description">
+            Adaugă imagini cu lucrările tale pentru a-ți prezenta serviciile. Această secțiune este opțională - poți adăuga imagini și mai târziu.
+          </p>
+        </div>
+
         <div class="form-group full-width">
           <app-portfolio-upload
             [uploadedPictures]="specialistData.portfolio || []"
@@ -49,7 +92,70 @@
 
         <div class="form-group full-width">
           <div class="button-wrapper">
-            <button (click)="addEntity()" class="send-button" title="Finalizează">Finalizează</button>
+            <button (click)="handleStep3()" class="send-button" title="Treci la pasul următor">
+              Continuă cu portofoliul creat
+            </button>
+
+            <button (click)="skipPortfolio()" class="skip-button" title="Sari peste această etapă">
+              Sari peste (voi adăuga imagini mai târziu)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Stripe Account Activation -->
+      <div *ngSwitchCase="4" class="form-layout">
+        <div class="stripe-activation-section">
+          <div class="activation-header">
+            <h3>Activează contul pentru plăți</h3>
+            <p class="activation-description">
+              Pentru a putea primi plăți de la clienți, trebuie să îți configurezi contul Stripe.
+              Acest proces durează doar câteva minute și este complet securizat.
+            </p>
+          </div>
+
+          <div class="activation-features">
+            <div class="feature-item">
+              <span class="feature-icon">💳</span>
+              <span>Primește plăți direct în contul tău</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">🔒</span>
+              <span>Securitate bancară de nivel înalt</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📊</span>
+              <span>Rapoarte detaliate despre câștiguri</span>
+            </div>
+          </div>
+
+          <div *ngIf="stripeActivationError" class="error-message">
+            <span class="error-icon">⚠️</span>
+            {{ stripeActivationError }}
+          </div>
+
+          <div class="button-wrapper">
+            <button
+              (click)="activateStripeAccount()"
+              [disabled]="isActivatingStripe"
+              class="send-button primary"
+              title="Activează contul Stripe">
+              <span *ngIf="!isActivatingStripe">🚀 Activează contul pentru plăți</span>
+              <span *ngIf="isActivatingStripe">Se procesează...</span>
+            </button>
+
+            <!-- Optional: Make Stripe activation optional -->
+            <button
+              (click)="skipStripeActivation()"
+              [disabled]="isActivatingStripe"
+              class="skip-button"
+              title="Sari peste această etapă">
+              Sari peste (poți activa mai târziu)
+            </button>
+          </div>
+
+          <div class="activation-note">
+            <p><strong>Notă:</strong> Dacă nu activezi contul acum, poți face acest lucru oricând din secțiunea "Profil" → "Cont plăți".</p>
           </div>
         </div>
       </div>

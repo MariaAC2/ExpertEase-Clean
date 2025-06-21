@@ -9,5 +9,6 @@ public class SpecialistSpec: Specification<SpecialistProfile>
     {
         Query.Where(e => e.UserId == id);
         Query.Include(e=> e.Categories);
+        Query.Include(e => e.User);
     }
 }

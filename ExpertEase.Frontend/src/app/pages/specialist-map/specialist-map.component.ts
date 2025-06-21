@@ -34,7 +34,7 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
     fullscreenControl: false,
     zoomControl: true,
     gestureHandling: 'greedy',
-    styles: this.getCustomMapStyle()
+    styles: this.getSimpleMapStyle()
   };
 
   // Info window options
@@ -59,24 +59,20 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
   sidePanelOpen = false;
   averageRating = 0;
 
-  // Enhanced marker options
+  // Authentication - you can inject your auth service here
+  isAuthenticated = false; // Set this based on your authentication service
+
+  // Simple marker options for user
   userMarkerOptions: google.maps.MarkerOptions = {
     icon: {
       url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
-          <defs>
-            <radialGradient id="userGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" style="stop-color:#6c5ce7;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#3c1a7d;stop-opacity:1" />
-            </radialGradient>
-          </defs>
-          <circle cx="25" cy="25" r="23" fill="url(#userGrad)" stroke="white" stroke-width="3"/>
-          <circle cx="25" cy="25" r="12" fill="white"/>
-          <text x="25" y="30" text-anchor="middle" fill="#3c1a7d" font-size="16" font-weight="bold">📍</text>
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="14" fill="#2196F3" stroke="white" stroke-width="2"/>
+          <circle cx="16" cy="16" r="6" fill="white"/>
         </svg>
       `),
-      scaledSize: new google.maps.Size(50, 50),
-      anchor: new google.maps.Point(25, 25)
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16)
     },
     zIndex: 1000
   };
@@ -85,9 +81,13 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
     private geolocationService: GeolocationService,
     private geocodingService: GeocodingService,
     private specialistService: SpecialistService
+    // Inject your auth service here
+    // private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Check authentication status
+    // this.isAuthenticated = this.authService.isAuthenticated();
     this.getCurrentLocation();
   }
 
@@ -96,65 +96,70 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Get custom map style for better appearance
-  getCustomMapStyle(): google.maps.MapTypeStyle[] {
+  // Simple map style - clean and minimal
+  getSimpleMapStyle(): google.maps.MapTypeStyle[] {
     return [
       {
-        featureType: 'poi',
-        elementType: 'labels',
+        featureType: 'poi.business',
         stylers: [{ visibility: 'off' }]
       },
       {
-        featureType: 'transit',
-        elementType: 'labels',
+        featureType: 'poi.park',
+        elementType: 'labels.text',
         stylers: [{ visibility: 'off' }]
       },
       {
-        featureType: 'road',
+        featureType: 'road.local',
         elementType: 'labels.icon',
         stylers: [{ visibility: 'off' }]
-      },
-      {
-        featureType: 'water',
-        elementType: 'geometry',
-        stylers: [{ color: '#a2daf2' }]
-      },
-      {
-        featureType: 'landscape',
-        elementType: 'geometry',
-        stylers: [{ color: '#f5f5f5' }]
       }
     ];
   }
 
-  // Get enhanced marker options for specialists
+  // Simple marker options for specialists
   getMarkerOptions(marker: MapMarkerInfo): google.maps.MarkerOptions {
-    const rating = marker.info?.rating || 0;
-    const color = rating >= 4.5 ? '#28a745' : rating >= 4 ? '#ffc107' : '#6c757d';
+    const profilePictureUrl = marker.specialist.profilePictureUrl;
 
-    return {
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <defs>
-              <radialGradient id="grad${marker.specialist.id}" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style="stop-color:${color};stop-opacity:0.8" />
-                <stop offset="100%" style="stop-color:${color};stop-opacity:1" />
-              </radialGradient>
-            </defs>
-            <circle cx="20" cy="20" r="18" fill="url(#grad${marker.specialist.id})" stroke="white" stroke-width="2"/>
-            <text x="20" y="25" text-anchor="middle" fill="white" font-size="20" font-weight="bold">👨‍💼</text>
-          </svg>
-        `),
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 20)
-      },
-      animation: google.maps.Animation.DROP,
-      zIndex: rating >= 4.5 ? 100 : 50
-    };
+    if (profilePictureUrl && profilePictureUrl !== 'src/assets/avatar.svg') {
+      // Use profile picture as marker
+      return {
+        icon: {
+          url: profilePictureUrl,
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 20)
+        },
+        optimized: false,
+        zIndex: 100
+      };
+    } else {
+      // Use simple colored marker
+      const rating = marker.info?.rating || 0;
+      let color = '#666666'; // Default gray
+
+      if (rating >= 4.5) {
+        color = '#4CAF50'; // Green for high rating
+      } else if (rating >= 4.0) {
+        color = '#FF9800'; // Orange for good rating
+      } else if (rating >= 3.0) {
+        color = '#2196F3'; // Blue for average rating
+      }
+
+      return {
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+              <circle cx="14" cy="14" r="12" fill="${color}" stroke="white" stroke-width="2"/>
+              <text x="14" y="18" text-anchor="middle" fill="white" font-size="12" font-weight="bold">👤</text>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(28, 28),
+          anchor: new google.maps.Point(14, 14)
+        },
+        zIndex: 50
+      };
+    }
   }
 
-  // Rest of your existing methods...
   getCurrentLocation(): void {
     this.isLoadingLocation = true;
     this.locationError = null;
@@ -329,5 +334,15 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
 
   trackBySpecialist(index: number, marker: MapMarkerInfo): string {
     return marker.specialist.id;
+  }
+
+  // Helper method to get the correct avatar URL
+  getAvatarUrl(specialist: SpecialistDTO): string {
+    return specialist.profilePictureUrl || 'assets/avatar.svg';
+  }
+
+  // Helper method to show basic tag for unauthenticated users
+  shouldShowBasicTag(): boolean {
+    return !this.isAuthenticated;
   }
 }

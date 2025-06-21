@@ -87,6 +87,13 @@
       [icon]="'assets/icons/history.svg'"
       (onClick)="goToHistory()">
     </app-icon-button>
+    <div *ngIf="userRole === 'Specialist'">
+      <app-icon-button
+        [label]="'Contul ExpertEase'"
+        [icon]="'assets/icons/account.svg'"
+        (onClick)="goToBankAccount()">
+      </app-icon-button>
+    </div>
     <app-icon-button
       [label]="'Setările contului'"
       [icon]="'assets/icons/settings.svg'"

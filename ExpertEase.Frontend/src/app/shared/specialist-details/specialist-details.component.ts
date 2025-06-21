@@ -55,21 +55,21 @@ export class SpecialistDetailsComponent implements OnInit {
 
   constructor(
     private readonly activatedRoute: ActivatedRoute,
-    private readonly homeService: UserService
+    private readonly userService: UserService
   ) {}
 
   ngOnInit() {
     this.userDetailsId = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.userDetails = this.dummyUserDetails;
-  //   this.homeService.getUserDetails(this.userDetailsId).subscribe({
-  //     next: (res) => {
-  //       this.userDetails = res.response ?? null;
-  //     },
-  //     error: (err) => {
-  //       console.error('Eroare la preluarea utilizatorului:', err);
-  //       alert('Nu s-au putut încărca detaliile utilizatorului.');
-  //     }
-  //   });
+    // this.userDetails = this.dummyUserDetails;
+    this.userService.getUserDetails(this.userDetailsId).subscribe({
+      next: (res) => {
+        this.userDetails = res.response ?? null;
+      },
+      error: (err) => {
+        console.error('Eroare la preluarea utilizatorului:', err);
+        alert('Nu s-au putut încărca detaliile utilizatorului.');
+      }
+    });
   }
 
   onCloseDetails() {

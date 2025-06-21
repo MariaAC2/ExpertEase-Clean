@@ -1,7 +1,10 @@
 import {Component, OnInit} from '@angular/core';
 import {StripeAccountService} from '../../../services/stripe-account.service';
 import {UserService} from '../../../services/user.service';
+import {SpecialistProfileService} from '../../../services/specialist-profile.service';
+import {AuthService} from '../../../services/auth.service';
 import {Router} from '@angular/router';
+import {NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-stripe-account',
@@ -11,20 +14,23 @@ import {Router} from '@angular/router';
 })
 export class StripeAccountComponent implements OnInit {
   loading = false;
-  isSettingUp = false;
+  isGeneratingLink = false;
   hasStripeAccount = false;
   accountComplete = false;
   stripeAccountId = '';
   errorMessage = '';
+  userProfile: any = null;
 
   constructor(
     private stripeAccountService: StripeAccountService,
     private userService: UserService,
+    private specialistProfileService: SpecialistProfileService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit() {
-    this.checkStripeAccountStatus();
+    this.loadUserStripeAccount();
   }
 
   get accountStatusClass() {
@@ -46,87 +52,114 @@ export class StripeAccountComponent implements OnInit {
   }
 
   get accountStatusDescription() {
-    if (!this.hasStripeAccount) return 'Trebuie să îți configurezi contul pentru a putea primi plăți.';
+    if (!this.hasStripeAccount) return 'Nu ai încă un cont Stripe configurat.';
     if (!this.accountComplete) return 'Completează configurarea pentru a putea primi plăți.';
     return 'Contul tău este configurat și poți primi plăți.';
   }
 
-  async checkStripeAccountStatus() {
+  async loadUserStripeAccount() {
     this.loading = true;
     this.errorMessage = '';
 
     try {
-      // TODO: Implement API call to check if user has Stripe account
-      // For now, simulate the check
-      setTimeout(() => {
-        this.loading = false;
-        // Set default values - you'll get these from your API
-        this.hasStripeAccount = false;
-        this.accountComplete = false;
-      }, 1000);
+      const currentUserId = this.authService.getUserId();
+      if (!currentUserId) {
+        throw new Error('User ID not found');
+      }
 
-    } catch (error) {
-      console.error('Error checking Stripe account status:', error);
-      this.errorMessage = 'Eroare la verificarea statusului contului.';
+      console.log('Loading specialist profile for user:', currentUserId);
+
+      // Get user's specialist profile to check for Stripe account
+      this.specialistProfileService.getSpecialistProfile().subscribe({
+        next: (profileResponse) => {
+          console.log('Specialist profile response:', profileResponse);
+
+          if (profileResponse?.response && profileResponse.response) {
+            this.userProfile = profileResponse.response;
+            this.stripeAccountId = profileResponse.response.stripeAccountId || '';
+            this.hasStripeAccount = !!this.stripeAccountId;
+
+            // TODO: In a real implementation, you'd check with Stripe API if the account is fully configured
+            // For now, assume it's incomplete until they complete onboarding
+            this.accountComplete = false;
+
+            console.log('User Stripe Account ID:', this.stripeAccountId);
+            console.log('Has Stripe Account:', this.hasStripeAccount);
+          } else {
+            console.log('No specialist profile found or response failed');
+            this.hasStripeAccount = false;
+            this.accountComplete = false;
+            this.errorMessage = 'Nu ai încă un profil de specialist configurat.';
+          }
+
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading Stripe account status:', error);
+          this.errorMessage = 'Eroare la încărcarea statusului contului.';
+          this.hasStripeAccount = false;
+          this.accountComplete = false;
+          this.loading = false;
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Error in loadUserStripeAccount:', error);
+      this.errorMessage = 'Eroare la încărcarea statusului contului.';
+      this.hasStripeAccount = false;
+      this.accountComplete = false;
       this.loading = false;
     }
   }
 
-  async setupStripeAccount() {
-    this.isSettingUp = true;
+  async activateStripeAccount() {
+    if (!this.stripeAccountId) {
+      this.errorMessage = 'Nu există un cont Stripe asociat cu profilul tău.';
+      return;
+    }
+
+    this.isGeneratingLink = true;
     this.errorMessage = '';
 
     try {
-      // Step 1: Create Stripe connected account
-      const createResponse = await this.stripeAccountService.createConnectedAccount().toPromise();
+      console.log('Generating onboarding link for account:', this.stripeAccountId);
 
-      if (createResponse?.success && createResponse.response?.accountId) {
-        // Step 2: Generate onboarding link
-        const linkResponse = await this.stripeAccountService
-          .generateOnboardingLink(createResponse.response.accountId).toPromise();
+      // Generate onboarding link for existing Stripe account
+      this.stripeAccountService.generateOnboardingLink(this.stripeAccountId).subscribe({
+        next: (linkResponse) => {
+          console.log('Link response:', linkResponse);
 
-        if (linkResponse?.success && linkResponse.response?.url) {
-          // Redirect to Stripe onboarding
-          window.location.href = linkResponse.response.url;
-        } else {
-          throw new Error(linkResponse?.message || 'Eroare la generarea link-ului de configurare.');
+          if (linkResponse?.response && linkResponse.response?.url) {
+            // Redirect to Stripe onboarding
+            console.log('Redirecting to:', linkResponse.response.url);
+            window.location.href = linkResponse.response.url;
+          } else {
+            throw new Error(linkResponse?.errorMessage?.message || 'Eroare la generarea link-ului de configurare.');
+          }
+        },
+        error: (error) => {
+          console.error('Error generating onboarding link:', error);
+
+          // More specific error handling
+          if (error.status === 401) {
+            this.errorMessage = 'Nu ești autentificat. Te rugăm să te conectezi din nou.';
+          } else if (error.status === 403) {
+            this.errorMessage = 'Nu ai permisiunea să accesezi această funcționalitate.';
+          } else if (error.status === 404) {
+            this.errorMessage = 'Contul Stripe nu a fost găsit.';
+          } else {
+            this.errorMessage = error.message || error.error?.message || 'Eroare la configurarea contului Stripe.';
+          }
+
+          this.isGeneratingLink = false;
         }
-      } else {
-        throw new Error(createResponse?.message || 'Eroare la crearea contului.');
-      }
+      });
 
     } catch (error: any) {
-      console.error('Error setting up Stripe account:', error);
+      console.error('Error in activateStripeAccount:', error);
       this.errorMessage = error.message || 'Eroare la configurarea contului Stripe.';
-      this.isSettingUp = false;
+      this.isGeneratingLink = false;
     }
-  }
-
-  async continueStripeSetup() {
-    this.isSettingUp = true;
-    this.errorMessage = '';
-
-    try {
-      // Generate new onboarding link for existing account
-      const linkResponse = await this.stripeAccountService
-        .generateOnboardingLink(this.stripeAccountId).toPromise();
-
-      if (linkResponse?.success && linkResponse.response?.url) {
-        window.location.href = linkResponse.response.url;
-      } else {
-        throw new Error(linkResponse?.message || 'Eroare la generarea link-ului.');
-      }
-
-    } catch (error: any) {
-      console.error('Error continuing Stripe setup:', error);
-      this.errorMessage = error.message || 'Eroare la continuarea configurării.';
-      this.isSettingUp = false;
-    }
-  }
-
-  viewStripeAccount() {
-    // TODO: Implement navigation to account details or Stripe Express dashboard
-    console.log('View Stripe account details');
   }
 
   goBack() {

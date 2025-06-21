@@ -6,7 +6,7 @@ import {
   MessageDTO,
   RequestDTO,
   ReplyDTO,
-  ConversationItemDTO, UserProfileDTO // Updated import
+  ConversationItemDTO, UserProfileDTO, PhotoDTO // Updated import
 } from '../../models/api.models';
 import { AuthService } from '../../services/auth.service';
 import { ExchangeService } from '../../services/exchange.service';
@@ -436,12 +436,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.currentUserDetails
     );
 
+    console.log(result);
+
     this.isSendingMessage = false;
 
     if (result.success) {
       this.messageContent = '';
-      this.refreshCurrentConversation();
-      this.loadExchanges(false);
+      this.refreshCurrentConversation(); // ← This bypasses SignalR
     } else {
       this.messageContent = content.trim();
       this.notificationService.showNotification({
@@ -551,6 +552,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   asTypedRequest(itemWrapper: any): RequestDTO {
     return itemWrapper.typed as RequestDTO;
+  }
+
+  asTypedPhoto(itemWrapper: any): PhotoDTO {
+    return itemWrapper.typed as PhotoDTO;
   }
 
   asTypedReply(itemWrapper: any): ReplyDTO {

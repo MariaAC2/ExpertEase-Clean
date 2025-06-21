@@ -13,6 +13,8 @@ public sealed class UserSpec : Specification<User>
     public UserSpec(Guid id)
     {
         Query.Where(e => e.Id == id);
+        Query.Include(e => e.ContactInfo);
+        Query.Include(e => e.SpecialistProfile);
     }
 
     public UserSpec(string email)

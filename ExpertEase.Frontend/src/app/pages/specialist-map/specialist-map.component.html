@@ -1,34 +1,29 @@
 <div class="map-container">
-  <!-- Beautiful Header -->
   <div class="map-header">
     <div class="header-content">
-      <div class="header-left">
-        <div class="header-icon">🗺️</div>
-        <div class="header-text">
-          <h1>Harta Specialiștilor</h1>
-          <p>Găsește experți în apropierea ta</p>
-        </div>
-      </div>
       <button class="back-button" routerLink="/home">
-        <span class="back-icon">←</span>
-        Înapoi la listă
+        ←
       </button>
     </div>
   </div>
 
-  <!-- Stats Bar -->
+  <!-- Simple Stats Bar -->
   <div class="stats-bar" *ngIf="!isLoadingLocation && !locationError">
     <div class="stat-item">
       <span class="stat-number">{{ specialistMarkers.length }}</span>
-      <span class="stat-label">Specialiști găsiți</span>
+      <span class="stat-label">specialiști găsiți</span>
     </div>
     <div class="stat-item" *ngIf="userLocation">
       <span class="stat-number">{{ getNearbyCount() }}</span>
-      <span class="stat-label">În raza de 10km</span>
+      <span class="stat-label">în raza de 10km</span>
     </div>
     <div class="stat-item" *ngIf="averageRating > 0">
       <span class="stat-number">{{ averageRating }}⭐</span>
-      <span class="stat-label">Rating mediu</span>
+      <span class="stat-label">rating mediu</span>
+    </div>
+    <!-- Basic tag for unauthenticated users -->
+    <div class="stat-item" *ngIf="shouldShowBasicTag()">
+      <span class="basic-tag">BASIC</span>
     </div>
   </div>
 
@@ -47,7 +42,6 @@
   <!-- Error State -->
   <div *ngIf="locationError" class="error-overlay">
     <div class="error-card">
-      <div class="error-icon">⚠️</div>
       <h3>Nu s-a putut obține locația</h3>
       <p>{{ locationError }}</p>
       <div class="error-actions">
@@ -61,7 +55,7 @@
     </div>
   </div>
 
-  <!-- Beautiful Map -->
+  <!-- Simple Map -->
   <google-map
     *ngIf="!isLoadingLocation && mapOptions"
     [center]="mapCenter"
@@ -87,14 +81,14 @@
       (mapClick)="onMarkerClick(marker)">
     </map-marker>
 
-    <!-- Beautiful Info Window -->
+    <!-- Simple Info Window -->
     <map-info-window
       *ngIf="selectedMarker"
       [position]="selectedMarker.position"
       [options]="infoWindowOptions">
       <div class="beautiful-info-window">
         <div class="info-header">
-          <img [src]="selectedMarker.specialist.profilePictureUrl || 'assets/avatar.svg'"
+          <img [src]="getAvatarUrl(selectedMarker.specialist)"
                class="specialist-avatar"
                [alt]="selectedMarker.info?.name">
           <div class="info-title">
@@ -118,10 +112,6 @@
               <span class="detail-icon">🚗</span>
               <span class="detail-text">{{ selectedMarker.info?.distance }}km depărtare</span>
             </div>
-<!--            <div class="detail-item" *ngIf="selectedMarker.info?.categories?.length">-->
-<!--              <span class="detail-icon">🏷️</span>-->
-<!--              <span class="detail-text">{{ getCategoriesText(selectedMarker.info.categories) }}</span>-->
-<!--            </div>-->
           </div>
         </div>
 
@@ -139,7 +129,7 @@
     </map-info-window>
   </google-map>
 
-  <!-- Floating Action Buttons -->
+  <!-- Simple Floating Controls -->
   <div class="floating-controls" *ngIf="!isLoadingLocation">
     <button
       class="fab"
@@ -171,7 +161,7 @@
     </button>
   </div>
 
-  <!-- Side Panel for Mobile -->
+  <!-- Simple Side Panel -->
   <div class="side-panel" [class.open]="sidePanelOpen">
     <div class="panel-header">
       <h3>Specialiști aproape de tine</h3>
@@ -184,7 +174,7 @@
            class="specialist-item"
            [class.selected]="selectedMarker === marker"
            (click)="selectSpecialistFromList(marker)">
-        <img [src]="marker.specialist.profilePictureUrl || 'assets/avatar.svg'"
+        <img [src]="getAvatarUrl(marker.specialist)"
              class="specialist-thumb"
              [alt]="marker.specialist.fullName">
         <div class="specialist-info">

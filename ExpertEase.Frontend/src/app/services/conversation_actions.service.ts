@@ -42,13 +42,13 @@ export class ConversationActionsService {
 
       if (response?.response?.id) {
         // For SignalR notification, use receiver ID
-        await this.signalRHandler.sendMessageNotification(
-          receiverId,
-          response.response.id,
-          content.trim(),
-          currentUser.fullName || 'Someone',
-          currentUser.id
-        );
+        // await this.signalRHandler.sendMessageNotification(
+        //   receiverId,
+        //   response.response.id,
+        //   content.trim(),
+        //   currentUser.fullName || 'Someone',
+        //   currentUser.id
+        // );
 
         this.triggerRefresh();
         return { success: true };
@@ -59,7 +59,7 @@ export class ConversationActionsService {
     } catch (error) {
       console.error('Error sending message:', error);
       this.messagesState.removeOptimisticMessage(tempMessage.id);
-      return { success: false, error: 'Failed to send message' };
+      return { success: false, error: 'Failed to send message, but the second one' };
     }
   }
 

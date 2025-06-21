@@ -9,4 +9,5 @@ public class BecomeSpecialistResponseDTO
     public string Token { get; set; } = null!;
     [Required]
     public UserDTO User { get; set; } = null!;
+    public string StripeAccountId { get; set; }
 }

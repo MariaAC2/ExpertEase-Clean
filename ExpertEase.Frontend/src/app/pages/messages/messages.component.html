@@ -107,7 +107,7 @@
             <!-- Photo bubble - NEW (uses ConversationItemDTO directly) -->
             <app-photo-bubble
               *ngSwitchCase="'photo'"
-              [photoItem]="itemWrapper.item"
+              [photoItem]="asTypedPhoto(itemWrapper)"
               [currentUserId]="userId">
             </app-photo-bubble>
 

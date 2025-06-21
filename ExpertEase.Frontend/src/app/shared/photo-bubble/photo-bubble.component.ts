@@ -1,5 +1,5 @@
-import {Component, Input} from '@angular/core';
-import {ConversationItemDTO} from '../../models/api.models';
+import {Component, Input, OnInit} from '@angular/core';
+import {ConversationItemDTO, PhotoDTO} from '../../models/api.models';
 import {DatePipe, NgClass, NgIf} from '@angular/common';
 
 @Component({
@@ -13,7 +13,7 @@ import {DatePipe, NgClass, NgIf} from '@angular/common';
   styleUrl: './photo-bubble.component.scss'
 })
 export class PhotoBubbleComponent {
-  @Input() photoItem!: ConversationItemDTO; // Use ConversationItemDTO instead
+  @Input() photoItem!: PhotoDTO; // Use ConversationItemDTO instead
   @Input() currentUserId: string | null | undefined;
 
   imageLoading = true;
@@ -34,10 +34,10 @@ export class PhotoBubbleComponent {
   }
 
   openPhotoViewer(): void {
-    if (!this.imageError && this.photoItem.data['url']) {
+    if (!this.imageError && this.photoItem.url) {
       // Open photo in new tab/window for now
       // You can implement a modal photo viewer later
-      window.open(this.photoItem.data['url'], '_blank');
+      window.open(this.photoItem.url, '_blank');
     }
   }
 }

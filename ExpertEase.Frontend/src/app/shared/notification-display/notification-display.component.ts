@@ -24,6 +24,7 @@ export class NotificationDisplayComponent implements OnInit, OnDestroy {
   constructor(private readonly notificationService: NotificationService) {}
 
   ngOnInit() {
+    console.log("First notification:", this.notifications[0].type);
     this.notificationService.notifications$
       .pipe(takeUntil(this.destroy$))
       .subscribe(notifications => {

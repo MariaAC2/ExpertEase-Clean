@@ -408,6 +408,7 @@ export interface BecomeSpecialistDTO {
 export interface BecomeSpecialistResponseDTO {
   token: string;
   user: UserDTO;
+  stripeAccountId: string;
 }
 export interface SpecialistProfileDTO {
     yearsExperience: number;

@@ -123,6 +123,10 @@ export class ProfileComponent implements OnInit {
     this.route.navigate(['profile/user-reviews']);
   }
 
+  goToBankAccount() {
+    this.route.navigate(['profile/stripe-account']);
+  }
+
   goToHistory() {
     // navigate to service history
   }

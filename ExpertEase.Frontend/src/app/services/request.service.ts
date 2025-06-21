@@ -25,24 +25,6 @@ export class RequestService {
 
     return this.http.get<RequestResponse<RequestDTO>>(`${this.baseUrl}/GetById/${requestId}`, {headers});
   }
-  //
-  // getRequests(search: string | undefined, page: number, pageSize: number) {
-  //   const token = this.authService.getToken();
-  //   const headers = new HttpHeaders({
-  //     Authorization: `Bearer ${token}`
-  //   });
-  //
-  //   const params = new HttpParams()
-  //     .set('search', search || '')
-  //     .set('page', page)
-  //     .set('pageSize', pageSize);
-  //
-  //   return this.http.get<RequestResponse<PagedResponse<RequestDTO>>>(
-  //     `${this.baseUrl}`,
-  //     { headers, params }
-  //   );
-  // }
-
   addRequest(user: RequestAddDTO) {
     const token = this.authService.getToken();
 
