@@ -185,72 +185,162 @@ public class RequestService(IRepository<WebAppDatabaseContext> repository,
         await UpdateFirestoreRequestStatus(entity.Id, request.Status, cancellationToken);
         
         // 🆕 Send SignalR notifications based on status
-        await SendRequestStatusNotification(entity, originalSenderId, specialistId, cancellationToken);
+        await SendRequestStatusNotification(entity, originalSenderId, specialistId, requestingUser.Id, cancellationToken);
         
         return ServiceResponse.CreateSuccessResponse();
     }
 
     private async Task SendRequestStatusNotification(
         Request entity, 
-        Guid originalSenderId, 
-        Guid? specialistId,
+        Guid clientId,
+        Guid specialistId,
+        Guid? actionPerformerId,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Create notification payload with relevant request data
-            var payload = new
-            {
-                RequestId = entity.Id,
-                SenderId = originalSenderId,
-                SpecialistId = specialistId,
-                Status = entity.Status.ToString(),
-                entity.Description,
-                entity.RequestedStartDate,
-                entity.PhoneNumber,
-                entity.Address,
-                UpdatedAt = DateTime.UtcNow,
-                // Add any other relevant data for the frontend
-                Message = GetStatusUpdateMessage(entity.Status)
-            };
+            // Get user details for better notifications
+            var client = await repository.GetAsync(new UserSpec(clientId), cancellationToken);
+            var specialist = await repository.GetAsync(new UserSpec(specialistId), cancellationToken);
 
             switch (entity.Status)
             {
                 case StatusEnum.Accepted:
-                    // Notify the original requester (client) that their request was accepted
-                    await notificationService.NotifyRequestAccepted(originalSenderId, payload);
+                    await HandleRequestAccepted(entity, client, specialist, cancellationToken);
                     break;
                     
                 case StatusEnum.Rejected:
-                    // Notify the original requester (client) that their request was rejected
-                    await notificationService.NotifyRequestRejected(originalSenderId, payload);
+                    await HandleRequestRejected(entity, client, specialist, cancellationToken);
                     break;
                     
                 case StatusEnum.Cancelled:
-                    // Notify the specialist that the request was cancelled by the client
-                    if (specialistId.HasValue && specialistId != originalSenderId)
-                    {
-                        await notificationService.NotifyRequestCancelled(specialistId.Value, payload);
-                    }
+                    await HandleRequestCancelled(entity, client, specialist, actionPerformerId, cancellationToken);
                     break;
             }
         }
-        catch (SystemException ex)
+        catch (Exception ex)
         {
             // Log the error but don't fail the main operation
-            Console.WriteLine($"Error sending request status notification: {ex.Message}");
+            Console.WriteLine($"Error sending request status notifications: {ex.Message}");
         }
     }
 
-    private static string GetStatusUpdateMessage(StatusEnum status)
+    private async Task HandleRequestAccepted(Request entity, User client, User specialist, CancellationToken cancellationToken)
     {
-        return status switch
+        // Payload for the CLIENT (original sender) - their request was accepted
+        var clientPayload = new
         {
-            StatusEnum.Accepted => "Your service request has been accepted!",
-            StatusEnum.Rejected => "Your service request has been declined.",
-            StatusEnum.Cancelled => "The service request has been cancelled.",
-            _ => "Service request status updated."
+            Type = "request_accepted",
+            RequestId = entity.Id,
+            Status = entity.Status.ToString(),
+            SpecialistName = specialist.FullName,
+            SpecialistId = specialist.Id,
+            entity.Description,
+            entity.RequestedStartDate,
+            entity.PhoneNumber,
+            entity.Address,
+            UpdatedAt = DateTime.UtcNow,
+            Message = $"Great news! {specialist.FullName} has accepted your service request."
         };
+
+        // Payload for the SPECIALIST (who accepted) - confirmation
+        var specialistPayload = new
+        {
+            Type = "request_accepted_confirmation",
+            RequestId = entity.Id,
+            Status = entity.Status.ToString(),
+            ClientName = client.FullName,
+            ClientId = client.Id,
+            entity.Description,
+            entity.RequestedStartDate,
+            entity.PhoneNumber,
+            entity.Address,
+            UpdatedAt = DateTime.UtcNow,
+            Message = $"You have successfully accepted the service request from {client.FullName}."
+        };
+
+        // Send notifications to BOTH users
+        await notificationService.NotifyRequestAccepted(client.Id, clientPayload);
+        await notificationService.NotifyRequestAccepted(specialist.Id, specialistPayload);
+    }
+
+    // 🆕 Handle request rejection - notify both users
+    private async Task HandleRequestRejected(Request entity, User client, User specialist, CancellationToken cancellationToken)
+    {
+        // Payload for the CLIENT (original sender) - their request was rejected
+        var clientPayload = new
+        {
+            Type = "request_rejected",
+            RequestId = entity.Id,
+            Status = entity.Status.ToString(),
+            SpecialistName = specialist.FullName,
+            SpecialistId = specialist.Id,
+            entity.Description,
+            entity.RequestedStartDate,
+            RejectedAt = entity.RejectedAt,
+            UpdatedAt = DateTime.UtcNow,
+            Message = $"Unfortunately, {specialist.FullName} cannot fulfill your service request at this time."
+        };
+
+        // Payload for the SPECIALIST (who rejected) - confirmation
+        var specialistPayload = new
+        {
+            Type = "request_rejected_confirmation", 
+            RequestId = entity.Id,
+            Status = entity.Status.ToString(),
+            ClientName = client.FullName,
+            ClientId = client.Id,
+            entity.Description,
+            entity.RequestedStartDate,
+            RejectedAt = entity.RejectedAt,
+            UpdatedAt = DateTime.UtcNow,
+            Message = $"You have declined the service request from {client.FullName}."
+        };
+
+        // Send notifications to BOTH users
+        await notificationService.NotifyRequestRejected(client.Id, clientPayload);
+        await notificationService.NotifyRequestRejected(specialist.Id, specialistPayload);
+    }
+
+    // 🆕 Handle request cancellation - notify the other party
+    private async Task HandleRequestCancelled(Request entity, User client, User specialist, Guid? actionPerformerId, CancellationToken cancellationToken)
+    {
+        if (actionPerformerId == client.Id)
+        {
+            // Client cancelled their own request - notify the specialist
+            var specialistPayload = new
+            {
+                Type = "request_cancelled",
+                RequestId = entity.Id,
+                Status = entity.Status.ToString(),
+                ClientName = client.FullName,
+                ClientId = client.Id,
+                entity.Description,
+                entity.RequestedStartDate,
+                UpdatedAt = DateTime.UtcNow,
+                Message = $"{client.FullName} has cancelled their service request."
+            };
+
+            await notificationService.NotifyRequestCancelled(specialist.Id, specialistPayload);
+        }
+        else if (actionPerformerId == specialist.Id)
+        {
+            // Specialist cancelled - notify the client
+            var clientPayload = new
+            {
+                Type = "request_cancelled",
+                RequestId = entity.Id,
+                Status = entity.Status.ToString(),
+                SpecialistName = specialist.FullName,
+                SpecialistId = specialist.Id,
+                entity.Description,
+                entity.RequestedStartDate,
+                UpdatedAt = DateTime.UtcNow,
+                Message = $"{specialist.FullName} has cancelled the service request."
+            };
+
+            await notificationService.NotifyRequestCancelled(client.Id, clientPayload);
+        }
     }
 
     public async Task<ServiceResponse> UpdateRequest(RequestUpdateDTO request, UserDTO? requestingUser = null,

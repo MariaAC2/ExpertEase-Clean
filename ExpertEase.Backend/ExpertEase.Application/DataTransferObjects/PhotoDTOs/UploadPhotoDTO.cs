@@ -4,5 +4,5 @@ namespace ExpertEase.Application.DataTransferObjects.PhotoDTOs;
 
 public class UploadPhotoDTO
 {
-    public IFormFile? file;
+    public IFormFile? File;
 }

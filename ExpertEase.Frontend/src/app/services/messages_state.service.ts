@@ -5,14 +5,16 @@ import {
   UserConversationDTO,
   MessageDTO,
   RequestDTO,
-  ReplyDTO, ConversationItemDTO
+  ReplyDTO, ConversationItemDTO,
+  PhotoDTO
 } from '../models/api.models';
 import { Timestamp } from 'firebase/firestore';
+import Photo = google.maps.places.Photo;
 
 export interface ConversationItemWrapper {
   item: ConversationItemDTO;
-  typed: MessageDTO | RequestDTO | ReplyDTO | null;
-  type: 'message' | 'request' | 'reply' | 'unknown';
+  typed: MessageDTO | RequestDTO | ReplyDTO | PhotoDTO | null;
+  type: 'message' | 'request' | 'reply' | 'photo' | 'unknown';
 }
 
 export interface SelectedUserInfo {
@@ -203,15 +205,16 @@ export class MessagesStateService {
 
     return items.map(item => {
       const typed = this.deserializeItem(item);
-      const type = typed ? item.type : 'unknown';
+      // ✅ FIX: Include photo type in the mapping
+      const type = typed ? item.type as ('message' | 'request' | 'reply' | 'photo') : 'unknown';
       return { item, typed, type };
     });
   }
 
   /**
-   * Deserialize conversation item
+   * Enhanced deserialize method with photo support
    */
-  private deserializeItem(item: ConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | null {
+  private deserializeItem(item: ConversationItemDTO): MessageDTO | RequestDTO | ReplyDTO | PhotoDTO | null {
     if (!item.data || !item.type) {
       return null;
     }
@@ -235,12 +238,10 @@ export class MessagesStateService {
         case 'request':
           return {
             ...baseFields,
-            // Backend uses PascalCase, so prioritize those
             requestedStartDate: this.convertTimestamp(data['RequestedStartDate'] || data['requestedStartDate']),
             description: data['Description'] || data['description'] || '',
             status: data['Status'] || data['status'] || 'Pending',
             senderContactInfo: data['SenderContactInfo'] || data['senderContactInfo'],
-            // Additional backend fields that might be present
             address: data['Address'] || data['address'],
             phoneNumber: data['PhoneNumber'] || data['phoneNumber']
           } as RequestDTO;
@@ -248,20 +249,31 @@ export class MessagesStateService {
         case 'reply':
           return {
             ...baseFields,
-            // Backend uses PascalCase, so prioritize those
             requestId: data['RequestId'] || data['requestId'] || '',
             startDate: this.convertTimestamp(data['StartDate'] || data['startDate']),
             endDate: this.convertTimestamp(data['EndDate'] || data['endDate']),
             price: Number(data['Price'] || data['price'] || 0),
             status: data['Status'] || data['status'] || 'Pending',
             serviceTask: data['ServiceTask'] || data['serviceTask'],
-            // Additional backend fields that might be present
             specialistId: data['SpecialistId'] || data['specialistId'],
             acceptedAt: data['AcceptedAt'] ? this.convertTimestamp(data['AcceptedAt']) : undefined,
             rejectedAt: data['RejectedAt'] ? this.convertTimestamp(data['RejectedAt']) : undefined
           } as ReplyDTO;
 
+        // ✅ ADD PHOTO CASE
+        case 'photo':
+          return {
+            ...baseFields,
+            url: data['Url'] || data['url'] || data['DownloadUrl'] || data['downloadUrl'] || '',
+            fileName: data['FileName'] || data['fileName'] || data['Name'] || data['name'] || 'Unknown',
+            contentType: data['ContentType'] || data['contentType'] || data['MimeType'] || data['mimeType'] || 'image/jpeg',
+            caption: data['Caption'] || data['caption'] || '',
+            createdAt: this.convertTimestamp(data['CreatedAt'] || data['createdAt'] || item.createdAt),
+            fileSize: Number(data['FileSize'] || data['fileSize'] || data['Size'] || data['size'] || 0)
+          } as PhotoDTO;
+
         default:
+          console.warn(`Unknown conversation item type: ${item.type}`, item);
           return null;
       }
     } catch (error) {

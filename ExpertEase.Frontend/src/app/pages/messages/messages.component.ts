@@ -668,6 +668,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     fileInput.onchange = (event: any) => {
       const file = event.target.files?.[0];
+      // console.log('File:', file);
       if (file) {
         this.handlePhotoSelection(file);
       }
@@ -682,18 +683,21 @@ export class MessagesComponent implements OnInit, OnDestroy {
    * Handle photo file selection
    */
   private handlePhotoSelection(file: File): void {
+    console.log('File: ', file);
     // Validate file
     const validation = this.photoService.validatePhotoFile(file);
+    console.log(validation);
     if (!validation.isValid) {
-      console.log("Poza invalida");
-      this.notificationService.showNotification({
-        type: 'error',
-        message: validation.error || 'Invalid file selected'
-      });
+      // console.log("Poza invalida");
+      // this.notificationService.showNotification({
+      //   type: 'error',
+      //   message: validation.error || 'Invalid file selected'
+      // });
       return;
     }
 
     this.selectedPhotoFile = file;
+    // console.log(this.selectedPhotoFile);
     this.uploadSelectedPhoto();
   }
 
@@ -707,6 +711,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     this.isUploadingPhoto = true;
     this.cdr.detectChanges();
+
+    console.log(this.selectedPhotoFile);
 
     try {
       const response = await this.photoService.uploadPhotoToConversation(

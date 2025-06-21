@@ -567,6 +567,17 @@ export interface ConversationDTO {
   conversationItems: FirestoreConversationItemDTO[];
 }
 
+export interface PhotoDTO {
+  id: string;
+  senderId: string;
+  url: string;
+  fileName: string;
+  contentType: string;
+  caption?: string;
+  createdAt: Date;
+  fileSize?: number;
+}
+
 export interface UserConversationDTO {
   conversationId: string;
   userId: string;
