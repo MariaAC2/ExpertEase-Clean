@@ -85,7 +85,7 @@ public async Task<ServiceResponse> AddConversationItem(
     if (type is "message" or "photo")
     {
         var requestValidation = await ValidateRequestStatusForConversation(conversation.RequestId, cancellationToken);
-        if (!requestValidation.IsOk)
+        if (!requestValidation.IsSuccess)
         {
             return requestValidation;
         }
@@ -600,7 +600,7 @@ public async Task<ServiceResponse> AddConversationItem(
         // Your existing implementation...
         var result = await AddConversationItem(firestoreMessage, conversationId, requestingUser, cancellationToken);
 
-        if (!result.IsOk) return null;
+        if (!result.IsSuccess) return null;
         // Invalidate all relevant caches including total counts
         var conversation = await firestoreRepository.GetAsync<FirestoreConversationDTO>(
             "conversations", conversationId.ToString(), cancellationToken);

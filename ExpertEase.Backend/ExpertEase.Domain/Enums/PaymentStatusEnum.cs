@@ -5,8 +5,10 @@ public enum PaymentStatusEnum
     Pending,
     Processing,
     Completed,
-    Failed,
-    Cancelled,
+    Escrowed,
+    Released,
     Refunded,
-    PartiallyRefunded
+    Cancelled,
+    Failed,
+    Disputed
 }

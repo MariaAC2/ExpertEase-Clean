@@ -182,7 +182,7 @@ public class SpecialistProfileService(
                 foreach (var photoIdToRemove in specialistProfile.PhotoIdsToRemove)
                 {
                     var deleteResult = await photoService.DeletePortfolioPicture(photoIdToRemove, requestingUser, cancellationToken);
-                    if (!deleteResult.IsOk)
+                    if (!deleteResult.IsSuccess)
                     {
                         // Log the error but continue with other operations
                         Console.WriteLine($"Failed to delete photo {photoIdToRemove}: {deleteResult.Error?.Message}");
@@ -199,7 +199,7 @@ public class SpecialistProfileService(
                     {
                         var uploadResult = await photoService.AddPortfolioPicture(photoDTO, requestingUser, cancellationToken);
                         
-                        if (uploadResult.IsOk)
+                        if (uploadResult.IsSuccess)
                         {
                             // Extract URL from the response (you might need to adjust this based on your AddPortfolioPicture return type)
                             var photoUrl = uploadResult.ToString();

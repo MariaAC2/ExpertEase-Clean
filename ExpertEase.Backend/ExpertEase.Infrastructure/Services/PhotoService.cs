@@ -234,7 +234,7 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
                 photoUpload.FileStream, 
                 photoUpload.ContentType, 
                 photoUpload.FileStream.Length);
-            if (!validationResult.IsOk)
+            if (!validationResult.IsSuccess)
                 return validationResult;
 
             var photoDto = new PhotoAddDTO
@@ -273,7 +273,7 @@ public class PhotoService(IRepository<WebAppDatabaseContext> repository,
                 sender,
                 cancellationToken);
 
-            if (!addResult.IsOk)
+            if (!addResult.IsSuccess)
             {
                 // If adding to conversation failed, clean up the uploaded image
                 try

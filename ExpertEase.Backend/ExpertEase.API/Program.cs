@@ -65,6 +65,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection(nameof(StripeConfiguration)));
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection(nameof(ProtectionFeeSettings)));
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
 builder.Services.AddScoped<IFirestoreRepository, FirestoreRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>()
@@ -83,7 +84,8 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IFirebaseStorageService, FirebaseStorageService>()
     .AddScoped<IPhotoService, PhotoService>()
     .AddScoped<IStripeAccountService, StripeAccountService>()
-    .AddScoped<IPaymentService, PaymentService>();
+    .AddScoped<IPaymentService, PaymentService>()
+    .AddScoped<IProtectionFeeConfigurationService, ProtectionFeeConfigurationService>();
 builder.Services.AddScoped<IConversationNotifier, ConversationNotifier>();
 builder.Services.AddSingleton<IMessageUpdateQueue, MessageUpdateWorker>();
 builder.Services.AddMemoryCache();

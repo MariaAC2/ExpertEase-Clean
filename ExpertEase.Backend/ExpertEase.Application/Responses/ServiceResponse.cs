@@ -5,7 +5,7 @@ namespace ExpertEase.Application.Responses;
 public class ServiceResponse
 {
     public ErrorMessage? Error { get; private init; }
-    public bool IsOk => Error == null;
+    public bool IsSuccess => Error == null;
 
     public static ServiceResponse CreateErrorResponse(ErrorMessage? error) => new() { Error = error };
     public static ServiceResponse<T> CreateErrorResponse<T>(ErrorMessage? error) => new() { Error = error };
