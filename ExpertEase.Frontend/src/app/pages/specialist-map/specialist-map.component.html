@@ -1,4 +1,5 @@
 <div class="map-container">
+  <!-- Simple Header -->
   <div class="map-header">
     <div class="header-content">
       <button class="back-button" routerLink="/home">
@@ -42,6 +43,7 @@
   <!-- Error State -->
   <div *ngIf="locationError" class="error-overlay">
     <div class="error-card">
+      <div class="error-icon">⚠️</div>
       <h3>Nu s-a putut obține locația</h3>
       <p>{{ locationError }}</p>
       <div class="error-actions">
@@ -78,11 +80,13 @@
       [position]="marker.position"
       [title]="marker.title"
       [options]="getMarkerOptions(marker)"
-      (mapClick)="onMarkerClick(marker)">
+      (mapClick)="onMarkerClick(marker)"
+      (mapMarkerClick)="onMarkerClick(marker)">
     </map-marker>
 
     <!-- Simple Info Window -->
     <map-info-window
+      #infoWindow
       *ngIf="selectedMarker"
       [position]="selectedMarker.position"
       [options]="infoWindowOptions">

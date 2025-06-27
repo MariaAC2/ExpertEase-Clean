@@ -19,14 +19,8 @@ public class RequestProjectionSpec : Specification<Request, RequestDTO>
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
-            SenderContactInfo = 
-                e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
-                    ? new ContactInfoDTO
-                    {
-                        PhoneNumber = e.PhoneNumber,
-                        Address = e.Address
-                    }
-                    : null,
+            SenderPhoneNumber = e.PhoneNumber,
+            SenderAddress = e.Address
         });
 
         if (orderByCreatedAt)
@@ -69,14 +63,8 @@ public class RequestConversationProjectionSpec : Specification<Request, RequestD
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
-            SenderContactInfo =
-                e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
-                    ? new ContactInfoDTO
-                    {
-                        PhoneNumber = e.PhoneNumber,
-                        Address = e.Address
-                    }
-                    : null,
+            SenderPhoneNumber = e.PhoneNumber,
+            SenderAddress = e.Address
         });
 
         if (orderByCreatedAt)
@@ -97,14 +85,8 @@ public class RequestUserProjectionSpec : Specification<Request, RequestDTO>
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
-            SenderContactInfo = 
-                e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
-                    ? new ContactInfoDTO
-                    {
-                        PhoneNumber = e.PhoneNumber,
-                        Address = e.Address
-                    }
-                    : null,
+            SenderPhoneNumber = e.PhoneNumber,
+            SenderAddress = e.Address
         });
 
         if (orderByCreatedAt)
@@ -147,14 +129,8 @@ public class RequestSpecialistProjectionSpec : Specification<Request, RequestDTO
             RequestedStartDate = e.RequestedStartDate,
             Description = e.Description,
             Status = e.Status,
-            SenderContactInfo =
-                e.Status != StatusEnum.Rejected && e.Status != StatusEnum.Pending
-                    ? new ContactInfoDTO
-                    {
-                        PhoneNumber = e.PhoneNumber,
-                        Address = e.Address
-                    }
-                    : null,
+            SenderPhoneNumber = e.PhoneNumber,
+            SenderAddress = e.Address
         });
 
         if (orderByCreatedAt)

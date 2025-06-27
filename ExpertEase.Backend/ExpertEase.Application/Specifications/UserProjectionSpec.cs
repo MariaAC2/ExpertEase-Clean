@@ -140,6 +140,7 @@ public class UserProfileProjectionSpec : Specification<User, UserProfileDTO>
             .ThenInclude(sp => sp.Categories);
         Query.Select(u => new UserProfileDTO
         {
+            Id = u.Id,
             FullName = u.FullName,
             ProfilePictureUrl = u.ProfilePictureUrl,
             Rating = u.Rating,

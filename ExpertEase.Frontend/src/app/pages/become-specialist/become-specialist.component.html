@@ -1,25 +1,5 @@
 <h2>Devino specialist!</h2>
 
-<!-- Step Progress Indicator -->
-<div class="step-progress">
-  <div class="step-item" [class.active]="step === 1" [class.completed]="step > 1">
-    <div class="step-number">1</div>
-    <div class="step-label">Introducere detalii specialist</div>
-  </div>
-  <div class="step-item" [class.active]="step === 2" [class.completed]="step > 2">
-    <div class="step-number">2</div>
-    <div class="step-label">Alegerea categoriilor</div>
-  </div>
-  <div class="step-item" [class.active]="step === 3" [class.completed]="step > 3">
-    <div class="step-number">3</div>
-    <div class="step-label">Crearea portofoliului</div>
-  </div>
-  <div class="step-item" [class.active]="step === 4" [class.completed]="step > 4">
-    <div class="step-number">4</div>
-    <div class="step-label">Activarea contului ExpertEase</div>
-  </div>
-</div>
-
 <div class="modal-overlay" *ngIf="showStep2BackAlert || showStep3BackAlert || showStep4BackAlert">
   <app-alert
     type="warning"
@@ -41,18 +21,24 @@
 
     <ng-container [ngSwitch]="step">
       <!-- Step 1: Basic Information -->
-      <app-dynamic-form *ngSwitchCase="1"
-                        [fields]="step1FormFields"
-                        [submitText]="'Treci la pasul următor'"
-                        (formSubmit)="handleStep1($event)">
-      </app-dynamic-form>
+      <div *ngSwitchCase="1">
+        <h3>Pas 1: Profilul de specialist</h3>
+        <p class="step-description">
+          Spune-ne puțin despre tine și despre serviciile tale!
+        </p>
+        <app-dynamic-form
+          [fields]="step1FormFields"
+          [submitText]="'Treci la pasul următor'"
+          (formSubmit)="handleStep1($event)">
+        </app-dynamic-form>
+      </div>
 
       <!-- Step 2: Category Selection -->
       <div *ngSwitchCase="2" class="form-layout">
         <div class="step-header">
-          <h3>Alegerea categoriilor</h3>
+          <h3>Pas 2: Alegerea categoriilor</h3>
           <p class="step-description">
-            Selectează categoriile de servicii pe care le oferi. Această secțiune este opțională - poți adăuga categorii și mai târziu.
+            Selectează categoriile de servicii pe care le oferi!
           </p>
         </div>
 
@@ -64,11 +50,11 @@
         <div class="form-group full-width">
           <div class="button-wrapper">
             <button (click)="handleStep2()" class="send-button" title="Treci la pasul următor">
-              Continuă cu categoriile selectate
+              Continuă
             </button>
 
             <button (click)="skipCategories()" class="skip-button" title="Sari peste această etapă">
-              Sari peste (voi adăuga categorii mai târziu)
+              Sari peste
             </button>
           </div>
         </div>
@@ -77,15 +63,15 @@
       <!-- Step 3: Portfolio Upload -->
       <div *ngSwitchCase="3" class="form-layout">
         <div class="step-header">
-          <h3>Crearea portofoliului</h3>
+          <h3>Pas 3: Crearea portofoliului</h3>
           <p class="step-description">
-            Adaugă imagini cu lucrările tale pentru a-ți prezenta serviciile. Această secțiune este opțională - poți adăuga imagini și mai târziu.
+            Adaugă imagini cu lucrările tale pentru a-ți prezenta serviciile!
           </p>
         </div>
 
         <div class="form-group full-width">
           <app-portfolio-upload
-            [uploadedPictures]="specialistData.portfolio || []"
+            [uploadedFiles]="portfolioImages"
             (portfolioChange)="updatePortfolio($event)">
           </app-portfolio-upload>
         </div>
@@ -93,11 +79,11 @@
         <div class="form-group full-width">
           <div class="button-wrapper">
             <button (click)="handleStep3()" class="send-button" title="Treci la pasul următor">
-              Continuă cu portofoliul creat
+              Continuă
             </button>
 
             <button (click)="skipPortfolio()" class="skip-button" title="Sari peste această etapă">
-              Sari peste (voi adăuga imagini mai târziu)
+              Sari peste
             </button>
           </div>
         </div>
@@ -107,7 +93,7 @@
       <div *ngSwitchCase="4" class="form-layout">
         <div class="stripe-activation-section">
           <div class="activation-header">
-            <h3>Activează contul pentru plăți</h3>
+            <h3>Pas 4: Activează contul pentru plăți</h3>
             <p class="activation-description">
               Pentru a putea primi plăți de la clienți, trebuie să îți configurezi contul Stripe.
               Acest proces durează doar câteva minute și este complet securizat.
@@ -150,12 +136,12 @@
               [disabled]="isActivatingStripe"
               class="skip-button"
               title="Sari peste această etapă">
-              Sari peste (poți activa mai târziu)
+              Sari peste
             </button>
           </div>
 
           <div class="activation-note">
-            <p><strong>Notă:</strong> Dacă nu activezi contul acum, poți face acest lucru oricând din secțiunea "Profil" → "Cont plăți".</p>
+            <p><strong>Notă:</strong> Dacă nu activezi contul acum, poți face acest lucru oricând din secțiunea "Profil" → "Contul ExpertEase".</p>
           </div>
         </div>
       </div>

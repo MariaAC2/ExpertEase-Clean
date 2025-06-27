@@ -241,9 +241,8 @@ export class MessagesStateService {
             requestedStartDate: this.convertTimestamp(data['RequestedStartDate'] || data['requestedStartDate']),
             description: data['Description'] || data['description'] || '',
             status: data['Status'] || data['status'] || 'Pending',
-            senderContactInfo: data['SenderContactInfo'] || data['senderContactInfo'],
-            address: data['Address'] || data['address'],
-            phoneNumber: data['PhoneNumber'] || data['phoneNumber']
+            senderAddress: data['Address'] || data['address'],
+            senderPhoneNumber: data['PhoneNumber'] || data['phoneNumber']
           } as RequestDTO;
 
         case 'reply':

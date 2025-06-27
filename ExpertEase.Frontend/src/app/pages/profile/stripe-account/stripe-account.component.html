@@ -1,1 +1,102 @@
-<p>stripe-account works!</p>
+<div class="top-action-button">
+  <button (click)="goBack()" class="back-button">← Înapoi la profil</button>
+</div>
+
+<div class="stripe-wrapper">
+  <div class="stripe-header">
+    <h1>Configurarea contului <strong class="brand-highlight">Stripe</strong></h1>
+    <p>Gestionează-ți contul de plăți pentru a primi bani de la clienți</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="status-card loading">
+    <div class="status-icon">⏳</div>
+    <div class="status-content">
+      <h3>Se încarcă...</h3>
+      <p>Verificăm statusul contului tău Stripe</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !loading" class="status-card error">
+    <div class="status-icon">❌</div>
+    <div class="status-content">
+      <h3>Eroare</h3>
+      <p>{{ errorMessage }}</p>
+      <button (click)="loadUserStripeAccount()" class="retry-button">Încearcă din nou</button>
+    </div>
+  </div>
+
+  <!-- Account Status Card -->
+  <div *ngIf="!loading && !errorMessage" class="status-card" [ngClass]="accountStatusClass">
+    <div class="status-icon">{{ accountStatusIcon }}</div>
+    <div class="status-content">
+      <h3>{{ accountStatusTitle }}</h3>
+      <p>{{ accountStatusDescription }}</p>
+
+      <!-- Account Details -->
+      <div *ngIf="hasStripeAccount" class="account-details">
+        <div class="detail-row">
+          <span class="detail-label">ID Cont Stripe:</span>
+          <span class="detail-value">{{ stripeAccountId }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value" [ngClass]="accountComplete ? 'status-complete' : 'status-incomplete'">
+            {{ accountComplete ? 'Complet' : 'Incomplet' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button
+          *ngIf="hasStripeAccount && !accountComplete"
+          (click)="activateStripeAccount()"
+          [disabled]="isGeneratingLink"
+          class="primary-button">
+          <span *ngIf="!isGeneratingLink">Completează configurarea</span>
+          <span *ngIf="isGeneratingLink">Se generează link-ul...</span>
+        </button>
+
+        <button
+          *ngIf="hasStripeAccount && accountComplete"
+          (click)="openDashboard()"
+          [disabled]="isGeneratingLink"
+          class="secondary-button">
+          <span *ngIf="!isGeneratingLink">Accesează Dashboard-ul</span>
+          <span *ngIf="isGeneratingLink">Se generează link-ul...</span>
+        </button>
+
+        <div *ngIf="!hasStripeAccount" class="no-account-message">
+          <p>Pentru a configura un cont Stripe, trebuie să îți completezi mai întâi profilul de specialist.</p>
+          <button (click)="goToSpecialistProfile()" class="secondary-button">
+            Completează profilul de specialist
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Information Section -->
+  <div class="info-section">
+    <h2>De ce ai nevoie de un cont Stripe?</h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">💳</div>
+        <h4>Primește plăți</h4>
+        <p>Clienții îți pot plăti direct prin platformă folosind cardul bancar</p>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🔒</div>
+        <h4>Securitate</h4>
+        <p>Stripe oferă cea mai înaltă securitate pentru tranzacțiile online</p>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📊</div>
+        <h4>Rapoarte</h4>
+        <p>Vezi toate tranzacțiile și veniturile tale într-un dashboard dedicat</p>
+      </div>
+    </div>
+  </div>
+</div>

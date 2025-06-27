@@ -1,26 +1,4 @@
-<!--<div class="portfolio-upload">-->
-<!--  <div class="portfolio-content">-->
-<!--    <div class="portfolio-preview" *ngFor="let preview of imagePreviews; let i = index">-->
-<!--      <div class="image-container">-->
-<!--        <img [src]="preview" alt="Portfolio image preview" />-->
-<!--        <button class="delete-btn" (click)="remove(i)" type="button" title="Remove image">✕</button>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
-
-<!--  <label class="custom-upload-btn">-->
-<!--    📸 Adaugă imagini-->
-<!--    <input type="file" multiple accept="image/*" (change)="onFileSelected($event)" hidden />-->
-<!--  </label>-->
-<!--</div>-->
-
 <div class="portfolio-section">
-<!--  <div class="portfolio-images" *ngIf="uploadedPictures.length > 0">-->
-<!--    <div class="image-item" *ngFor="let image of uploadedPictures; let i = index">-->
-<!--      <img [src]="image.fileName" alt="Portfolio image" />-->
-<!--      <button type="button" class="delete-image-btn" (click)="remove(i)">×</button>-->
-<!--    </div>-->
-<!--  </div>-->
   <div class="portfolio-images" *ngIf="imagePreviews.length > 0">
     <div class="image-item" *ngFor="let preview of imagePreviews; let i = index">
       <img [src]="preview" alt="Portfolio image" />
@@ -28,7 +6,7 @@
     </div>
   </div>
 
-  <div class="portfolio-empty" *ngIf="uploadedPictures.length === 0">
+  <div class="portfolio-empty" *ngIf="uploadedFiles.length === 0">
     <p>Nu ai adăugat nicio imagine în portofoliu</p>
   </div>
 

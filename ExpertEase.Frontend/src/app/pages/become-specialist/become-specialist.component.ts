@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {BecomeSpecialistDTO, PortfolioPictureAddDTO} from '../../models/api.models';
+import {BecomeSpecialistDTO} from '../../models/api.models';
 import {dtoToFormFields} from '../../models/form.models';
 import {Router} from '@angular/router';
 import {DynamicFormComponent} from '../../shared/dynamic-form/dynamic-form.component';
@@ -45,8 +45,7 @@ export class BecomeSpecialistComponent implements OnInit {
     phoneNumber: '',
     address: '',
     description: '',
-    categories: [],
-    portfolio: []
+    categories: []
   };
 
   formData: { [key: string]: any } = {};
@@ -106,11 +105,13 @@ export class BecomeSpecialistComponent implements OnInit {
     this.step = 3;
   }
 
-  // Step 3 handlers
-  updatePortfolio(portfolio: PortfolioPictureAddDTO[]) {
-    this.portfolioImages = portfolio.map(p => p.fileStream);
-    this.imagePreviews = portfolio.map(p => URL.createObjectURL(p.fileStream));
-    this.specialistData.portfolio = portfolio;
+  // Step 3 handlers - Updated to handle File objects instead of DTOs
+  updatePortfolio(files: File[]) {
+    this.portfolioImages = files;
+    // Clean up old previews
+    this.imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    // Create new previews
+    this.imagePreviews = files.map(file => URL.createObjectURL(file));
   }
 
   handleStep3() {
@@ -120,77 +121,56 @@ export class BecomeSpecialistComponent implements OnInit {
 
   skipPortfolio() {
     // Clear any uploaded portfolio and move to next step
-    this.specialistData.portfolio = [];
     this.portfolioImages = [];
+    // Clean up previews
+    this.imagePreviews.forEach(url => URL.revokeObjectURL(url));
     this.imagePreviews = [];
     this.step = 4;
   }
 
-  // Step 4 - Stripe Account Activation
+  // Step 4 - Stripe Account Activation - Updated to use FormData
   async activateStripeAccount() {
     this.isActivatingStripe = true;
     this.stripeActivationError = '';
 
     try {
-      // First, create the specialist profile (this will create the Stripe account ID)
       const currentUserId = this.authService.getUserId();
       if (!currentUserId) {
         throw new Error('User ID not found');
       }
 
-      const userToSubmit: BecomeSpecialistDTO = {
-        userId: currentUserId,
-        phoneNumber: this.specialistData.phoneNumber,
-        address: this.specialistData.address,
-        yearsExperience: this.specialistData.yearsExperience,
-        description: this.specialistData.description,
-        categories: this.specialistData.categories,
-        portfolio: this.specialistData.portfolio
-      };
+      // Create the specialist profile using the new FormData approach
+      const response = await this.createSpecialistProfileWithFormData(currentUserId);
 
-      console.log('Creating specialist profile:', userToSubmit);
+      if (!response?.response) {
+        throw new Error(response?.errorMessage?.message || 'Eroare la crearea profilului');
+      }
 
-      // Create specialist profile with Stripe account ID
-      this.specialistProfileService.becomeSpecialist(userToSubmit).subscribe({
-        next: async (profileResponse) => {
-          console.log('Specialist profile created:', profileResponse);
+      // Get the Stripe account ID from the response
+      this.stripeAccountId = response.response?.stripeAccountId || '';
 
-          if (!profileResponse?.response) {
-            throw new Error(profileResponse?.errorMessage?.message || 'Eroare la crearea profilului');
+      console.log('Retrieved stripeAccountId:', this.stripeAccountId);
+
+      if (!this.stripeAccountId) {
+        throw new Error('Stripe account ID not found in response');
+      }
+
+      // Generate onboarding link
+      this.stripeAccountService.generateOnboardingLink(this.stripeAccountId).subscribe({
+        next: (linkResponse) => {
+          console.log('Onboarding link response:', linkResponse);
+
+          if (linkResponse?.response && linkResponse.response?.url) {
+            // Redirect to Stripe onboarding
+            console.log('Redirecting to Stripe onboarding:', linkResponse.response.url);
+            window.location.href = linkResponse.response.url;
+          } else {
+            throw new Error(linkResponse?.errorMessage?.message || 'Eroare la generarea link-ului de activare');
           }
-
-          // Get the Stripe account ID from the response
-          this.stripeAccountId = profileResponse.response?.stripeAccountId || '';
-
-          console.log('Retrieved stripeAccountId:', this.stripeAccountId);
-
-          if (!this.stripeAccountId) {
-            throw new Error('Stripe account ID not found in response');
-          }
-
-          // Generate onboarding link
-          this.stripeAccountService.generateOnboardingLink(this.stripeAccountId).subscribe({
-            next: (linkResponse) => {
-              console.log('Onboarding link response:', linkResponse);
-
-              if (linkResponse?.response && linkResponse.response?.url) {
-                // Redirect to Stripe onboarding
-                console.log('Redirecting to Stripe onboarding:', linkResponse.response.url);
-                window.location.href = linkResponse.response.url;
-              } else {
-                throw new Error(linkResponse?.errorMessage?.message || 'Eroare la generarea link-ului de activare');
-              }
-            },
-            error: (linkError) => {
-              console.error('Error generating onboarding link:', linkError);
-              this.stripeActivationError = linkError.message || linkError.error?.message || 'Eroare la generarea link-ului de activare';
-              this.isActivatingStripe = false;
-            }
-          });
         },
-        error: (profileError) => {
-          console.error('Error creating specialist profile:', profileError);
-          this.stripeActivationError = profileError.message || profileError.error?.message || 'Eroare la crearea profilului';
+        error: (linkError) => {
+          console.error('Error generating onboarding link:', linkError);
+          this.stripeActivationError = linkError.message || linkError.error?.message || 'Eroare la generarea link-ului de activare';
           this.isActivatingStripe = false;
         }
       });
@@ -202,9 +182,35 @@ export class BecomeSpecialistComponent implements OnInit {
     }
   }
 
-  // Option to skip Stripe activation (if you want to make it optional)
+  // Helper method to create specialist profile with FormData
+  private createSpecialistProfileWithFormData(userId: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      // Use the updated service method that expects separated data and files
+      this.specialistProfileService.becomeSpecialist(
+        {
+          userId: userId,
+          phoneNumber: this.specialistData.phoneNumber,
+          address: this.specialistData.address,
+          yearsExperience: this.specialistData.yearsExperience,
+          description: this.specialistData.description,
+          categories: this.specialistData.categories
+        },
+        this.portfolioImages // Pass files separately
+      ).subscribe({
+        next: (response) => {
+          console.log('Specialist profile created:', response);
+          resolve(response);
+        },
+        error: (error) => {
+          console.error('Error creating specialist profile:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  // Option to skip Stripe activation
   skipStripeActivation() {
-    // Create specialist profile without Stripe activation
     this.createSpecialistProfileOnly();
   }
 
@@ -215,19 +221,17 @@ export class BecomeSpecialistComponent implements OnInit {
       return;
     }
 
-    const userToSubmit: BecomeSpecialistDTO = {
-      userId: currentUserId,
-      phoneNumber: this.specialistData.phoneNumber,
-      address: this.specialistData.address,
-      yearsExperience: this.specialistData.yearsExperience,
-      description: this.specialistData.description,
-      categories: this.specialistData.categories,
-      portfolio: this.specialistData.portfolio
-    };
-
-    console.log('Creating specialist profile only:', userToSubmit);
-
-    this.specialistProfileService.becomeSpecialist(userToSubmit).subscribe({
+    this.specialistProfileService.becomeSpecialist(
+      {
+        userId: currentUserId,
+        phoneNumber: this.specialistData.phoneNumber,
+        address: this.specialistData.address,
+        yearsExperience: this.specialistData.yearsExperience,
+        description: this.specialistData.description,
+        categories: this.specialistData.categories
+      },
+      this.portfolioImages
+    ).subscribe({
       next: (response) => {
         console.log('Specialist profile created successfully:', response);
         this.closeAddUserForm();
@@ -285,8 +289,9 @@ export class BecomeSpecialistComponent implements OnInit {
   }
 
   goBackToStep2() {
-    this.specialistData.portfolio = [];
+    // Clean up portfolio files and previews
     this.portfolioImages = [];
+    this.imagePreviews.forEach(url => URL.revokeObjectURL(url));
     this.imagePreviews = [];
     this.showStep3BackAlert = false;
     this.step = 2;
@@ -299,5 +304,11 @@ export class BecomeSpecialistComponent implements OnInit {
 
   closeAddUserForm() {
     this.isAddUserFormVisible = false;
+  }
+
+  // Cleanup on component destroy
+  ngOnDestroy() {
+    // Clean up any object URLs to prevent memory leaks
+    this.imagePreviews.forEach(url => URL.revokeObjectURL(url));
   }
 }

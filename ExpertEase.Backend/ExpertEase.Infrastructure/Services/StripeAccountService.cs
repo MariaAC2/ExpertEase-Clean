@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using ExpertEase.Application.DataTransferObjects;
+using ExpertEase.Application.DataTransferObjects.StripeAccountDTOs;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Infrastructure.Configurations;
@@ -61,6 +62,29 @@ public class StripeAccountService : IStripeAccountService
             Url = link.Url
         });
     }
+    
+    public async Task<ServiceResponse<StripeAccountLinkResponseDTO>> GenerateDashboardLink(string accountId)
+    {
+        var linkService = new AccountLinkService();
+        var link = await linkService.CreateAsync(new AccountLinkCreateOptions
+        {
+            Account = accountId,
+            ReturnUrl = $"http://localhost:5241/dashboard/{accountId}",
+            RefreshUrl = $"http://localhost:5241/dashboard/{accountId}",
+            Type = "account_update"
+        });
+        
+        if (link == null || string.IsNullOrEmpty(link.Url))
+        {
+            return ServiceResponse.CreateErrorResponse<StripeAccountLinkResponseDTO>(
+                new(HttpStatusCode.Forbidden ,"Failed to create dashboard link. Please try again later."));
+        }
+
+        return ServiceResponse.CreateSuccessResponse(new StripeAccountLinkResponseDTO
+        {
+            Url = link.Url
+        });
+    }
 
     public async Task<string> CreatePaymentIntent(decimal amount, string stripeAccountId)
     {
@@ -86,5 +110,39 @@ public class StripeAccountService : IStripeAccountService
 
         var paymentIntent = await service.CreateAsync(options);
         return paymentIntent.ClientSecret;
+    }
+    
+    public async Task<ServiceResponse<StripeAccountStatusDTO>> GetAccountStatus(string accountId)
+    {
+        try
+        {
+            var service = new AccountService();
+            var account = await service.GetAsync(accountId);
+        
+            if (account == null)
+            {
+                return ServiceResponse.CreateErrorResponse<StripeAccountStatusDTO>(
+                    new(HttpStatusCode.NotFound, "Stripe account not found"));
+            }
+
+            var status = new StripeAccountStatusDTO
+            {
+                AccountId = account.Id,
+                IsActive = account.ChargesEnabled && account.PayoutsEnabled,
+                ChargesEnabled = account.ChargesEnabled,
+                PayoutsEnabled = account.PayoutsEnabled,
+                DetailsSubmitted = account.DetailsSubmitted,
+                RequirementsCurrentlyDue = account.Requirements?.CurrentlyDue?.ToList() ?? new List<string>(),
+                RequirementsEventuallyDue = account.Requirements?.EventuallyDue?.ToList() ?? new List<string>(),
+                DisabledReason = account.Requirements?.DisabledReason
+            };
+
+            return ServiceResponse.CreateSuccessResponse(status);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResponse.CreateErrorResponse<StripeAccountStatusDTO>(
+                new(HttpStatusCode.InternalServerError, $"Error checking account status: {ex.Message}"));
+        }
     }
 }

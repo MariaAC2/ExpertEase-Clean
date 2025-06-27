@@ -16,7 +16,9 @@ public class RequestDTO
     public DateTime RequestedStartDate { get; set; }
     [Required]
     public string Description { get; set; } = null!;
-    public ContactInfoDTO? SenderContactInfo { get; set; }
-    [Required]
+
+    public string SenderPhoneNumber { get; set; } = null;
+    
+    public string SenderAddress { get; set; } = null!;
     public StatusEnum Status { get; set; } = StatusEnum.Pending;
 }

@@ -24,7 +24,9 @@ public class SpecialistProfileProjectionSpec : Specification<User, SpecialistPro
             {
                 Id = c.Id,
                 Name = c.Name
-            }).ToList()
+            }).ToList(),
+            PortfolioPhotos = e.SpecialistProfile.Portfolio,
+            StripeAccountId = e.SpecialistProfile.StripeAccountId,
         });
     }
 }

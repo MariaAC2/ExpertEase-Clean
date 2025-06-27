@@ -241,7 +241,8 @@ export interface RequestDTO {
     senderId: string;
     requestedStartDate: Date;
     description: string;
-    senderContactInfo?: ContactInfoDTO;
+    senderPhoneNumber: string;
+    senderAddress: string;
     status: StatusEnum;
 }
 
@@ -393,6 +394,17 @@ export interface SpecialistDTO {
     updatedAt: Date;
     rating: number;
     categories?: CategoryDTO[];
+}
+
+export interface StripeAccountStatusDTO {
+  accountId: string;
+  isActive: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  requirementsCurrentlyDue: string[];
+  requirementsEventuallyDue: string[];
+  disabledReason?: string;
 }
 
 export interface BecomeSpecialistDTO {

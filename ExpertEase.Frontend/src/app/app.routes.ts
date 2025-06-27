@@ -22,6 +22,7 @@ import {ContactUsComponent} from './pages/contact-us/contact-us.component';
 import {TermsComponent} from './pages/terms/terms.component';
 import {PrivacyComponent} from './pages/privacy/privacy.component';
 import {SpecialistMapComponent} from './pages/specialist-map/specialist-map.component';
+import {StripeAccountComponent} from './pages/profile/stripe-account/stripe-account.component';
 
 export const routes: Routes = [
   {
@@ -86,7 +87,7 @@ export const routes: Routes = [
   },
   {
     path: 'profile/stripe-account',
-    component: ReviewsComponent,
+    component: StripeAccountComponent,
     canActivate: [AuthGuard],
     data: { roles: ['Specialist'] }
   },

@@ -11,4 +11,6 @@ public class SpecialistProfileDTO
     public string Description { get; set; } = null!;
     [Required]
     public List<CategoryDTO> Categories { get; set; } = null!;
+    public List<string>? PortfolioPhotos { get; set; }
+    public string StripeAccountId { get; set; }
 }

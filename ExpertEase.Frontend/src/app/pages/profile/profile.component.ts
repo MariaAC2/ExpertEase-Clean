@@ -54,7 +54,6 @@ export class ProfileComponent implements OnInit {
     this.userRole = this.authService.getUserRole()
     this.loadUserProfile();
   }
-
   loadUserProfile() {
     // this.user = this.dummyUser; // Use this for testing
     this.profileService.getUserProfile().subscribe({

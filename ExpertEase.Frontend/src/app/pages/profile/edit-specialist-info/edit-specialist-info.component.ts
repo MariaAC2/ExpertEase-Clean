@@ -1,6 +1,4 @@
 import {
-  PortfolioPictureAddDTO,
-  SpecialistProfileUpdateDTO,
   UserProfileDTO,
 } from '../../../models/api.models';
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
@@ -22,6 +20,7 @@ interface PortfolioImage {
   url: string;
   file?: File;
   isNew?: boolean;
+  isExisting?: boolean;
 }
 
 @Component({
@@ -46,8 +45,14 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
     description: ''
   };
 
-  portfolioImages: PortfolioImage[] = [];
-  newPortfolioFiles: PortfolioPictureAddDTO[] = [];
+  // Existing portfolio images from the server
+  existingPortfolioImages: PortfolioImage[] = [];
+
+  // New files to upload
+  newPortfolioFiles: File[] = [];
+
+  // IDs of photos marked for removal
+  photosToRemove: string[] = [];
 
   isLoading = false;
 
@@ -75,11 +80,35 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
         description: this.user.description || ''
       };
 
-      // Load existing portfolio images if available
-      // Note: You may need to adjust this based on your actual API structure
-      this.portfolioImages = [];
+      // Load existing portfolio images
+      this.existingPortfolioImages = [];
+      this.photosToRemove = [];
       this.newPortfolioFiles = [];
+
+      if (this.user.portfolio && this.user.portfolio.length > 0) {
+        this.existingPortfolioImages = this.user.portfolio.map((url, index) => ({
+          id: `existing_${index}`, // You might want to use actual photo IDs from your API
+          url: url,
+          isExisting: true
+        }));
+      }
     }
+  }
+
+  // Get all portfolio images for display (existing + new)
+  get portfolioImages(): PortfolioImage[] {
+    const existingFiltered = this.existingPortfolioImages.filter(
+      img => !this.photosToRemove.includes(img.id!)
+    );
+
+    const newImages = this.newPortfolioFiles.map((file, index) => ({
+      id: `new_${index}`,
+      url: URL.createObjectURL(file),
+      file: file,
+      isNew: true
+    }));
+
+    return [...existingFiltered, ...newImages];
   }
 
   updateCategories(categories: string[]) {
@@ -90,27 +119,10 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
 
-    for (const element of input.files) {
-      const file = element;
-
-      // Create portfolio DTO for new files
-      const portfolioDto: PortfolioPictureAddDTO = {
-        fileStream: file,
-        contentType: file.type,
-        fileName: file.name
-      };
-      this.newPortfolioFiles.push(portfolioDto);
-
-      // Create preview for display
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.portfolioImages.push({
-          url: reader.result as string,
-          file: file,
-          isNew: true
-        });
-      };
-      reader.readAsDataURL(file);
+    // Add new files to the array
+    for (let i = 0; i < input.files.length; i++) {
+      const file = input.files[i];
+      this.newPortfolioFiles.push(file);
     }
 
     // Reset input
@@ -118,18 +130,25 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
   }
 
   removeImage(index: number) {
-    const imageToRemove = this.portfolioImages[index];
+    const allImages = this.portfolioImages;
+    const imageToRemove = allImages[index];
 
     if (imageToRemove.isNew) {
       // Remove from new files array
-      const fileIndex = this.newPortfolioFiles.findIndex(f => f.fileName === imageToRemove.file?.name);
-      if (fileIndex > -1) {
-        this.newPortfolioFiles.splice(fileIndex, 1);
+      const newFileIndex = this.newPortfolioFiles.findIndex(
+        (file, i) => `new_${i}` === imageToRemove.id
+      );
+      if (newFileIndex > -1) {
+        // Revoke the object URL to prevent memory leaks
+        URL.revokeObjectURL(imageToRemove.url);
+        this.newPortfolioFiles.splice(newFileIndex, 1);
+      }
+    } else if (imageToRemove.isExisting) {
+      // Mark existing image for removal
+      if (imageToRemove.id) {
+        this.photosToRemove.push(imageToRemove.id);
       }
     }
-
-    // Remove from display array
-    this.portfolioImages.splice(index, 1);
   }
 
   onClose() {
@@ -138,8 +157,13 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
   }
 
   private resetForm() {
+    // Clean up object URLs
+    this.newPortfolioFiles.forEach((_, index) => {
+      const url = URL.createObjectURL(this.newPortfolioFiles[index]);
+      URL.revokeObjectURL(url);
+    });
+
     this.loadSpecialistData();
-    this.newPortfolioFiles = [];
   }
 
   async onSubmit() {
@@ -148,46 +172,98 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
     this.isLoading = true;
 
     try {
-      // Create SpecialistProfileUpdateDTO according to your API model
-      const updateData: SpecialistProfileUpdateDTO = {
-        userId: this.user!.id,
-        phoneNumber: this.specialistInfo.phoneNumber,
-        address: this.specialistInfo.address,
-        categories: this.specialistInfo.categories,
-        yearsExperience: this.specialistInfo.yearsExperience,
-        description: this.specialistInfo.description
-      };
+      const formData = new FormData();
 
-      // Include portfolio if there are new images
-      if (this.newPortfolioFiles.length > 0) {
-        updateData.portfolio = this.newPortfolioFiles;
+      // Add basic profile data
+      formData.append('UserId', this.user!.id);
+
+      if (this.specialistInfo.phoneNumber) {
+        formData.append('PhoneNumber', this.specialistInfo.phoneNumber);
       }
 
-      // Update specialist profile
-      // this.specialistService.updateSpecialistProfile(updateData).subscribe({
-      //   next: (response) => {
-      //     console.log('Specialist updated successfully', response);
-      //     this.handleSuccess(response.response);
-      //   },
-      //   error: (error) => {
-      //     console.error('Error updating specialist:', error);
-      //     this.isLoading = false;
-      //     // You could show an error message here
-      //   }
-      // });
+      if (this.specialistInfo.address) {
+        formData.append('Address', this.specialistInfo.address);
+      }
+
+      if (this.specialistInfo.yearsExperience !== undefined) {
+        formData.append('YearsExperience', this.specialistInfo.yearsExperience.toString());
+      }
+
+      if (this.specialistInfo.description) {
+        formData.append('Description', this.specialistInfo.description);
+      }
+
+      // Add existing photos to keep (those not marked for removal)
+      const photosToKeep = this.existingPortfolioImages
+        .filter(img => !this.photosToRemove.includes(img.id!))
+        .map(img => img.url);
+
+      photosToKeep.forEach((url, index) => {
+        formData.append(`ExistingPortfolioPhotoUrls[${index}]`, url);
+      });
+
+      // Add photos marked for removal
+      this.photosToRemove.forEach((photoId, index) => {
+        formData.append(`PhotoIdsToRemove[${index}]`, photoId);
+      });
+
+      // Add new photos to upload
+      this.newPortfolioFiles.forEach((file) => {
+        formData.append('NewPortfolioPhotos', file, file.name);
+      });
+
+      // Call the service
+      this.specialistService.updateSpecialistProfile(formData).subscribe({
+        next: (response) => {
+          console.log('Specialist updated successfully', response);
+          this.handleSuccess();
+        },
+        error: (error) => {
+          console.error('Error updating specialist:', error);
+          this.isLoading = false;
+          // You could show an error message here
+          alert('Eroare la actualizarea profilului. Te rugăm să încerci din nou.');
+        }
+      });
 
     } catch (error) {
       console.error('Error during update:', error);
       this.isLoading = false;
+      alert('Eroare neașteptată. Te rugăm să încerci din nou.');
     }
   }
 
-  private handleSuccess(updatedUser?: UserProfileDTO) {
+  private handleSuccess() {
     this.isLoading = false;
-    if (updatedUser) {
-      this.specialistUpdated.emit(updatedUser);
-    }
+
+    // Emit success and close the modal
+    this.specialistUpdated.emit(this.user!);
     this.onClose();
-    // You could show a success message here
+
+    // Show success message
+    alert('Profilul a fost actualizat cu succes!');
+  }
+
+  // Helper method to get file preview URL
+  getFilePreview(file: File): string {
+    return URL.createObjectURL(file);
+  }
+
+  // Helper method to format file size
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Cleanup on component destroy
+  ngOnDestroy() {
+    // Clean up any remaining object URLs
+    this.newPortfolioFiles.forEach((_, index) => {
+      const url = URL.createObjectURL(this.newPortfolioFiles[index]);
+      URL.revokeObjectURL(url);
+    });
   }
 }

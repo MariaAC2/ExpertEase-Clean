@@ -136,27 +136,107 @@ public class SpecialistProfileService(
             ServiceResponse.CreateErrorResponse<SpecialistProfileDTO>(CommonErrors.UserNotFound);
     }
 
-    public async Task<ServiceResponse> UpdateSpecialistProfile(SpecialistProfileUpdateDTO specialistProfile, UserDTO? requestingUser = null,
+    public async Task<ServiceResponse> UpdateSpecialistProfile(
+        SpecialistProfileUpdateDTO specialistProfile, 
+        List<PortfolioPictureAddDTO>? newPhotos = null,
+        UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
-        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != specialistProfile.UserId) // Verify who can add the user, you can change this however you se fit.
+        if (requestingUser != null && requestingUser.Role != UserRoleEnum.Admin && requestingUser.Id != specialistProfile.UserId)
         {
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden, "Only the admin or the own user can update the user!", ErrorCodes.CannotUpdate));
         }
 
-        var entity = await repository.GetAsync(new UserSpec(specialistProfile.UserId), cancellationToken); 
+        var entity = await repository.GetAsync(new UserSpec(specialistProfile.UserId), cancellationToken);
 
-        if (entity != null)
+        if (entity?.SpecialistProfile == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Specialist profile not found!", ErrorCodes.EntityNotFound));
+        }
+
+        // Update basic profile information
+        if (entity.ContactInfo != null)
         {
             entity.ContactInfo.PhoneNumber = specialistProfile.PhoneNumber ?? entity.ContactInfo.PhoneNumber;
             entity.ContactInfo.Address = specialistProfile.Address ?? entity.ContactInfo.Address;
-            entity.SpecialistProfile.YearsExperience = specialistProfile.YearsExperience ?? entity.SpecialistProfile.YearsExperience;
-            entity.SpecialistProfile.Description = specialistProfile.Description ?? entity.SpecialistProfile.Description;
-
-            await repository.UpdateAsync(entity, cancellationToken);
         }
+        
+        entity.SpecialistProfile.YearsExperience = specialistProfile.YearsExperience ?? entity.SpecialistProfile.YearsExperience;
+        entity.SpecialistProfile.Description = specialistProfile.Description ?? entity.SpecialistProfile.Description;
 
-        return ServiceResponse.CreateSuccessResponse();
+        // Handle photo management
+        var currentPortfolio = entity.SpecialistProfile.Portfolio ?? new List<string>();
+        var updatedPortfolio = new List<string>();
+
+        try
+        {
+            // 1. Keep existing photos that are not being removed
+            if (specialistProfile.ExistingPortfolioPhotoUrls != null)
+            {
+                updatedPortfolio.AddRange(specialistProfile.ExistingPortfolioPhotoUrls);
+            }
+
+            // 2. Remove photos that are explicitly marked for removal
+            if (specialistProfile.PhotoIdsToRemove != null && specialistProfile.PhotoIdsToRemove.Any())
+            {
+                foreach (var photoIdToRemove in specialistProfile.PhotoIdsToRemove)
+                {
+                    var deleteResult = await photoService.DeletePortfolioPicture(photoIdToRemove, requestingUser, cancellationToken);
+                    if (!deleteResult.IsOk)
+                    {
+                        // Log the error but continue with other operations
+                        Console.WriteLine($"Failed to delete photo {photoIdToRemove}: {deleteResult.Error?.Message}");
+                    }
+                }
+            }
+
+            // 3. Upload and add new photos
+            if (newPhotos != null && newPhotos.Any())
+            {
+                foreach (var photoDTO in newPhotos)
+                {
+                    try
+                    {
+                        var uploadResult = await photoService.AddPortfolioPicture(photoDTO, requestingUser, cancellationToken);
+                        
+                        if (uploadResult.IsOk)
+                        {
+                            // Extract URL from the response (you might need to adjust this based on your AddPortfolioPicture return type)
+                            var photoUrl = uploadResult.ToString();
+                            if (!string.IsNullOrEmpty(photoUrl))
+                            {
+                                updatedPortfolio.Add(photoUrl);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to upload new photo: {uploadResult.Error?.Message}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Exception uploading photo: {ex.Message}");
+                    }
+                    finally
+                    {
+                        // Ensure streams are disposed
+                        photoDTO.FileStream?.Dispose();
+                    }
+                }
+            }
+
+            // 4. Update the portfolio with the new list
+            entity.SpecialistProfile.Portfolio = updatedPortfolio;
+
+            // 5. Save changes
+            await repository.UpdateAsync(entity, cancellationToken);
+
+            return ServiceResponse.CreateSuccessResponse();
+        }
+        catch (Exception ex)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, $"Error updating profile: {ex.Message}", ErrorCodes.CannotUpdate));
+        }
     }
     
     public async Task<ServiceResponse> DeleteSpecialistProfile(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)

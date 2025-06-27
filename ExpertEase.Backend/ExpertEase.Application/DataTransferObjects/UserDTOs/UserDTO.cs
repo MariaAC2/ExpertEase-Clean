@@ -63,7 +63,7 @@ public class ContactInfoDTO
 
 public class UserDetailsDTO
 {
-    [Required]
+    public Guid Id { get; set; }
     public string FullName { get; set; } = null!;
 
     public string? ProfilePictureUrl { get; set; }

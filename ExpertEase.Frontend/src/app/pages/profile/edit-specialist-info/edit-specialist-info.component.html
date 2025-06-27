@@ -87,21 +87,42 @@
       <div class="form-section">
         <h3>Portofoliu imagini</h3>
         <div class="portfolio-section">
+
+          <!-- Current Portfolio Images -->
           <div class="portfolio-images" *ngIf="portfolioImages.length > 0">
-            <div class="image-item" *ngFor="let image of portfolioImages; let i = index">
+            <div class="image-item" *ngFor="let image of portfolioImages; let i = index"
+                 [ngClass]="{'existing-image': image.isExisting, 'new-image': image.isNew}">
               <img [src]="image.url" alt="Portfolio image" />
-              <button type="button" class="delete-image-btn" (click)="removeImage(i)">×</button>
+              <div class="image-overlay">
+                <span class="image-status" *ngIf="image.isNew">Nou</span>
+                <span class="image-status existing" *ngIf="image.isExisting">Existent</span>
+                <button type="button" class="delete-image-btn" (click)="removeImage(i)" title="Șterge imaginea">×</button>
+              </div>
             </div>
           </div>
 
+          <!-- Empty State -->
           <div class="portfolio-empty" *ngIf="portfolioImages.length === 0">
             <p>Nu ai încă imagini în portofoliu</p>
           </div>
 
+          <!-- Upload Button -->
           <label class="upload-portfolio-btn">
-            📸 Adaugă imagini
+            📸 Adaugă imagini noi
             <input type="file" multiple accept="image/*" (change)="onPortfolioImagesSelected($event)" hidden />
           </label>
+
+          <!-- Changes Summary -->
+          <div class="changes-summary" *ngIf="photosToRemove.length > 0 || newPortfolioFiles.length > 0">
+            <div class="summary-item" *ngIf="photosToRemove.length > 0">
+              <span class="summary-icon">🗑️</span>
+              <span><strong>{{ photosToRemove.length }}</strong> imagine(i) vor fi șterse</span>
+            </div>
+            <div class="summary-item" *ngIf="newPortfolioFiles.length > 0">
+              <span class="summary-icon">📤</span>
+              <span><strong>{{ newPortfolioFiles.length }}</strong> imagine(i) noi vor fi încărcate</span>
+            </div>
+          </div>
         </div>
       </div>
 

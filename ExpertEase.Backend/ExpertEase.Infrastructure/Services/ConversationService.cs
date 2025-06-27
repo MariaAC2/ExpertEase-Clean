@@ -91,7 +91,6 @@ public async Task<ServiceResponse> AddConversationItem(
         }
     }
 
-    // Convert any DateTime entries to Firestore Timestamps
     var normalizedData = firestoreMessage.Data.ToDictionary(
         kv => kv.Key,
         kv =>

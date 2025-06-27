@@ -22,10 +22,8 @@ export class RequestMessageComponent implements OnInit {
     requestedStartDate: new Date(),
     description: '',
     status: StatusEnum.Pending,
-    senderContactInfo: {
-      phoneNumber: '',
-      address: ''
-    }
+    senderPhoneNumber: '',
+    senderAddress: ''
   };
 
   @Input() currentUserId: string | null | undefined; // Add this input

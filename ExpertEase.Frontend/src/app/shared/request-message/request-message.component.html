@@ -11,12 +11,8 @@
 
     <p><strong>Data și ora:</strong> {{ request.requestedStartDate | date: 'short' }}</p>
     <p><strong>Descriere:</strong> {{ request.description }}</p>
-    <p *ngIf="request.senderContactInfo?.address">
-      <strong>Adresă:</strong> {{ request.senderContactInfo?.address }}
-    </p>
-    <p *ngIf="request.senderContactInfo?.phoneNumber">
-      <strong>Telefon:</strong> {{ request.senderContactInfo?.phoneNumber }}
-    </p>
+    <p><strong>Adresă:</strong> {{ request.senderAddress }}</p>
+    <p><strong>Telefon:</strong> {{ request.senderPhoneNumber }}</p>
 
     <!-- Status-specific actions -->
     <!-- Pending -->
