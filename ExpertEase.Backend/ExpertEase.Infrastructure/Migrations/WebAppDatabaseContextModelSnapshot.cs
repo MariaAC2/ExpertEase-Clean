@@ -89,6 +89,70 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.ToTable("ContactInfo");
                 });
 
+            modelBuilder.Entity("ExpertEase.Domain.Entities.CustomerPaymentMethod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CardBrand")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("CardLast4")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character(4)")
+                        .IsFixedLength();
+
+                    b.Property<string>("CardholderName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasMaxLength(255)
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("StripeCustomerId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("StripePaymentMethodId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("StripeCustomerId")
+                        .HasDatabaseName("IX_CustomerPaymentMethods_StripeCustomerId");
+
+                    b.ToTable("CustomerPaymentMethod", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerPaymentMethods_CardBrand_Values", "\"CardBrand\" IN ('VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'DINERS', 'JCB', 'UNIONPAY', 'UNKNOWN')");
+
+                            t.HasCheckConstraint("CK_CustomerPaymentMethods_CardLast4_Length", "LENGTH(\"CardLast4\") = 4");
+                        });
+                });
+
             modelBuilder.Entity("ExpertEase.Domain.Entities.Payment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -106,9 +170,8 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<string>("Currency")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(3)
-                        .HasColumnType("character(3)")
+                        .HasColumnType("character varying(3)")
                         .HasDefaultValue("RON")
-                        .IsFixedLength()
                         .HasComment("ISO currency code");
 
                     b.Property<DateTime?>("EscrowReleasedAt")
@@ -138,7 +201,7 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasComment("Platform protection fee");
 
                     b.Property<string>("ProtectionFeeDetailsJson")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("jsonb")
                         .HasComment("JSON serialized protection fee calculation details");
 
                     b.Property<decimal>("RefundedAmount")
@@ -154,9 +217,6 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Property<Guid>("ReplyId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ReplyId1")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("ServiceAmount")
                         .HasColumnType("decimal(18,2)")
                         .HasComment("Amount that will be transferred to specialist");
@@ -165,10 +225,8 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasComment("Associated service task ID");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("StripeAccountId")
                         .IsRequired()
@@ -211,50 +269,15 @@ namespace ExpertEase.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt")
-                        .HasDatabaseName("IX_Payment_CreatedAt");
-
-                    b.HasIndex("PaidAt")
-                        .HasDatabaseName("IX_Payment_PaidAt")
-                        .HasFilter("[PaidAt] IS NOT NULL");
-
                     b.HasIndex("ReplyId");
-
-                    b.HasIndex("ReplyId1")
-                        .IsUnique();
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_Payment_Status");
 
                     b.HasIndex("StripePaymentIntentId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Payment_StripePaymentIntentId")
-                        .HasFilter("[StripePaymentIntentId] IS NOT NULL");
+                        .HasFilter("\"StripePaymentIntentId\" IS NOT NULL");
 
-                    b.HasIndex("Status", "CreatedAt")
-                        .HasDatabaseName("IX_Payment_Status_CreatedAt");
-
-                    b.HasIndex("Status", "TransferredAmount", "RefundedAmount")
-                        .HasDatabaseName("IX_Payment_Escrow_Status")
-                        .HasFilter("[Status] IN ('Escrowed', 'Completed')");
-
-                    b.ToTable("Payments", "dbo", t =>
+                    b.ToTable("Payment", t =>
                         {
                             t.HasComment("Payment records with escrow support for secure service transactions");
-
-                            t.HasCheckConstraint("CK_Payment_EscrowRelease_After_Payment", "[EscrowReleasedAt] IS NULL OR [PaidAt] IS NULL OR [EscrowReleasedAt] >= [PaidAt]");
-
-                            t.HasCheckConstraint("CK_Payment_PlatformRevenue_Valid", "[PlatformRevenue] >= 0 AND [PlatformRevenue] <= [ProtectionFee]");
-
-                            t.HasCheckConstraint("CK_Payment_ProtectionFee_NonNegative", "[ProtectionFee] >= 0");
-
-                            t.HasCheckConstraint("CK_Payment_RefundedAmount_Valid", "[RefundedAmount] >= 0 AND [RefundedAmount] <= [TotalAmount]");
-
-                            t.HasCheckConstraint("CK_Payment_ServiceAmount_NonNegative", "[ServiceAmount] >= 0");
-
-                            t.HasCheckConstraint("CK_Payment_TotalAmount_Valid", "[TotalAmount] = [ServiceAmount] + [ProtectionFee]");
-
-                            t.HasCheckConstraint("CK_Payment_TransferredAmount_Valid", "[TransferredAmount] >= 0 AND [TransferredAmount] <= [ServiceAmount]");
                         });
                 });
 
@@ -271,7 +294,7 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("RejectedAt")
                         .HasColumnType("timestamp with time zone");
@@ -521,6 +544,10 @@ namespace ExpertEase.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("StripeCustomerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -557,17 +584,24 @@ namespace ExpertEase.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ExpertEase.Domain.Entities.Payment", b =>
+            modelBuilder.Entity("ExpertEase.Domain.Entities.CustomerPaymentMethod", b =>
                 {
-                    b.HasOne("ExpertEase.Domain.Entities.Reply", "Reply")
+                    b.HasOne("ExpertEase.Domain.Entities.User", "Customer")
                         .WithMany()
-                        .HasForeignKey("ReplyId")
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ExpertEase.Domain.Entities.Reply", null)
-                        .WithOne("Payment")
-                        .HasForeignKey("ExpertEase.Domain.Entities.Payment", "ReplyId1");
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("ExpertEase.Domain.Entities.Payment", b =>
+                {
+                    b.HasOne("ExpertEase.Domain.Entities.Reply", "Reply")
+                        .WithMany("Payments")
+                        .HasForeignKey("ReplyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Reply");
                 });
@@ -669,7 +703,7 @@ namespace ExpertEase.Infrastructure.Migrations
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Reply", b =>
                 {
-                    b.Navigation("Payment");
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("ExpertEase.Domain.Entities.Request", b =>

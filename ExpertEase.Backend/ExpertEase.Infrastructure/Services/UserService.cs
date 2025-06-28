@@ -15,6 +15,7 @@ using ExpertEase.Domain.Specifications;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Repositories;
 using Google.Apis.Auth;
+using Stripe;
 
 namespace ExpertEase.Infrastructure.Services;
 
@@ -252,6 +253,21 @@ public class UserService(
         };
 
         await repository.AddAsync(newUser, cancellationToken);
+        
+        var customerService = new Stripe.CustomerService();
+        var stripeCustomer = await customerService.CreateAsync(new CustomerCreateOptions
+        {
+            Email = user.Email,
+            Name = user.FullName,
+            Metadata = new Dictionary<string, string>
+            {
+                { "user_id", newUser.Id.ToString() }
+            }
+        }, cancellationToken: cancellationToken);
+
+        // Update user with Stripe customer ID
+        newUser.StripeCustomerId = stripeCustomer.Id;
+        await repository.UpdateAsync(newUser, cancellationToken);
 
         // var fullName = $"{user.LastName} {user.FirstName}";
         // await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(fullName), true, "ExpertEase Team", cancellationToken);

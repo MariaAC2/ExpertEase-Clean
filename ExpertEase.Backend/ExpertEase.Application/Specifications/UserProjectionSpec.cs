@@ -30,6 +30,8 @@ public class UserProjectionSpec : Specification<User, UserDTO>
             Email = e.Email,
             FullName = e.FullName,
             Role = e.Role,
+            AuthProvider = e.AuthProvider,
+            StripeCustomerId = e.StripeCustomerId,
         });
 
         if (orderByCreatedAt)

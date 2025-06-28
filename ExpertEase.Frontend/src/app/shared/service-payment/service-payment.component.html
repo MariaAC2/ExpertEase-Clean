@@ -1,3 +1,4 @@
+<!-- Updated service-payment.component.html with fixed DOM element handling -->
 <div class="payment-overlay">
   <div class="payment-container">
     <div class="payment-header">
@@ -68,6 +69,34 @@
         </div>
       </section>
 
+      <!-- ✅ NEW: Escrow Information Section -->
+      <section class="payment-section escrow-info">
+        <h3>🔒 Plată cu protecție escrow</h3>
+        <div class="escrow-explanation">
+          <div class="escrow-step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+              <strong>Plata ta este protejată</strong>
+              <p>Banii sunt păstrați în siguranță până la finalizarea serviciului</p>
+            </div>
+          </div>
+          <div class="escrow-step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+              <strong>Serviciul este prestat</strong>
+              <p>Specialistul va efectua serviciul conform acordului</p>
+            </div>
+          </div>
+          <div class="escrow-step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+              <strong>Plata este eliberată</strong>
+              <p>După confirmarea finalizării, banii sunt transferați specialistului</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Payment Method -->
       <section class="payment-section">
         <h3>Plata</h3>
@@ -102,25 +131,61 @@
         </div>
       </section>
 
-      <!-- Price Details -->
+      <!-- ✅ UPDATED: Enhanced Price Details with Escrow Information -->
       <section class="payment-section price-section">
         <h3>Detalii preț</h3>
         <div class="price-breakdown">
           <div class="price-item">
             <span class="price-label">Prețul serviciului:</span>
-            <span class="price-value">{{ serviceDetails?.price | currency:'RON':'symbol':'1.2-2' }}</span>
+            <span class="price-value">{{ serviceAmount | currency:'RON':'symbol':'1.2-2' }}</span>
           </div>
-          <div class="price-item">
-            <span class="price-label">Taxă de protecție pentru client:</span>
-            <span class="price-value">{{ protectionFee | currency:'RON':'symbol':'1.2-2' }}</span>
+
+          <!-- ✅ NEW: Enhanced protection fee display -->
+          <div class="price-item protection-fee-item">
+            <span class="price-label">
+              Taxă de protecție pentru client:
+              <span class="protection-fee-badge" *ngIf="feeCalculationLoaded">
+                {{ protectionFeeDisplayText }}
+              </span>
+              <span class="loading-badge" *ngIf="isLoadingFeeCalculation">
+                Se calculează...
+              </span>
+            </span>
+            <span class="price-value" *ngIf="feeCalculationLoaded">
+              {{ protectionFee | currency:'RON':'symbol':'1.2-2' }}
+            </span>
+            <span class="price-value loading" *ngIf="isLoadingFeeCalculation">
+              ...
+            </span>
           </div>
+
           <div class="price-item protection-info">
-            <small>Pentru cazuri de servicii nesatisfăcătoare</small>
+            <small>
+              {{ protectionFeeExplanation }}
+            </small>
           </div>
+
           <hr class="price-divider">
+
           <div class="price-item total">
-            <span class="price-label">Total:</span>
-            <span class="price-value total-amount">{{ totalAmount | currency:'RON':'symbol':'1.2-2' }}</span>
+            <span class="price-label">
+              <strong>Total de plată:</strong>
+            </span>
+            <span class="price-value total-amount" *ngIf="feeCalculationLoaded">
+              {{ totalAmount | currency:'RON':'symbol':'1.2-2' }}
+            </span>
+            <span class="price-value loading" *ngIf="isLoadingFeeCalculation">
+              Se calculează...
+            </span>
+          </div>
+
+          <!-- ✅ NEW: Escrow guarantee message -->
+          <div class="escrow-guarantee" *ngIf="feeCalculationLoaded">
+            <div class="guarantee-icon">🛡️</div>
+            <div class="guarantee-text">
+              <strong>Garanție 100%:</strong> Banii tăi sunt protejați până la finalizarea serviciului.
+              În caz de probleme, poți solicita rambursarea integrală.
+            </div>
           </div>
         </div>
       </section>
@@ -128,17 +193,30 @@
 
     <!-- Payment Actions -->
     <div class="payment-actions">
-      <button class="cancel-btn" (click)="cancelPayment()" [disabled]="isProcessing">Anulează</button>
-      <button class="pay-btn" (click)="processPayment()" [disabled]="!cardDetailsEntered || isProcessing">
-        <span *ngIf="!isProcessing">Confirmă și plătește</span>
-        <span *ngIf="isProcessing">Se procesează...</span>
+      <button class="cancel-btn" (click)="cancelPayment()" [disabled]="isProcessing">
+        Anulează
+      </button>
+      <button class="pay-btn"
+              (click)="processPayment()"
+              [disabled]="!cardDetailsEntered || isProcessing || !feeCalculationLoaded">
+        <span *ngIf="!isProcessing && feeCalculationLoaded">
+          🔒 Plătește în siguranță
+        </span>
+        <span *ngIf="!isProcessing && !feeCalculationLoaded">
+          Se calculează...
+        </span>
+        <span *ngIf="isProcessing">
+          Se procesează...
+        </span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- Card Details Modal -->
-<div class="card-modal-overlay" *ngIf="showCardModal" (click)="closeCardModal($event)">
+<!-- ✅ FIXED: Card Details Modal with proper DOM element handling -->
+<div class="card-modal-overlay"
+     *ngIf="showCardModal"
+     (click)="closeCardModal($event)">
   <div class="card-modal" (click)="$event.stopPropagation()">
     <div class="card-modal-header">
       <h3>Introdu datele cardului</h3>
@@ -149,7 +227,11 @@
       <div class="form-group">
         <label id="cardNumber">Numărul cardului</label>
         <div class="input-container">
-          <div #cardNumberElement class="stripe-element"></div>
+          <!-- ✅ FIXED: Added unique ID and kept template reference -->
+          <div id="card-number-element"
+               #cardNumberElement
+               class="stripe-element"
+               [attr.data-mounted]="isElementsMounted"></div>
         </div>
         <div class="field-error" *ngIf="cardNumberError">{{ cardNumberError }}</div>
       </div>
@@ -170,7 +252,11 @@
         <div class="form-group half">
           <label id="cardExpiry">Data de expirare</label>
           <div class="input-container">
-            <div #cardExpiryElement class="stripe-element"></div>
+            <!-- ✅ FIXED: Added unique ID and kept template reference -->
+            <div id="card-expiry-element"
+                 #cardExpiryElement
+                 class="stripe-element"
+                 [attr.data-mounted]="isElementsMounted"></div>
           </div>
           <div class="field-error" *ngIf="cardExpiryError">{{ cardExpiryError }}</div>
         </div>
@@ -178,7 +264,11 @@
         <div class="form-group half">
           <label id="cardCvc">Codul cardului</label>
           <div class="input-container">
-            <div #cardCvcElement class="stripe-element"></div>
+            <!-- ✅ FIXED: Added unique ID and kept template reference -->
+            <div id="card-cvc-element"
+                 #cardCvcElement
+                 class="stripe-element"
+                 [attr.data-mounted]="isElementsMounted"></div>
           </div>
           <div class="field-error" *ngIf="cardCvcError">{{ cardCvcError }}</div>
         </div>

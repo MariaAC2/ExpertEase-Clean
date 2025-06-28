@@ -1,22 +1,18 @@
-// service-payment.component.ts
+// Updated service-payment.component.ts with robust Stripe element handling
 import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { loadStripe, Stripe, StripeElements, StripeCardNumberElement, StripeCardExpiryElement, StripeCardCvcElement } from '@stripe/stripe-js';
-import {firstValueFrom} from 'rxjs';
-import {PaymentConfirmationDTO, PaymentIntentCreateDTO} from '../../models/api.models';
-import {PaymentService} from '../../services/payment.service';
-import {PaymentFlowService} from '../../services/payment-flow.service';
-import {NotificationService} from '../../services/notification.service';
-import {CurrencyPipe, DatePipe, NgIf} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {ProtectionFeeService} from '../../services/protection-fee-service';
-interface ProtectionFeeConfig {
-  type: 'percentage' | 'fixed';    // How to calculate the fee
-  percentage: number;              // Percentage rate (e.g., 10%)
-  fixedAmount: number;             // Fixed amount (e.g., 15 lei)
-  minFee: number;                  // Minimum fee (e.g., 5 lei)
-  maxFee: number;                  // Maximum fee (e.g., 100 lei)
-  enabled: boolean;                // Turn protection fee on/off
-}
+import { firstValueFrom } from 'rxjs';
+import {
+  PaymentConfirmationDTO,
+  PaymentIntentCreateDTO,
+  CalculateProtectionFeeRequestDTO
+} from '../../models/api.models';
+import { PaymentService } from '../../services/payment.service';
+import { PaymentFlowService } from '../../services/payment-flow.service';
+import { NotificationService } from '../../services/notification.service';
+import { CurrencyPipe, DatePipe, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 @Component({
   selector: 'app-service-payment',
   templateUrl: './service-payment.component.html',
@@ -39,6 +35,11 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   cardNumber: StripeCardNumberElement | null = null;
   cardExpiry: StripeCardExpiryElement | null = null;
   cardCvc: StripeCardCvcElement | null = null;
+
+  // ✅ NEW: Element state tracking
+  isElementsMounted = false;
+  private elementMountRetries = 0;
+  private maxRetries = 3;
 
   // Modal and form state
   showCardModal = false;
@@ -69,30 +70,26 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   specialistDetails: any;
   userDetails: any;
 
-  // ✅ UPDATED: Dynamic protection fee calculation
-  baseServicePrice = 0;
-  protectionFeePercentage = 10; // 10% default - can be configured
-  protectionFeeFixed = 0; // Fixed fee option
-  protectionFeeType: 'percentage' | 'fixed' = 'percentage'; // Can be toggled
-  minProtectionFee = 5; // Minimum protection fee
-  maxProtectionFee = 100; // Maximum protection fee
-
-  // Calculated values
-  protectionFee = 0;
-  totalAmount = 0;
+  // ✅ NEW: Escrow payment amounts
+  serviceAmount = 0;           // Amount that goes to specialist
+  protectionFee = 0;          // Platform protection fee
+  totalAmount = 0;            // Total amount charged to client
   isProcessing = false;
+
+  // ✅ NEW: Protection fee details for transparency
+  protectionFeeDetails: any = null;
+  feeCalculationLoaded = false;
 
   constructor(
     private readonly paymentService: PaymentService,
     private readonly paymentFlowService: PaymentFlowService,
-    private readonly notificationService: NotificationService,
-    private readonly protectionFeeService: ProtectionFeeService
+    private readonly notificationService: NotificationService
   ) {}
 
   async ngOnInit() {
     await this.initializeStripe();
     this.loadPaymentFlowData();
-    this.calculateTotal();
+    await this.calculateProtectionFee();
   }
 
   ngAfterViewInit() {
@@ -100,7 +97,7 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngOnDestroy() {
-    this.destroyStripeElements();
+    this.safeDestroyElements();
   }
 
   private loadPaymentFlowData() {
@@ -109,15 +106,32 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     this.userDetails = paymentFlowState.userDetails;
     this.specialistDetails = paymentFlowState.specialistDetails;
 
-    // ✅ UPDATED: Extract price from service details
-    this.extractServicePrice();
+    // Extract service amount from service details
+    this.extractServiceAmount();
   }
 
-  // ✅ NEW: Extract and validate service price
-  private extractServicePrice() {
+  // ✅ UPDATED: Enhanced recreate method
+  recreateStripeElements() {
+    console.log('🔄 Recreating Stripe elements...');
+    this.cardDetailsEntered = false;
+    this.paymentMethodSelected = false;
+    this.isElementsMounted = false;
+    this.clearErrors();
+
+    this.safeDestroyElements().then(() => {
+      if (this.showCardModal) {
+        setTimeout(() => {
+          this.setupStripeElements();
+        }, 200);
+      }
+    });
+  }
+
+  // ✅ NEW: Extract service amount from service details
+  private extractServiceAmount() {
     if (!this.serviceDetails) {
       console.warn('⚠️ No service details found');
-      this.baseServicePrice = 0;
+      this.serviceAmount = 0;
       return;
     }
 
@@ -127,101 +141,91 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
 
     for (const field of priceFields) {
       if (this.serviceDetails[field] !== undefined && this.serviceDetails[field] !== null) {
-        this.baseServicePrice = Number(this.serviceDetails[field]);
+        this.serviceAmount = Number(this.serviceDetails[field]);
         foundPrice = true;
-        console.log(`✅ Found price in field '${field}':`, this.baseServicePrice);
+        console.log(`✅ Found service amount in field '${field}':`, this.serviceAmount);
         break;
       }
     }
 
     if (!foundPrice) {
       console.warn('⚠️ No price field found in serviceDetails:', this.serviceDetails);
-      this.baseServicePrice = 0;
+      this.serviceAmount = 0;
     }
 
-    // Validate price
-    if (this.baseServicePrice < 0) {
+    // Validate amount
+    if (this.serviceAmount < 0) {
       console.warn('⚠️ Invalid negative price, setting to 0');
-      this.baseServicePrice = 0;
+      this.serviceAmount = 0;
     }
   }
 
-  // ✅ NEW: Calculate protection fee dynamically
-  private calculateProtectionFee(): number {
-    if (this.baseServicePrice <= 0) {
+  // ✅ NEW: Calculate protection fee using backend
+  private async calculateProtectionFee() {
+    if (this.serviceAmount <= 0) {
+      this.protectionFee = 0;
+      this.totalAmount = this.serviceAmount;
+      this.feeCalculationLoaded = true;
+      return;
+    }
+
+    try {
+      console.log('💰 Calculating protection fee for service amount:', this.serviceAmount);
+
+      const request: CalculateProtectionFeeRequestDTO = {
+        serviceAmount: this.serviceAmount
+      };
+
+      const response = await firstValueFrom(
+        this.paymentService.calculateProtectionFee(request)
+      );
+
+      if (response.response) {
+        this.protectionFee = response.response.protectionFee;
+        this.totalAmount = response.response.totalAmount;
+        this.protectionFeeDetails = response.response.feeConfiguration;
+        this.feeCalculationLoaded = true;
+
+        console.log('✅ Protection fee calculated:', {
+          serviceAmount: this.serviceAmount,
+          protectionFee: this.protectionFee,
+          totalAmount: this.totalAmount,
+          justification: response.response.feeJustification
+        });
+      } else {
+        throw new Error('Failed to calculate protection fee');
+      }
+    } catch (error) {
+      console.error('❌ Error calculating protection fee:', error);
+      // Fallback calculation: 10% with min 5, max 100
+      this.protectionFee = Math.min(Math.max(this.serviceAmount * 0.1, 5), 100);
+      this.totalAmount = this.serviceAmount + this.protectionFee;
+      this.feeCalculationLoaded = true;
+
+      this.notificationService.showNotification({
+        type: 'warning',
+        message: 'Using fallback protection fee calculation.'
+      });
+    }
+  }
+
+  // ✅ NEW: Get protection fee explanation
+  get protectionFeeExplanation(): string {
+    if (!this.protectionFeeDetails) {
+      return 'Protection fee helps ensure service quality';
+    }
+
+    return this.protectionFeeDetails.description || 'Client protection fee for service quality assurance';
+  }
+
+  // ✅ NEW: Get fee percentage for display
+  get protectionFeePercentage(): number {
+    if (!this.protectionFeeDetails || this.serviceAmount <= 0) {
       return 0;
     }
 
-    let calculatedFee: number;
-
-    if (this.protectionFeeType === 'percentage') {
-      // Calculate percentage-based fee
-      calculatedFee = (this.baseServicePrice * this.protectionFeePercentage) / 100;
-
-      // Apply min/max limits
-      calculatedFee = Math.max(this.minProtectionFee, calculatedFee);
-      calculatedFee = Math.min(this.maxProtectionFee, calculatedFee);
-    } else {
-      // Use fixed fee
-      calculatedFee = this.protectionFeeFixed;
-    }
-
-    return Math.round(calculatedFee * 100) / 100; // Round to 2 decimal places
+    return (this.protectionFee / this.serviceAmount) * 100;
   }
-
-  // ✅ UPDATED: Calculate total with dynamic protection fee
-  private calculateTotal() {
-    // Get service price
-    this.extractServicePrice();
-
-    // Calculate protection fee using the service
-    const feeBreakdown = this.protectionFeeService.getProtectionFeeBreakdown(this.baseServicePrice);
-    this.protectionFee = feeBreakdown.fee;
-    this.totalAmount = this.baseServicePrice + this.protectionFee;
-
-    console.log('💰 Payment calculation:', {
-      baseServicePrice: this.baseServicePrice,
-      protectionFeeBreakdown: feeBreakdown,
-      totalAmount: this.totalAmount
-    });
-  }
-
-  // ✅ NEW: Methods to update protection fee configuration
-  updateProtectionFeePercentage(percentage: number) {
-    this.protectionFeePercentage = Math.max(0, Math.min(50, percentage)); // 0-50% range
-    this.calculateTotal();
-  }
-
-  updateProtectionFeeFixed(amount: number) {
-    this.protectionFeeFixed = Math.max(0, amount);
-    this.calculateTotal();
-  }
-
-  setProtectionFeeType(type: 'percentage' | 'fixed') {
-    this.protectionFeeType = type;
-    this.calculateTotal();
-  }
-
-  updateMinMaxProtectionFee(min: number, max: number) {
-    this.minProtectionFee = Math.max(0, min);
-    this.maxProtectionFee = Math.max(this.minProtectionFee, max);
-    this.calculateTotal();
-  }
-
-  // ✅ NEW: Getters for template usage
-  get protectionFeeFormatted(): string {
-    if (this.protectionFeeType === 'percentage') {
-      return `${this.protectionFeePercentage}% (${this.protectionFee} lei)`;
-    } else {
-      return `${this.protectionFee} lei (fixed)`;
-    }
-  }
-
-  get hasValidPrice(): boolean {
-    return this.baseServicePrice > 0;
-  }
-
-  // ... rest of your existing methods remain the same ...
 
   get allFieldsComplete(): boolean {
     return this.cardNumberComplete &&
@@ -236,6 +240,7 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       if (!this.stripe) {
         throw new Error('Failed to load Stripe');
       }
+      console.log('✅ Stripe initialized successfully');
     } catch (error) {
       console.error('Error initializing Stripe:', error);
       this.notificationService.showNotification({
@@ -245,59 +250,149 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  // ✅ UPDATED: Enhanced modal opening
   openCardDetailsModal() {
     this.showCardModal = true;
+
+    // ✅ Use Angular's change detection to ensure DOM is ready
     setTimeout(() => {
       this.setupStripeElements();
-    }, 100);
+    }, 150); // Slightly longer delay to ensure DOM is fully rendered
   }
 
+  // ✅ UPDATED: Don't destroy elements when closing modal
   closeCardModal(event?: Event) {
     if (event) {
       event.preventDefault();
     }
     this.showCardModal = false;
-    this.destroyStripeElements();
+    // ✅ Only destroy if card details weren't entered
+    this.conditionallyDestroyElements();
     this.clearErrors();
   }
 
-  private setupStripeElements() {
-    if (!this.stripe || !this.cardNumberElement) return;
+  // ✅ NEW: Conditional element destruction
+  private conditionallyDestroyElements() {
+    if (!this.cardDetailsEntered) {
+      this.safeDestroyElements();
+    }
+  }
 
-    this.elements = this.stripe.elements();
+  // ✅ UPDATED: Robust element setup with retry logic
+  private async setupStripeElements(): Promise<void> {
+    if (!this.stripe) {
+      console.error('❌ Stripe not initialized');
+      return;
+    }
 
-    const elementStyle = {
-      base: {
-        fontSize: '16px',
-        color: '#424770',
-        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-        '::placeholder': {
-          color: '#aab7c4',
+    // ✅ Ensure DOM elements exist
+    if (!this.cardNumberElement?.nativeElement ||
+      !this.cardExpiryElement?.nativeElement ||
+      !this.cardCvcElement?.nativeElement) {
+      console.error('❌ Card DOM elements not available');
+
+      if (this.elementMountRetries < this.maxRetries) {
+        this.elementMountRetries++;
+        console.log(`🔄 Retrying element setup (attempt ${this.elementMountRetries})`);
+        setTimeout(() => this.setupStripeElements(), 200);
+        return;
+      } else {
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Failed to load payment form. Please refresh the page.'
+        });
+        return;
+      }
+    }
+
+    try {
+      // ✅ Clean up existing elements first
+      await this.safeDestroyElements();
+
+      // ✅ Create new elements instance
+      this.elements = this.stripe.elements();
+
+      const elementStyle = {
+        base: {
+          fontSize: '16px',
+          color: '#424770',
+          fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+          '::placeholder': {
+            color: '#aab7c4',
+          },
         },
-      },
-      invalid: {
-        color: '#9e2146',
-      },
-    };
+        invalid: {
+          color: '#9e2146',
+        },
+      };
 
-    this.cardNumber = this.elements.create('cardNumber', {
-      style: elementStyle,
-      placeholder: '1234 5678 9012 3456'
-    });
+      // ✅ Create elements
+      this.cardNumber = this.elements.create('cardNumber', {
+        style: elementStyle,
+        placeholder: '1234 5678 9012 3456'
+      });
 
-    this.cardExpiry = this.elements.create('cardExpiry', {
-      style: elementStyle,
-      placeholder: 'MM/YY'
-    });
+      this.cardExpiry = this.elements.create('cardExpiry', {
+        style: elementStyle,
+        placeholder: 'MM/YY'
+      });
 
-    this.cardCvc = this.elements.create('cardCvc', {
-      style: elementStyle,
-      placeholder: '123'
-    });
+      this.cardCvc = this.elements.create('cardCvc', {
+        style: elementStyle,
+        placeholder: '123'
+      });
 
-    this.cardNumber.mount(this.cardNumberElement.nativeElement);
-    this.cardExpiry.mount(this.cardExpiryElement.nativeElement);
-    this.cardCvc.mount(this.cardCvcElement.nativeElement);
+      // ✅ Mount elements with error handling
+      await this.mountElementSafely(this.cardNumber, this.cardNumberElement.nativeElement, 'cardNumber');
+      await this.mountElementSafely(this.cardExpiry, this.cardExpiryElement.nativeElement, 'cardExpiry');
+      await this.mountElementSafely(this.cardCvc, this.cardCvcElement.nativeElement, 'cardCvc');
+
+      // ✅ Setup event listeners
+      this.setupElementEventListeners();
+
+      // ✅ Set default cardholder name
+      if (this.userDetails?.userFullName && !this.cardholderName) {
+        this.cardholderName = this.userDetails.userFullName;
+        this.validateCardholderName();
+      }
+
+      this.isElementsMounted = true;
+      this.elementMountRetries = 0;
+      console.log('✅ Stripe elements mounted successfully');
+
+    } catch (error) {
+      console.error('❌ Error setting up Stripe elements:', error);
+      this.isElementsMounted = false;
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to load payment form. Please try again.'
+      });
+    }
+  }
+
+  // ✅ NEW: Safe element mounting with verification
+  private async mountElementSafely(element: any, domElement: HTMLElement, elementName: string): Promise<void> {
+    try {
+      // Check if DOM element is still in the document
+      if (!document.contains(domElement)) {
+        throw new Error(`DOM element for ${elementName} is not in document`);
+      }
+
+      element.mount(domElement);
+
+      // Wait a bit and verify mount was successful
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      console.log(`✅ ${elementName} mounted successfully`);
+    } catch (error) {
+      console.error(`❌ Failed to mount ${elementName}:`, error);
+      throw error;
+    }
+  }
+
+  // ✅ NEW: Setup event listeners separately
+  private setupElementEventListeners(): void {
+    if (!this.cardNumber || !this.cardExpiry || !this.cardCvc) return;
 
     this.cardNumber.on('change', (event) => {
       this.cardNumberComplete = event.complete;
@@ -307,9 +402,17 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
 
+    this.cardNumber.on('ready', () => {
+      console.log('✅ Card number element ready');
+    });
+
     this.cardExpiry.on('change', (event) => {
       this.cardExpiryComplete = event.complete;
       this.cardExpiryError = event.error ? event.error.message : null;
+    });
+
+    this.cardExpiry.on('ready', () => {
+      console.log('✅ Card expiry element ready');
     });
 
     this.cardCvc.on('change', (event) => {
@@ -317,25 +420,64 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       this.cardCvcError = event.error ? event.error.message : null;
     });
 
-    if (this.userDetails?.userFullName && !this.cardholderName) {
-      this.cardholderName = this.userDetails.userFullName;
-      this.validateCardholderName();
+    this.cardCvc.on('ready', () => {
+      console.log('✅ Card CVC element ready');
+    });
+  }
+
+  // ✅ UPDATED: Safe element destruction
+  private async safeDestroyElements(): Promise<void> {
+    try {
+      if (this.cardNumber) {
+        this.cardNumber.destroy();
+        this.cardNumber = null;
+      }
+      if (this.cardExpiry) {
+        this.cardExpiry.destroy();
+        this.cardExpiry = null;
+      }
+      if (this.cardCvc) {
+        this.cardCvc.destroy();
+        this.cardCvc = null;
+      }
+      this.isElementsMounted = false;
+      console.log('✅ Stripe elements destroyed safely');
+    } catch (error) {
+      console.error('❌ Error destroying elements:', error);
+      // Continue anyway
+      this.cardNumber = null;
+      this.cardExpiry = null;
+      this.cardCvc = null;
+      this.isElementsMounted = false;
     }
   }
 
-  private destroyStripeElements() {
-    if (this.cardNumber) {
-      this.cardNumber.destroy();
-      this.cardNumber = null;
-    }
-    if (this.cardExpiry) {
-      this.cardExpiry.destroy();
-      this.cardExpiry = null;
-    }
-    if (this.cardCvc) {
-      this.cardCvc.destroy();
-      this.cardCvc = null;
-    }
+  // ✅ NEW: Verify elements are ready for use
+  private verifyElementsReady(): boolean {
+    // Check Stripe elements exist
+    const elementsExist = !!(this.stripe && this.cardNumber && this.cardExpiry && this.cardCvc);
+
+    // Check ViewChild elements exist
+    const viewChildElements = [
+      this.cardNumberElement?.nativeElement,
+      this.cardExpiryElement?.nativeElement,
+      this.cardCvcElement?.nativeElement
+    ];
+
+    const domElementsExist = viewChildElements.every(el => !!el);
+
+    // Only check document.contains if all elements exist
+    const domElementsInDocument = domElementsExist &&
+      viewChildElements.every(el => document.contains(el!));
+
+    console.log('Element verification:', {
+      elementsExist,
+      domElementsExist,
+      domElementsInDocument,
+      isElementsMounted: this.isElementsMounted
+    });
+
+    return elementsExist && domElementsExist && domElementsInDocument && this.isElementsMounted;
   }
 
   onCardholderNameChange() {
@@ -356,10 +498,28 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  // ✅ UPDATED: Enhanced save card details with element verification
   async saveCardDetails() {
     if (!this.allFieldsComplete) {
       this.validateAllFields();
       return;
+    }
+
+    // ✅ Verify elements are still mounted and functional
+    if (!this.verifyElementsReady()) {
+      console.log('🔄 Elements not ready, attempting to remount...');
+      await this.setupStripeElements();
+
+      // Wait a bit for remounting
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (!this.verifyElementsReady()) {
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Payment form not ready. Please close and reopen the card form.'
+        });
+        return;
+      }
     }
 
     this.isSavingCard = true;
@@ -370,24 +530,47 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
         card: this.cardNumber!,
         billing_details: {
           name: this.cardholderName,
+          email: this.userDetails?.email,
+          phone: this.userDetails?.phoneNumber,
         },
       });
 
       if (error) {
+        console.error('❌ Stripe createPaymentMethod error:', error);
         this.cardNumberError = error.message || 'Invalid card details';
         return;
       }
 
-      this.cardLast4 = paymentMethod.card?.last4 || '';
-      this.cardBrand = paymentMethod.card?.brand?.toUpperCase() || '';
-      this.cardDetailsEntered = true;
-      this.paymentMethodSelected = true;
-      this.showError = false;
-      this.closeCardModal();
+      if (paymentMethod?.card) {
+        this.cardLast4 = paymentMethod.card.last4 || '';
+        this.cardBrand = paymentMethod.card.brand?.toUpperCase() || '';
+        this.cardDetailsEntered = true;
+        this.paymentMethodSelected = true;
+        this.showError = false;
+
+        console.log('✅ Card details saved successfully');
+        this.closeCardModal();
+      } else {
+        throw new Error('Failed to create payment method');
+      }
 
     } catch (error) {
-      console.error('Error validating card:', error);
-      this.cardNumberError = 'Failed to validate card details';
+      console.error('❌ Error validating card:', error);
+
+      // Check if it's a mounting issue
+      if ((error as Error)?.message?.includes('Element') || (error as Error)?.message?.includes('mounted')) {
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Card form disconnected. Please close and reopen the card form.'
+        });
+        this.recreateStripeElements();
+      } else {
+        this.cardNumberError = 'Failed to validate card details';
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Failed to validate card. Please check your details and try again.'
+        });
+      }
     } finally {
       this.isSavingCard = false;
     }
@@ -413,16 +596,32 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     this.cardholderNameError = null;
   }
 
+  // ✅ UPDATED: Enhanced payment processing with element verification
   async processPayment() {
-    if (!this.cardDetailsEntered || !this.serviceDetails || !this.userDetails) {
+    if (!this.cardDetailsEntered || !this.serviceDetails || !this.userDetails || !this.feeCalculationLoaded) {
       this.showError = true;
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Please complete all required fields before proceeding.'
+      });
+      return;
+    }
+
+    // ✅ Critical verification before payment
+    if (!this.verifyElementsReady()) {
+      console.error('❌ Stripe elements not ready for payment');
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Payment form not ready. Please reopen the card form and try again.'
+      });
       return;
     }
 
     this.isProcessing = true;
 
     try {
-      console.log('🚀 Starting payment process...');
+      console.log('🚀 Starting escrow payment process...');
+
       const paymentIntentResponse = await this.createPaymentIntent();
 
       if (!paymentIntentResponse.response) {
@@ -430,8 +629,9 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       }
 
       const { clientSecret, paymentIntentId } = paymentIntentResponse.response;
-      console.log('✅ Payment intent created:', paymentIntentId);
+      console.log('✅ Escrow payment intent created:', paymentIntentId);
 
+      console.log('💳 Confirming payment with Stripe...');
       const { error, paymentIntent } = await this.stripe!.confirmCardPayment(clientSecret, {
         payment_method: {
           card: this.cardNumber!,
@@ -445,17 +645,29 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
 
       if (error) {
         console.error('❌ Stripe payment failed:', error);
-        this.notificationService.showNotification({
-          type: 'error',
-          message: error.message || 'Payment failed. Please try again.'
-        });
+
+        // Handle element-specific errors
+        if (error.message?.includes('Element') || error.message?.includes('mounted')) {
+          this.notificationService.showNotification({
+            type: 'error',
+            message: 'Payment form disconnected. Please refresh the page and try again.'
+          });
+        } else {
+          this.notificationService.showNotification({
+            type: 'error',
+            message: error.message || 'Payment failed. Please try again.'
+          });
+        }
         return;
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        console.log('✅ Stripe payment succeeded');
+        console.log('✅ Stripe payment succeeded - money now in escrow');
         await this.confirmPaymentWithBackend(paymentIntentId);
-        console.log('✅ Payment process completed successfully');
+        console.log('✅ Escrow payment process completed successfully');
+
+        // Now safe to destroy elements
+        await this.safeDestroyElements();
       }
 
     } catch (error) {
@@ -469,35 +681,40 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  // ✅ UPDATED: Create payment intent with new escrow structure
   private async createPaymentIntent() {
     const paymentFlowState = this.paymentFlowService.getCurrentState();
 
     const paymentIntentDto: PaymentIntentCreateDTO = {
       replyId: paymentFlowState.replyId!,
-      amount: this.totalAmount,
+      serviceAmount: this.serviceAmount,     // ✅ NEW: Separate service amount
+      protectionFee: this.protectionFee,    // ✅ NEW: Separate protection fee
+      totalAmount: this.totalAmount,        // ✅ NEW: Total amount
       currency: 'ron',
-      description: `Service booking: ${this.serviceDetails?.description || 'Professional service'}`,
+      description: `Escrow payment: ${this.serviceDetails?.description || 'Professional service'}`,
       metadata: {
         replyId: paymentFlowState.replyId!,
         conversationId: paymentFlowState.conversationId!,
         userId: this.userDetails?.userId || '',
         specialistId: this.specialistDetails?.userId || '',
-        baseServicePrice: this.baseServicePrice.toString(),
-        protectionFee: this.protectionFee.toString(),
-        protectionFeeType: this.protectionFeeType
+        paymentType: 'escrow'                // ✅ NEW: Mark as escrow payment
       }
     };
 
+    console.log('💳 Creating escrow payment intent:', paymentIntentDto);
     return await firstValueFrom(this.paymentService.createPaymentIntent(paymentIntentDto));
   }
 
+  // ✅ UPDATED: Confirm payment with new escrow structure
   private async confirmPaymentWithBackend(paymentIntentId: string): Promise<void> {
     const paymentFlowState = this.paymentFlowService.getCurrentState();
 
     const confirmationDto: PaymentConfirmationDTO = {
       paymentIntentId: paymentIntentId,
       replyId: paymentFlowState.replyId!,
-      amount: this.totalAmount,
+      serviceAmount: this.serviceAmount,     // ✅ NEW: Service amount
+      protectionFee: this.protectionFee,    // ✅ NEW: Protection fee
+      totalAmount: this.totalAmount,        // ✅ NEW: Total amount
       paymentMethod: `${this.cardBrand} •••• ${this.cardLast4}`
     };
 
@@ -509,11 +726,11 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       if (confirmResponse.response !== undefined) {
         this.notificationService.showNotification({
           type: 'success',
-          message: 'Payment completed successfully!'
+          message: 'Payment completed successfully! Money is now securely held in escrow.'
         });
 
         this.paymentFlowService.completePayment();
-        console.log('💳 Payment flow completed - service task will be created');
+        console.log('💳 Escrow payment flow completed - service task will be created');
       } else {
         throw new Error(confirmResponse.errorMessage?.message || 'Failed to confirm payment');
       }
@@ -532,19 +749,25 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
-  // ✅ NEW: Get protection fee configuration for display
-  get protectionFeeConfig() {
-    return this.protectionFeeService.getConfig();
+  // ✅ NEW: Helper methods for template
+  get hasValidServiceAmount(): boolean {
+    return this.serviceAmount > 0;
   }
 
-// ✅ NEW: Get protection fee breakdown for display
-  get protectionFeeBreakdown() {
-    return this.protectionFeeService.getProtectionFeeBreakdown(this.baseServicePrice);
+  get isLoadingFeeCalculation(): boolean {
+    return !this.feeCalculationLoaded && this.serviceAmount > 0;
   }
 
-// ✅ NEW: Admin methods to update protection fee (if user is admin)
-  updateProtectionFeeSettings(config: Partial<ProtectionFeeConfig>) {
-    this.protectionFeeService.updateConfig(config);
-    this.calculateTotal(); // Recalculate with new settings
+  get protectionFeeDisplayText(): string {
+    if (!this.feeCalculationLoaded) {
+      return 'Calculating...';
+    }
+
+    if (this.protectionFee === 0) {
+      return 'No protection fee';
+    }
+
+    const percentage = this.protectionFeePercentage;
+    return `${percentage.toFixed(1)}% protection fee`;
   }
 }

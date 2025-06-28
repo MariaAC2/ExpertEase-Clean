@@ -12,6 +12,12 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.Id)
             .IsRequired();
         builder.HasKey(p => p.Id);
+        
+        // ✅ CORRECT: Keep your navigation property relationship
+        builder.HasOne(p => p.Reply)
+            .WithMany(r => r.Payments) // This is fine if Reply has List<Payment> Payments
+            .HasForeignKey(p => p.ReplyId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ✅ UPDATED: New amount structure for escrow support
         builder.Property(p => p.ServiceAmount)
@@ -32,16 +38,19 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         // ✅ Financial tracking fields
         builder.Property(p => p.TransferredAmount)
+            .IsRequired()
             .HasColumnType("decimal(18,2)")
             .HasDefaultValue(0)
             .HasComment("Amount actually transferred to specialist");
 
         builder.Property(p => p.RefundedAmount)
+            .IsRequired()
             .HasColumnType("decimal(18,2)")
             .HasDefaultValue(0)
             .HasComment("Amount refunded to client");
 
         builder.Property(p => p.PlatformRevenue)
+            .IsRequired()
             .HasColumnType("decimal(18,2)")
             .HasDefaultValue(0)
             .HasComment("Platform's actual revenue from this payment");
@@ -53,9 +62,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         // ✅ Status and required fields
         builder.Property(p => p.Status)
-            .IsRequired()
-            .HasConversion<string>() // Store enum as string for readability
-            .HasMaxLength(50); // ✅ INCREASED: More room for new enum values like "Escrowed"
+            .IsRequired();
 
         builder.Property(p => p.StripeAccountId)
             .IsRequired()
@@ -65,7 +72,6 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.Currency)
             .HasMaxLength(3)
             .HasDefaultValue("RON")
-            .IsFixedLength()
             .HasComment("ISO currency code");
 
         // ✅ Stripe integration fields
@@ -87,27 +93,33 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         // ✅ Timestamp fields
         builder.Property(p => p.PaidAt)
+            .IsRequired(false)
             .HasComment("When client completed payment");
 
         builder.Property(p => p.EscrowReleasedAt)
+            .IsRequired(false)
             .HasComment("When money was transferred to specialist");
 
         builder.Property(p => p.CancelledAt)
+            .IsRequired(false)
             .HasComment("When payment was cancelled");
 
         builder.Property(p => p.RefundedAt)
+            .IsRequired(false)
             .HasComment("When payment was refunded");
 
-        // ✅ JSON field for protection fee details
+        // ✅ JSON field for PostgreSQL
         builder.Property(p => p.ProtectionFeeDetailsJson)
-            .HasColumnType("nvarchar(max)") // ✅ CHANGED: Use SQL Server compatible type instead of PostgreSQL jsonb
+            .HasColumnType("jsonb")
+            .IsRequired(false)
             .HasComment("JSON serialized protection fee calculation details");
 
         // ✅ Optional service task reference
         builder.Property(p => p.ServiceTaskId)
+            .IsRequired(false)
             .HasComment("Associated service task ID");
 
-        // ✅ UPDATED: Base entity properties (CreatedAt, UpdatedAt, etc.)
+        // ✅ Base entity properties
         builder.Property(p => p.CreatedAt)
             .IsRequired()
             .HasComment("When payment record was created");
@@ -116,62 +128,10 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .IsRequired()
             .HasComment("When payment record was last updated");
 
-        // ✅ FIXED: Change from WithOne() to WithMany()
-        builder.HasOne(p => p.Reply)
-            .WithMany() // This indicates Reply can have many Payments
-            .HasForeignKey(p => p.ReplyId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         // ✅ Indexes for performance
         builder.HasIndex(p => p.StripePaymentIntentId)
             .IsUnique()
-            .HasDatabaseName("IX_Payment_StripePaymentIntentId")
-            .HasFilter("[StripePaymentIntentId] IS NOT NULL"); // ✅ ADDED: Filter for partial unique index
-
-        builder.HasIndex(p => p.Status)
-            .HasDatabaseName("IX_Payment_Status");
-
-        builder.HasIndex(p => p.CreatedAt)
-            .HasDatabaseName("IX_Payment_CreatedAt");
-
-        builder.HasIndex(p => p.PaidAt)
-            .HasDatabaseName("IX_Payment_PaidAt")
-            .HasFilter("[PaidAt] IS NOT NULL"); // ✅ ADDED: Filter since PaidAt is nullable
-
-        builder.HasIndex(p => new { p.Status, p.CreatedAt })
-            .HasDatabaseName("IX_Payment_Status_CreatedAt");
-
-        // ✅ ADDED: Index for escrow queries
-        builder.HasIndex(p => new { p.Status, p.TransferredAmount, p.RefundedAmount })
-            .HasDatabaseName("IX_Payment_Escrow_Status")
-            .HasFilter("[Status] IN ('Escrowed', 'Completed')");
-
-        // ✅ Check constraints for data integrity
-        builder.HasCheckConstraint("CK_Payment_ServiceAmount_NonNegative", 
-            "[ServiceAmount] >= 0");
-
-        builder.HasCheckConstraint("CK_Payment_ProtectionFee_NonNegative", 
-            "[ProtectionFee] >= 0");
-
-        builder.HasCheckConstraint("CK_Payment_TotalAmount_Valid", 
-            "[TotalAmount] = [ServiceAmount] + [ProtectionFee]");
-
-        builder.HasCheckConstraint("CK_Payment_TransferredAmount_Valid", 
-            "[TransferredAmount] >= 0 AND [TransferredAmount] <= [ServiceAmount]");
-
-        builder.HasCheckConstraint("CK_Payment_RefundedAmount_Valid", 
-            "[RefundedAmount] >= 0 AND [RefundedAmount] <= [TotalAmount]");
-
-        // ✅ ADDED: Additional business logic constraints
-        builder.HasCheckConstraint("CK_Payment_PlatformRevenue_Valid",
-            "[PlatformRevenue] >= 0 AND [PlatformRevenue] <= [ProtectionFee]");
-
-        // ✅ ADDED: Ensure escrow release timestamp is after payment timestamp
-        builder.HasCheckConstraint("CK_Payment_EscrowRelease_After_Payment",
-            "[EscrowReleasedAt] IS NULL OR [PaidAt] IS NULL OR [EscrowReleasedAt] >= [PaidAt]");
-
-        // ✅ Table configuration
-        builder.ToTable("Payments", schema: "dbo");
+            .HasFilter("\"StripePaymentIntentId\" IS NOT NULL");
         
         // ✅ Add table comment
         builder.HasComment("Payment records with escrow support for secure service transactions");

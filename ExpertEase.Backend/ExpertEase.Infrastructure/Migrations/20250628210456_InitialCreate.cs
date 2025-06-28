@@ -41,6 +41,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     Role = table.Column<string>(type: "text", nullable: false),
                     AuthProvider = table.Column<int>(type: "integer", nullable: false),
                     ProfilePictureUrl = table.Column<string>(type: "text", nullable: true),
+                    StripeCustomerId = table.Column<string>(type: "text", nullable: false),
                     Rating = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -67,6 +68,34 @@ namespace ExpertEase.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_ContactInfo_User_UserId",
                         column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerPaymentMethod",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", maxLength: 255, nullable: false),
+                    StripeCustomerId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    StripePaymentMethodId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    CardLast4 = table.Column<string>(type: "character(4)", fixedLength: true, maxLength: 4, nullable: false),
+                    CardBrand = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    CardholderName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerPaymentMethod", x => x.Id);
+                    table.CheckConstraint("CK_CustomerPaymentMethods_CardBrand_Values", "\"CardBrand\" IN ('VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'DINERS', 'JCB', 'UNIONPAY', 'UNKNOWN')");
+                    table.CheckConstraint("CK_CustomerPaymentMethods_CardLast4_Length", "LENGTH(\"CardLast4\") = 4");
+                    table.ForeignKey(
+                        name: "FK_CustomerPaymentMethod_User_CustomerId",
+                        column: x => x.CustomerId,
                         principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -137,7 +166,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     RequestId = table.Column<Guid>(type: "uuid", nullable: false),
                     StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     RejectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -179,12 +208,54 @@ namespace ExpertEase.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Payment",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReplyId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ServiceAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false, comment: "Amount that will be transferred to specialist"),
+                    ProtectionFee = table.Column<decimal>(type: "numeric(18,2)", nullable: false, defaultValue: 0m, comment: "Platform protection fee"),
+                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false, comment: "Total amount charged to client (ServiceAmount + ProtectionFee)"),
+                    StripeAccountId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    StripePaymentIntentId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true, comment: "Stripe payment intent ID"),
+                    StripeChargeId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true, comment: "Stripe charge ID"),
+                    StripeTransferId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true, comment: "Stripe transfer ID when money sent to specialist"),
+                    StripeRefundId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true, comment: "Stripe refund ID if payment was refunded"),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    PaidAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, comment: "When client completed payment"),
+                    EscrowReleasedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, comment: "When money was transferred to specialist"),
+                    CancelledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, comment: "When payment was cancelled"),
+                    RefundedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, comment: "When payment was refunded"),
+                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: true, defaultValue: "RON", comment: "ISO currency code"),
+                    ProtectionFeeDetailsJson = table.Column<string>(type: "jsonb", nullable: true, comment: "JSON serialized protection fee calculation details"),
+                    TransferredAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false, defaultValue: 0m, comment: "Amount actually transferred to specialist"),
+                    RefundedAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false, defaultValue: 0m, comment: "Amount refunded to client"),
+                    PlatformRevenue = table.Column<decimal>(type: "numeric(18,2)", nullable: false, defaultValue: 0m, comment: "Platform's actual revenue from this payment"),
+                    FeeCollected = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false, comment: "Whether platform fee has been secured"),
+                    ServiceTaskId = table.Column<Guid>(type: "uuid", nullable: true, comment: "Associated service task ID"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, comment: "When payment record was created"),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, comment: "When payment record was last updated")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Payment", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Payment_Reply_ReplyId",
+                        column: x => x.ReplyId,
+                        principalTable: "Reply",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                },
+                comment: "Payment records with escrow support for secure service transactions");
+
+            migrationBuilder.CreateTable(
                 name: "ServiceTask",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     SpecialistId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PaymentId = table.Column<Guid>(type: "uuid", nullable: false),
                     StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
@@ -193,7 +264,6 @@ namespace ExpertEase.Infrastructure.Migrations
                     CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CancelledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    ReplyId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -201,37 +271,21 @@ namespace ExpertEase.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_ServiceTask", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ServiceTask_Reply_ReplyId",
-                        column: x => x.ReplyId,
-                        principalTable: "Reply",
+                        name: "FK_ServiceTask_Payment_PaymentId",
+                        column: x => x.PaymentId,
+                        principalTable: "Payment",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Payment",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ServiceTaskId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    StripeAccountId = table.Column<string>(type: "text", nullable: false),
-                    StripePaymentIntentId = table.Column<string>(type: "text", nullable: true),
-                    StripeChargeId = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    PaidAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CancelledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: true, defaultValue: "RON"),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Payment", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Payment_ServiceTask_ServiceTaskId",
-                        column: x => x.ServiceTaskId,
-                        principalTable: "ServiceTask",
+                        name: "FK_ServiceTask_User_SpecialistId",
+                        column: x => x.SpecialistId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ServiceTask_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -273,10 +327,26 @@ namespace ExpertEase.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Payment_ServiceTaskId",
+                name: "IX_CustomerPaymentMethod_CustomerId",
+                table: "CustomerPaymentMethod",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerPaymentMethods_StripeCustomerId",
+                table: "CustomerPaymentMethod",
+                column: "StripeCustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payment_ReplyId",
                 table: "Payment",
-                column: "ServiceTaskId",
-                unique: true);
+                column: "ReplyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payment_StripePaymentIntentId",
+                table: "Payment",
+                column: "StripePaymentIntentId",
+                unique: true,
+                filter: "\"StripePaymentIntentId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reply_RequestId",
@@ -310,10 +380,20 @@ namespace ExpertEase.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceTask_ReplyId",
+                name: "IX_ServiceTask_PaymentId",
                 table: "ServiceTask",
-                column: "ReplyId",
+                column: "PaymentId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceTask_SpecialistId",
+                table: "ServiceTask",
+                column: "SpecialistId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceTask_UserId",
+                table: "ServiceTask",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SpecialistCategories_SpecialistsUserId",
@@ -328,7 +408,7 @@ namespace ExpertEase.Infrastructure.Migrations
                 name: "ContactInfo");
 
             migrationBuilder.DropTable(
-                name: "Payment");
+                name: "CustomerPaymentMethod");
 
             migrationBuilder.DropTable(
                 name: "Review");
@@ -344,6 +424,9 @@ namespace ExpertEase.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "SpecialistProfile");
+
+            migrationBuilder.DropTable(
+                name: "Payment");
 
             migrationBuilder.DropTable(
                 name: "Reply");

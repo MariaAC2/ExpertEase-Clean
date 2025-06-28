@@ -662,8 +662,9 @@ public class PaymentService(
         if (reply == null)
             return (null, null, null);
 
-        var specialist = reply.Request.ReceiverUser;
-        var accountId = specialist?.SpecialistProfile?.StripeAccountId;
+        var specialist = await repository.GetAsync(new UserSpec(reply.Request.ReceiverUserId), cancellationToken);
+        var accountId = specialist.SpecialistProfile?.StripeAccountId;
+        Console.WriteLine("Stripe account id: " + accountId);
 
         return (reply, specialist, accountId);
     }

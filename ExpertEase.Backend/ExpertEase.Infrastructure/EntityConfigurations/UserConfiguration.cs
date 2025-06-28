@@ -37,6 +37,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
         builder.Property(u => u.Rating)
             .HasDefaultValue(0);
+        builder.Property(e => e.StripeCustomerId)
+            .IsRequired();
         builder.HasOne(u => u.ContactInfo)
             .WithOne(ci => ci.User)
             .HasForeignKey<ContactInfo>(ci => ci.UserId)

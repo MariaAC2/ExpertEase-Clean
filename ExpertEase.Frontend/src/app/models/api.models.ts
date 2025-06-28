@@ -308,59 +308,208 @@ export interface UserPaymentDetailsDTO {
 // }
 
 export interface PaymentIntentCreateDTO {
-  replyId: string; // Guid
-  amount: number;
-  currency?: string; // default: "ron"
-  description: string;
+  replyId: string;
+  serviceAmount: number;        // NEW: Amount that goes to specialist
+  protectionFee?: number;       // NEW: Platform protection fee (calculated if not provided)
+  totalAmount?: number;         // NEW: Total amount (calculated if not provided)
+  currency?: string;            // default: "ron"
+  description?: string;
   metadata?: Record<string, string>;
+  protectionFeeDetails?: ProtectionFeeDetailsDTO; // NEW: Fee calculation details
+}
+
+export interface ProtectionFeeDetailsDTO {
+  baseServiceAmount: number;
+  feeType: string;              // 'percentage' or 'fixed'
+  feePercentage?: number;
+  fixedFeeAmount?: number;
+  minimumFee: number;
+  maximumFee: number;
+  calculatedFee: number;
+  feeJustification: string;
+  calculatedAt: Date;
 }
 
 export interface PaymentIntentResponseDTO {
   clientSecret: string;
   paymentIntentId: string;
+  stripeAccountId: string;      // NEW: Specialist's Stripe account
+  serviceAmount: number;        // NEW: Amount for specialist
+  protectionFee: number;        // NEW: Platform protection fee
+  totalAmount: number;          // NEW: Total amount charged
+  protectionFeeDetails?: ProtectionFeeDetailsDTO; // NEW: Fee breakdown
 }
 
 export interface PaymentConfirmationDTO {
   paymentIntentId: string;
   replyId: string;
-  amount: number;
-  paymentMethod: string;
+  serviceAmount: number;        // NEW: Service amount
+  protectionFee: number;        // NEW: Protection fee
+  totalAmount: number;          // NEW: Total amount
+  paymentMethod?: string;
 }
 
 export interface PaymentHistoryDTO {
   id: string;
   replyId: string;
-  amount: number;
+
+  // NEW: Detailed amount breakdown
+  serviceAmount: number;
+  protectionFee: number;
+  totalAmount: number;
+
   currency: string;
   status: string;
-  paidAt?: string; // ISO Date string or null
+  paidAt?: string;              // ISO Date string or null
+  escrowReleasedAt?: string;    // NEW: When money was released to specialist
+
   serviceDescription: string;
   serviceAddress: string;
   specialistName: string;
   clientName: string;
+
+  // NEW: Financial tracking
+  transferredAmount: number;
+  refundedAmount: number;
+  isEscrowed: boolean;
 }
 
 export interface PaymentDetailsDTO {
   id: string;
   replyId: string;
-  amount: number;
+
+  // NEW: Detailed amount breakdown
+  serviceAmount: number;
+  protectionFee: number;
+  totalAmount: number;
+
   currency: string;
   status: string;
   paidAt?: string;
+  escrowReleasedAt?: string;    // NEW: When money was released to specialist
   createdAt: string;
+
   stripePaymentIntentId?: string;
+  stripeTransferId?: string;    // NEW: Transfer ID when money sent to specialist
+  stripeRefundId?: string;      // NEW: Refund ID if payment was refunded
+
   serviceDescription: string;
   serviceAddress: string;
   serviceStartDate: Date;
   serviceEndDate: Date;
   specialistName: string;
   clientName: string;
+
+  // NEW: Financial details
+  transferredAmount: number;
+  refundedAmount: number;
+  platformRevenue: number;
+  isEscrowed: boolean;
+  protectionFeeDetails?: ProtectionFeeDetailsDTO;
 }
 
 export interface PaymentRefundDTO {
   paymentId: string;
-  amount?: number;
+  amount?: number;              // If null, full refund
   reason?: string;
+}
+
+export interface PaymentReleaseDTO {
+  paymentId: string;
+  customAmount?: number;        // If null, release full service amount
+  reason?: string;
+}
+
+export interface PaymentReportDTO {
+  period: string;
+  totalServiceRevenue: number;
+  totalProtectionFees: number;
+  totalPlatformRevenue: number;
+  totalTransactions: number;
+  completedServices: number;
+  refundedServices: number;
+  escrowedPayments: number;
+  refundRate: number;
+  averageServiceValue: number;
+  averageProtectionFee: number;
+  totalEscrowedAmount: number;
+}
+
+export interface PaymentStatusResponseDTO {
+  paymentId: string;
+  status: string;
+  isEscrowed: boolean;          // NEW: Is money in escrow
+  canBeReleased: boolean;       // NEW: Can be released to specialist
+  canBeRefunded: boolean;       // NEW: Can be refunded to client
+  amountBreakdown: PaymentAmountBreakdown; // NEW: Amount breakdown
+  protectionFeeDetails?: ProtectionFeeDetailsDTO;
+}
+
+export interface PaymentAmountBreakdown {
+  serviceAmount: number;        // Amount for specialist
+  protectionFee: number;        // Platform protection fee
+  totalAmount: number;          // Total charged to client
+  transferredAmount: number;    // Amount already transferred to specialist
+  refundedAmount: number;       // Amount already refunded to client
+  pendingAmount: number;        // Amount still in escrow
+  platformRevenue: number;      // Platform's secured revenue
+}
+
+// ✅ NEW: Protection fee calculation DTOs
+export interface CalculateProtectionFeeRequestDTO {
+  serviceAmount: number;
+}
+
+export interface CalculateProtectionFeeResponseDTO {
+  serviceAmount: number;
+  protectionFee: number;
+  totalAmount: number;
+  feeJustification: string;
+  feeConfiguration: ProtectionFeeConfigurationDTO;
+}
+
+export interface ProtectionFeeConfigurationDTO {
+  feeType: string;              // 'percentage', 'fixed', 'hybrid'
+  percentageRate: number;
+  fixedAmount: number;
+  minimumFee: number;
+  maximumFee: number;
+  isEnabled: boolean;
+  description: string;
+  lastUpdated: Date;
+}
+
+export interface DetailedProtectionFeeResponseDTO {
+  serviceAmount: number;
+  protectionFee: number;
+  totalAmount: number;
+  breakdown: ProtectionFeeBreakdownDTO;
+  configuration: ProtectionFeeConfigurationDTO;
+  summary: string;
+}
+
+export interface ProtectionFeeBreakdownDTO {
+  baseServiceAmount: number;
+  feeType: string;
+  percentageRate: number;
+  fixedAmount: number;
+  minimumFee: number;
+  maximumFee: number;
+  calculatedFeeBeforeLimits: number;
+  finalFee: number;
+  justification: string;
+  minimumApplied: boolean;
+  maximumApplied: boolean;
+  calculatedAt: Date;
+}
+
+export interface ProtectionFeeConfig {
+  type: 'percentage' | 'fixed';
+  percentage: number;
+  fixedAmount: number;
+  minFee: number;
+  maxFee: number;
+  enabled: boolean;
 }
 
 export interface ServiceTaskUpdateDTO {
@@ -491,12 +640,6 @@ export enum TransactionEnum {
     Transfer = "Transfer",
 }
 
-export interface TransactionUpdateDTO {
-    id: string;
-    status?: StatusEnum;
-    description?: string | undefined;
-}
-
 export interface UserAddDTO {
     fullName: string;
     email: string;
@@ -617,7 +760,9 @@ export enum UserRoleEnum {
 export enum PaymentStatusEnum {
   Pending = 'Pending',
   Processing = 'Processing',
-  Completed = 'Completed',
+  Escrowed = 'Escrowed',        // NEW: Money held in escrow
+  Completed = 'Completed',      // OLD: Kept for compatibility
+  Released = 'Released',        // NEW: Money released to specialist
   Failed = 'Failed',
   Cancelled = 'Cancelled',
   Refunded = 'Refunded',

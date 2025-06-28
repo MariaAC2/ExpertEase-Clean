@@ -10,16 +10,10 @@ public class PaymentHistoryDTO
     public decimal ServiceAmount { get; set; }
     public decimal ProtectionFee { get; set; }
     public decimal TotalAmount { get; set; }
-    
-    // ✅ DEPRECATED: Keep for backward compatibility
-    [Obsolete("Use TotalAmount instead")]
-    public decimal Amount => TotalAmount;
-    
     public string Currency { get; set; } = null!;
     public string Status { get; set; } = null!;
     public DateTime? PaidAt { get; set; }
     public DateTime? EscrowReleasedAt { get; set; } // ✅ NEW
-    
     public string ServiceDescription { get; set; } = null!;
     public string ServiceAddress { get; set; } = null!;
     public string SpecialistName { get; set; } = null!;
@@ -41,10 +35,6 @@ public class PaymentDetailsDTO
     public decimal ServiceAmount { get; set; }
     public decimal ProtectionFee { get; set; }
     public decimal TotalAmount { get; set; }
-    
-    // ✅ DEPRECATED: Keep for backward compatibility
-    [Obsolete("Use TotalAmount instead")]
-    public decimal Amount => TotalAmount;
     
     public string Currency { get; set; } = null!;
     public string Status { get; set; } = null!;
@@ -78,15 +68,6 @@ public class PaymentAddDTO
     // ✅ UPDATED: Separate amounts
     public decimal ServiceAmount { get; set; }
     public decimal ProtectionFee { get; set; }
-    
-    // ✅ DEPRECATED: Keep for backward compatibility
-    [Obsolete("Use ServiceAmount and ProtectionFee instead")]
-    public decimal Amount 
-    { 
-        get => ServiceAmount + ProtectionFee; 
-        set => ServiceAmount = value; // Fallback for old usage
-    }
-    
     public string StripeAccountId { get; set; } = null!;
 }
 
@@ -94,20 +75,9 @@ public class PaymentAddDTO
 public class PaymentIntentCreateDTO
 {
     public Guid ReplyId { get; set; }
-    
-    public string StripeAccountId { get; set; }
     public decimal ServiceAmount { get; set; }
     public decimal ProtectionFee { get; set; }
     public decimal TotalAmount { get; set; }
-    
-    // ✅ DEPRECATED: Keep for backward compatibility
-    [Obsolete("Use ServiceAmount and ProtectionFee instead")]
-    public decimal Amount 
-    { 
-        get => TotalAmount; 
-        set => TotalAmount = value; 
-    }
-    
     public string Currency { get; set; } = "ron";
     public string Description { get; set; } = null!;
     public Dictionary<string, string>? Metadata { get; set; }
@@ -122,8 +92,6 @@ public class PaymentIntentResponseDTO
     public string ClientSecret { get; set; } = null!;
     public string PaymentIntentId { get; set; } = null!;
     public string StripeAccountId { get; set; } = null!;
-    
-    // ✅ NEW: Amount breakdown in response
     public decimal ServiceAmount { get; set; }
     public decimal ProtectionFee { get; set; }
     public decimal TotalAmount { get; set; }
@@ -140,11 +108,6 @@ public class PaymentConfirmationDTO
     public decimal ServiceAmount { get; set; }
     public decimal ProtectionFee { get; set; }
     public decimal TotalAmount { get; set; }
-    
-    // ✅ DEPRECATED: Keep for backward compatibility
-    [Obsolete("Use TotalAmount instead")]
-    public decimal Amount => TotalAmount;
-    
     public string PaymentMethod { get; set; } = null!;
 }
 

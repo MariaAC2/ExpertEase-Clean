@@ -28,6 +28,8 @@ public class UserDTO
     public string ProfilePictureUrl { get; set; } = null!;
     [Required]
     public AuthProvider AuthProvider { get; set; } = AuthProvider.Local;
+
+    public string StripeCustomerId { get; set; }
 }
 
 public class UserAdminDetailsDTO

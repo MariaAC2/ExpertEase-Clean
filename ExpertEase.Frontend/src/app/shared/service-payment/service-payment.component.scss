@@ -1,3 +1,6 @@
+// Complete service-payment.component.scss - Original aesthetic + New escrow features
+
+/* ===== ORIGINAL STYLES ===== */
 .payment-overlay {
   position: fixed;
   top: 0;
@@ -189,6 +192,7 @@
   padding: 16px;
   border-radius: 8px;
   margin-top: 16px;
+  position: relative; /* Added for loading animation */
 }
 
 .price-breakdown {
@@ -221,10 +225,18 @@
   font-weight: bold;
   font-size: 18px;
   padding-top: 8px;
+  /* Enhanced styling moved to new section below */
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
 }
 
 .total-amount {
   color: #007bff;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .payment-actions {
@@ -257,17 +269,25 @@
 }
 
 .pay-btn {
-  background: #007bff;
+  /* Enhanced styling below in new section */
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
+  position: relative;
+  overflow: hidden;
 }
 
 .pay-btn:hover:not(:disabled) {
-  background: #0056b3;
+  background: linear-gradient(135deg, #218838 0%, #1ea080 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
 .pay-btn:disabled {
-  opacity: 0.6;
+  background: #6c757d;
+  opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Card Summary */
@@ -275,11 +295,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: #f8f9ff;
-  border: 1px solid #007bff;
-  border-radius: 6px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+  border: 2px solid #007bff;
+  border-radius: 8px;
   margin-top: 12px;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
 }
 
 .card-info {
@@ -292,30 +313,35 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   color: #333;
+  font-size: 16px;
 }
 
 .card-brand {
   background: #007bff;
   color: white;
-  padding: 2px 8px;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   text-transform: uppercase;
+  font-weight: bold;
 }
 
 .edit-card-btn {
   background: none;
-  border: 1px solid #007bff;
+  border: 2px solid #007bff;
   color: #007bff;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .edit-card-btn:hover {
   background: #007bff;
   color: white;
+  transform: translateY(-1px);
 }
 
 /* Card Modal */
@@ -447,30 +473,38 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 8px 12px;
 }
 
 .field-error::before {
   content: "⚠";
+  color: #dc3545;
 }
 
 .security-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: #f8f9fa;
-  border-radius: 6px;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 100%);
+  border: 1px solid #28a745;
+  border-radius: 8px;
   margin-top: 16px;
 }
 
 .security-icon {
-  font-size: 18px;
+  font-size: 20px;
+  color: #28a745;
 }
 
 .security-info p {
   margin: 0;
-  color: #666;
+  color: #155724;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .card-modal-actions {
@@ -516,6 +550,181 @@
   cursor: not-allowed;
 }
 
+/* ===== NEW ESCROW ELEMENTS ===== */
+
+/* Escrow Information Section */
+.escrow-info {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 100%);
+  border: 2px solid #28a745;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.escrow-info h3 {
+  color: #28a745;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.escrow-explanation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.escrow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #28a745;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content strong {
+  display: block;
+  color: #333;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.step-content p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Enhanced Protection Fee Display */
+.protection-fee-item {
+  position: relative;
+}
+
+.protection-fee-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.loading-badge {
+  display: inline-block;
+  background: #f5f5f5;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-style: italic;
+  margin-left: 8px;
+}
+
+.price-value.loading {
+  color: #999;
+  font-style: italic;
+}
+
+/* Escrow Guarantee Section */
+.escrow-guarantee {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.guarantee-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.guarantee-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.guarantee-text strong {
+  color: #28a745;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Loading Animation for Price Calculation */
+.price-section.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Enhanced Protection Info */
+.protection-info {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+}
+
+.protection-info small {
+  color: #856404;
+  font-size: 13px;
+  line-height: 1.4;
+  display: block;
+}
+
+/* Animation for successful actions */
+@keyframes escrowSuccess {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}
+
+.escrow-success {
+  animation: escrowSuccess 0.6s ease-out;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
 @media (max-width: 768px) {
   .payment-container {
     width: 95%;
@@ -534,5 +743,41 @@
 
   .value {
     text-align: left;
+  }
+
+  /* Escrow responsive styles */
+  .escrow-explanation {
+    gap: 12px;
+  }
+
+  .escrow-step {
+    gap: 8px;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .step-content strong {
+    font-size: 14px;
+  }
+
+  .step-content p {
+    font-size: 13px;
+  }
+
+  .escrow-guarantee {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .guarantee-icon {
+    font-size: 20px;
+  }
+
+  .guarantee-text {
+    font-size: 13px;
   }
 }

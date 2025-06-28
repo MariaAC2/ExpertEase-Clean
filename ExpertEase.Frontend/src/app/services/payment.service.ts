@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {
+  CalculateProtectionFeeRequestDTO, CalculateProtectionFeeResponseDTO,
   PaymentConfirmationDTO, PaymentDetailsDTO,
   PaymentIntentCreateDTO,
   PaymentIntentResponseDTO, PaymentRefundDTO,
@@ -27,6 +28,19 @@ export class PaymentService {
     return this.http.post<RequestResponse<PaymentIntentResponseDTO>>(
       `${this.baseUrl}/CreatePaymentIntent`,
       dto,
+      { headers }
+    );
+  }
+
+  calculateProtectionFee(request: CalculateProtectionFeeRequestDTO): Observable<RequestResponse<CalculateProtectionFeeResponseDTO>> {
+    console.log('Calculating protection fee for:', request);
+    const token = this.authService.getToken();
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+    return this.http.post<RequestResponse<CalculateProtectionFeeResponseDTO>>(
+      `${this.baseUrl}/CalculateProtectionFee`,
+      request,
       { headers }
     );
   }

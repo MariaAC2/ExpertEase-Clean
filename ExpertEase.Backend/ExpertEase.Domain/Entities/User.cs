@@ -12,8 +12,9 @@ public class User : BaseEntity
     public string Password { get; set; } = null!;
     public UserRoleEnum Role { get; set; }
     public AuthProvider AuthProvider { get; set; } = AuthProvider.Local;
-    public ContactInfo? ContactInfo { get; set; }
-    public SpecialistProfile? SpecialistProfile { get; set; }
     public string? ProfilePictureUrl { get; set; }
     public int Rating = 0;
+    public string StripeCustomerId { get; set; }
+    public ContactInfo? ContactInfo { get; set; }
+    public SpecialistProfile? SpecialistProfile { get; set; }
 }
