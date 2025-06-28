@@ -545,7 +545,6 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("StripeCustomerId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")

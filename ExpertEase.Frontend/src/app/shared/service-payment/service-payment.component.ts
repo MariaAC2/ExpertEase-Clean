@@ -1,17 +1,27 @@
-// Updated service-payment.component.ts with robust Stripe element handling
-import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+// service-payment.component.ts - Main component structure
+import { Component, ElementRef, OnInit, ViewChild, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { loadStripe, Stripe, StripeElements, StripeCardNumberElement, StripeCardExpiryElement, StripeCardCvcElement } from '@stripe/stripe-js';
 import { firstValueFrom } from 'rxjs';
 import {
   PaymentConfirmationDTO,
   PaymentIntentCreateDTO,
-  CalculateProtectionFeeRequestDTO
+  CalculateProtectionFeeRequestDTO,
+  CustomerPaymentMethodDto,
+  SaveCustomerPaymentMethodDto
 } from '../../models/api.models';
 import { PaymentService } from '../../services/payment.service';
 import { PaymentFlowService } from '../../services/payment-flow.service';
+import { CustomerPaymentMethodService } from '../../services/payment_method.service';
 import { NotificationService } from '../../services/notification.service';
-import { CurrencyPipe, DatePipe, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgIf, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+interface PaymentMethodData {
+  paymentMethodId: string;
+  cardLast4: string;
+  cardBrand: string;
+  cardholderName: string;
+}
 
 @Component({
   selector: 'app-service-payment',
@@ -20,11 +30,12 @@ import { FormsModule } from '@angular/forms';
     DatePipe,
     CurrencyPipe,
     NgIf,
+    NgForOf,
     FormsModule
   ],
   styleUrls: ['./service-payment.component.scss']
 })
-export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ServicePaymentComponent implements OnInit, OnDestroy {
   @ViewChild('cardNumberElement') cardNumberElement!: ElementRef;
   @ViewChild('cardExpiryElement') cardExpiryElement!: ElementRef;
   @ViewChild('cardCvcElement') cardCvcElement!: ElementRef;
@@ -36,16 +47,28 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   cardExpiry: StripeCardExpiryElement | null = null;
   cardCvc: StripeCardCvcElement | null = null;
 
-  // ✅ NEW: Element state tracking
-  isElementsMounted = false;
+  // DOM tracking
   private elementMountRetries = 0;
-  private maxRetries = 3;
+  private maxMountRetries = 5;
+  private isElementsDestroyed = false;
+  private isModalOpen = false;
+  private mountingInProgress = false;
+
+  // Store payment method data separately
+  private storedPaymentMethodData: PaymentMethodData | null = null;
+
+  // Saved payment methods
+  savedPaymentMethods: CustomerPaymentMethodDto[] = [];
+  selectedSavedCard: CustomerPaymentMethodDto | null = null;
+  showSavedCards = false;
+  isLoadingSavedCards = false;
 
   // Modal and form state
   showCardModal = false;
   paymentMethodSelected = false;
   cardDetailsEntered = false;
   isSavingCard = false;
+  saveCardForFuture = true;
 
   // Card form data
   cardholderName = '';
@@ -70,34 +93,53 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
   specialistDetails: any;
   userDetails: any;
 
-  // ✅ NEW: Escrow payment amounts
-  serviceAmount = 0;           // Amount that goes to specialist
-  protectionFee = 0;          // Platform protection fee
-  totalAmount = 0;            // Total amount charged to client
+  // Escrow payment amounts
+  serviceAmount = 0;
+  protectionFee = 0;
+  totalAmount = 0;
   isProcessing = false;
 
-  // ✅ NEW: Protection fee details for transparency
+  // Protection fee details
   protectionFeeDetails: any = null;
   feeCalculationLoaded = false;
 
   constructor(
     private readonly paymentService: PaymentService,
     private readonly paymentFlowService: PaymentFlowService,
-    private readonly notificationService: NotificationService
+    private readonly customerPaymentMethodService: CustomerPaymentMethodService,
+    private readonly notificationService: NotificationService,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly ngZone: NgZone
   ) {}
 
   async ngOnInit() {
     await this.initializeStripe();
     this.loadPaymentFlowData();
     await this.calculateProtectionFee();
-  }
-
-  ngAfterViewInit() {
-    // Elements will be created when modal opens
+    await this.loadSavedPaymentMethods();
   }
 
   ngOnDestroy() {
+    this.isModalOpen = false;
     this.safeDestroyElements();
+  }
+
+  // ===== INITIALIZATION =====
+
+  private async initializeStripe() {
+    try {
+      this.stripe = await loadStripe('pk_test_51RY4TaRP4R8qcMUlWSJwbW6GBjetIiG7jc4fLrsUcl7xMS8uTMcI2mfDHId8YRAku8lllViJiAY0mVPObrvgLYke00QP5RVa7S');
+      if (!this.stripe) {
+        throw new Error('Failed to load Stripe');
+      }
+      console.log('✅ Stripe initialized successfully');
+    } catch (error) {
+      console.error('Error initializing Stripe:', error);
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to initialize payment system'
+      });
+    }
   }
 
   private loadPaymentFlowData() {
@@ -105,37 +147,15 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     this.serviceDetails = paymentFlowState.serviceDetails;
     this.userDetails = paymentFlowState.userDetails;
     this.specialistDetails = paymentFlowState.specialistDetails;
-
-    // Extract service amount from service details
     this.extractServiceAmount();
   }
 
-  // ✅ UPDATED: Enhanced recreate method
-  recreateStripeElements() {
-    console.log('🔄 Recreating Stripe elements...');
-    this.cardDetailsEntered = false;
-    this.paymentMethodSelected = false;
-    this.isElementsMounted = false;
-    this.clearErrors();
-
-    this.safeDestroyElements().then(() => {
-      if (this.showCardModal) {
-        setTimeout(() => {
-          this.setupStripeElements();
-        }, 200);
-      }
-    });
-  }
-
-  // ✅ NEW: Extract service amount from service details
   private extractServiceAmount() {
     if (!this.serviceDetails) {
-      console.warn('⚠️ No service details found');
       this.serviceAmount = 0;
       return;
     }
 
-    // Try different possible price field names
     const priceFields = ['price', 'amount', 'cost', 'servicePrice', 'totalPrice'];
     let foundPrice = false;
 
@@ -143,25 +163,632 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       if (this.serviceDetails[field] !== undefined && this.serviceDetails[field] !== null) {
         this.serviceAmount = Number(this.serviceDetails[field]);
         foundPrice = true;
-        console.log(`✅ Found service amount in field '${field}':`, this.serviceAmount);
         break;
       }
     }
 
     if (!foundPrice) {
-      console.warn('⚠️ No price field found in serviceDetails:', this.serviceDetails);
       this.serviceAmount = 0;
     }
 
-    // Validate amount
     if (this.serviceAmount < 0) {
-      console.warn('⚠️ Invalid negative price, setting to 0');
       this.serviceAmount = 0;
     }
   }
 
-  // ✅ NEW: Calculate protection fee using backend
-  private async calculateProtectionFee() {
+  // ===== SIMPLE MODAL MANAGEMENT =====
+
+  openCardDetailsModal() {
+    console.log('🔓 Opening card details modal...');
+    this.showCardModal = true;
+    this.isModalOpen = true;
+    this.isElementsDestroyed = false;
+    this.elementMountRetries = 0;
+    this.mountingInProgress = false;
+
+    this.cdr.detectChanges();
+
+    // Use simple timeout approach for DOM readiness
+    setTimeout(() => {
+      this.setupStripeElementsWithRetry();
+    }, 200);
+  }
+
+  closeCardModal(event?: Event) {
+    if (event) {
+      event.preventDefault();
+    }
+
+    console.log('🔒 Closing card modal...');
+    this.isModalOpen = false;
+    this.showCardModal = false;
+    this.mountingInProgress = false;
+    this.clearErrors();
+
+    if (!this.cardDetailsEntered) {
+      this.safeDestroyElements();
+    }
+  }
+
+  // ===== SIMPLE ELEMENT SETUP WITH RETRY =====
+
+  private async setupStripeElementsWithRetry() {
+    if (!this.stripe || this.isElementsDestroyed || !this.isModalOpen) {
+      return;
+    }
+
+    try {
+      // Check if elements are available
+      if (!this.cardNumberElement?.nativeElement ||
+        !this.cardExpiryElement?.nativeElement ||
+        !this.cardCvcElement?.nativeElement) {
+
+        if (this.elementMountRetries < this.maxMountRetries) {
+          this.elementMountRetries++;
+          console.log(`🔄 Retrying element setup (${this.elementMountRetries}/${this.maxMountRetries})...`);
+          setTimeout(() => this.setupStripeElementsWithRetry(), 200);
+          return;
+        } else {
+          throw new Error('DOM elements not available after retries');
+        }
+      }
+
+      await this.createAndMountElements();
+
+    } catch (error) {
+      console.error('❌ Error setting up Stripe elements:', error);
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to load payment form. Please try again.'
+      });
+    }
+  }
+
+  private async createAndMountElements() {
+    // Destroy existing elements
+    await this.safeDestroyElements(false);
+
+    if (!this.isModalOpen) return;
+
+    // Create new elements
+    this.elements = this.stripe!.elements();
+
+    const elementStyle = {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        '::placeholder': { color: '#aab7c4' }
+      },
+      invalid: { color: '#9e2146' }
+    };
+
+    this.cardNumber = this.elements.create('cardNumber', { style: elementStyle });
+    this.cardExpiry = this.elements.create('cardExpiry', { style: elementStyle });
+    this.cardCvc = this.elements.create('cardCvc', { style: elementStyle });
+
+    // Mount elements
+    this.cardNumber.mount(this.cardNumberElement.nativeElement);
+    this.cardExpiry.mount(this.cardExpiryElement.nativeElement);
+    this.cardCvc.mount(this.cardCvcElement.nativeElement);
+
+    // Setup event listeners
+    this.cardNumber.on('change', (event) => {
+      this.cardNumberComplete = event.complete;
+      this.cardNumberError = event.error ? event.error.message : null;
+      if (event.brand) this.cardBrand = event.brand.toUpperCase();
+    });
+
+    this.cardExpiry.on('change', (event) => {
+      this.cardExpiryComplete = event.complete;
+      this.cardExpiryError = event.error ? event.error.message : null;
+    });
+
+    this.cardCvc.on('change', (event) => {
+      this.cardCvcComplete = event.complete;
+      this.cardCvcError = event.error ? event.error.message : null;
+    });
+
+    // Set default name
+    if (this.userDetails?.userFullName && !this.cardholderName) {
+      this.cardholderName = this.userDetails.userFullName;
+      this.validateCardholderName();
+    }
+
+    console.log('✅ Stripe elements setup completed');
+  }
+
+  private async safeDestroyElements(markAsDestroyed = true) {
+    try {
+      if (this.cardNumber) {
+        this.cardNumber.destroy();
+        this.cardNumber = null;
+      }
+      if (this.cardExpiry) {
+        this.cardExpiry.destroy();
+        this.cardExpiry = null;
+      }
+      if (this.cardCvc) {
+        this.cardCvc.destroy();
+        this.cardCvc = null;
+      }
+
+      if (markAsDestroyed) {
+        this.isElementsDestroyed = true;
+      }
+
+    } catch (error) {
+      console.error('❌ Error destroying elements:', error);
+      this.cardNumber = null;
+      this.cardExpiry = null;
+      this.cardCvc = null;
+      if (markAsDestroyed) this.isElementsDestroyed = true;
+    }
+  }
+
+  // ===== VALIDATION =====
+
+  onCardholderNameChange() {
+    this.validateCardholderName();
+  }
+
+  private validateCardholderName() {
+    const name = this.cardholderName.trim();
+    if (!name) {
+      this.cardholderNameError = 'Numele titularului este obligatoriu';
+      this.cardholderNameValid = false;
+    } else if (name.length < 2) {
+      this.cardholderNameError = 'Numele trebuie să aibă cel puțin 2 caractere';
+      this.cardholderNameValid = false;
+    } else {
+      this.cardholderNameError = null;
+      this.cardholderNameValid = true;
+    }
+  }
+
+  private validateAllFields() {
+    this.validateCardholderName();
+    if (!this.cardNumberComplete) {
+      this.cardNumberError = 'Numărul cardului este incomplet';
+    }
+    if (!this.cardExpiryComplete) {
+      this.cardExpiryError = 'Data de expirare este incompletă';
+    }
+    if (!this.cardCvcComplete) {
+      this.cardCvcError = 'Codul cardului este incomplet';
+    }
+  }
+
+  private clearErrors() {
+    this.cardNumberError = null;
+    this.cardExpiryError = null;
+    this.cardCvcError = null;
+    this.cardholderNameError = null;
+  }
+
+  // ===== GETTERS =====
+
+  get allFieldsComplete(): boolean {
+    if (this.selectedSavedCard) return true;
+    return this.cardNumberComplete && this.cardExpiryComplete &&
+      this.cardCvcComplete && this.cardholderNameValid;
+  }
+
+  get hasValidServiceAmount(): boolean {
+    return this.serviceAmount > 0;
+  }
+
+  get isLoadingFeeCalculation(): boolean {
+    return !this.feeCalculationLoaded && this.serviceAmount > 0;
+  }
+
+  get protectionFeeDisplayText(): string {
+    if (!this.feeCalculationLoaded) return 'Calculating...';
+    if (this.protectionFee === 0) return 'No protection fee';
+    const percentage = (this.protectionFee / this.serviceAmount) * 100;
+    return `${percentage.toFixed(1)}% protection fee`;
+  }
+
+  get protectionFeeExplanation(): string {
+    if (!this.protectionFeeDetails) return 'Protection fee helps ensure service quality';
+    return this.protectionFeeDetails.description || 'Client protection fee for service quality assurance';
+  }
+
+  get hasSavedCards(): boolean {
+    return this.savedPaymentMethods.length > 0;
+  }
+
+  async processPayment() {
+    if (!this.cardDetailsEntered || !this.serviceDetails || !this.userDetails || !this.feeCalculationLoaded) {
+      this.showError = true;
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Please complete all required fields before proceeding.'
+      });
+      return;
+    }
+
+    if (!this.storedPaymentMethodData && !this.selectedSavedCard) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'No payment method available. Please add a card first.'
+      });
+      return;
+    }
+
+    this.isProcessing = true;
+
+    try {
+      console.log('🚀 Starting escrow payment process...');
+
+      const paymentIntentResponse = await this.createPaymentIntent();
+
+      if (!paymentIntentResponse.response) {
+        throw new Error(paymentIntentResponse.errorMessage?.message || 'Failed to create payment intent');
+      }
+
+      const { clientSecret, paymentIntentId } = paymentIntentResponse.response;
+      console.log('✅ Escrow payment intent created:', paymentIntentId);
+
+      // Use stored payment method ID instead of DOM elements
+      let paymentMethodId: string;
+
+      if (this.selectedSavedCard) {
+        paymentMethodId = this.selectedSavedCard.stripePaymentMethodId;
+        console.log('💳 Using saved card:', this.selectedSavedCard.cardLast4);
+      } else if (this.storedPaymentMethodData) {
+        paymentMethodId = this.storedPaymentMethodData.paymentMethodId;
+        console.log('💳 Using new card:', this.storedPaymentMethodData.cardLast4);
+      } else {
+        throw new Error('No payment method available');
+      }
+
+      console.log('💳 Confirming payment with payment method ID:', paymentMethodId);
+
+      // Use payment method ID directly - no DOM elements involved
+      const { error, paymentIntent } = await this.stripe!.confirmCardPayment(clientSecret, {
+        payment_method: paymentMethodId
+      });
+
+      if (error) {
+        console.error('❌ Stripe payment failed:', error);
+        this.notificationService.showNotification({
+          type: 'error',
+          message: error.message || 'Payment failed. Please try again.'
+        });
+        return;
+      }
+
+      if (paymentIntent?.status === 'succeeded') {
+        console.log('✅ Stripe payment succeeded - money now in escrow');
+        await this.confirmPaymentWithBackend(paymentIntentId);
+        console.log('✅ Escrow payment process completed successfully');
+        this.safeDestroyElements();
+      } else {
+        throw new Error(`Unexpected payment status: ${paymentIntent?.status}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Payment error:', error);
+
+      let errorMessage = 'Payment failed. Please try again.';
+      if (error instanceof Error) {
+        if (error.message.includes('network')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('declined')) {
+          errorMessage = 'Payment was declined. Please check your card details.';
+        }
+      }
+
+      this.notificationService.showNotification({
+        type: 'error',
+        message: errorMessage
+      });
+
+    } finally {
+      this.isProcessing = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+// ===== PAYMENT INTENT CREATION =====
+
+  private async createPaymentIntent() {
+    const paymentFlowState = this.paymentFlowService.getCurrentState();
+
+    const paymentIntentDto: PaymentIntentCreateDTO = {
+      replyId: paymentFlowState.replyId!,
+      serviceAmount: this.serviceAmount,
+      protectionFee: this.protectionFee,
+      totalAmount: this.totalAmount,
+      currency: 'ron',
+      description: `Escrow payment: ${this.serviceDetails?.description || 'Professional service'}`,
+      metadata: {
+        replyId: paymentFlowState.replyId!,
+        conversationId: paymentFlowState.conversationId!,
+        userId: this.userDetails?.userId || '',
+        specialistId: this.specialistDetails?.userId || '',
+        paymentType: 'escrow'
+      }
+    };
+
+    console.log('💳 Creating escrow payment intent:', paymentIntentDto);
+    return await firstValueFrom(this.paymentService.createPaymentIntent(paymentIntentDto));
+  }
+
+// ===== PAYMENT CONFIRMATION =====
+
+  private async confirmPaymentWithBackend(paymentIntentId: string): Promise<void> {
+    const paymentFlowState = this.paymentFlowService.getCurrentState();
+
+    const confirmationDto: PaymentConfirmationDTO = {
+      paymentIntentId: paymentIntentId,
+      replyId: paymentFlowState.replyId!,
+      serviceAmount: this.serviceAmount,
+      protectionFee: this.protectionFee,
+      totalAmount: this.totalAmount,
+      paymentMethod: `${this.cardBrand} •••• ${this.cardLast4}`
+    };
+
+    try {
+      const confirmResponse = await firstValueFrom(
+        this.paymentService.confirmPayment(confirmationDto)
+      );
+
+      if (confirmResponse.response !== undefined) {
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Payment completed successfully! Money is now securely held in escrow.'
+        });
+
+        this.paymentFlowService.completePayment();
+        console.log('💳 Escrow payment flow completed - service task will be created');
+      } else {
+        throw new Error(confirmResponse.errorMessage?.message || 'Failed to confirm payment');
+      }
+    } catch (error) {
+      console.error('❌ Backend confirmation failed:', error);
+      throw error;
+    }
+  }
+
+// ===== PAYMENT CANCELLATION =====
+
+  cancelPayment() {
+    console.log('🚫 Payment cancelled by user');
+    this.paymentFlowService.cancelPaymentFlow();
+    this.notificationService.showNotification({
+      type: 'info',
+      message: 'Payment cancelled'
+    });
+  }
+
+  // Saved Cards Management Methods - Add these to your component
+
+// ===== LOAD SAVED PAYMENT METHODS =====
+
+  async loadSavedPaymentMethods(): Promise<void> {
+    this.isLoadingSavedCards = true;
+    try {
+      const response = await firstValueFrom(
+        this.customerPaymentMethodService.getPaymentMethods()
+      );
+
+      if (response.response) {
+        this.savedPaymentMethods = response.response;
+        console.log('✅ Loaded saved payment methods:', this.savedPaymentMethods.length);
+
+        // Auto-select default card if available
+        const defaultCard = this.savedPaymentMethods.find(card => card.isDefault);
+        if (defaultCard) {
+          this.selectSavedCard(defaultCard);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error loading saved payment methods:', error);
+      // Don't show error notification - just continue without saved cards
+    } finally {
+      this.isLoadingSavedCards = false;
+    }
+  }
+
+// ===== SELECT SAVED CARD =====
+
+  selectSavedCard(card: CustomerPaymentMethodDto): void {
+    this.selectedSavedCard = card;
+    this.cardLast4 = card.cardLast4;
+    this.cardBrand = card.cardBrand;
+    this.cardholderName = card.cardholderName;
+    this.cardDetailsEntered = true;
+    this.paymentMethodSelected = true;
+    this.showSavedCards = false;
+    this.showError = false;
+
+    // Store payment method data for later use
+    this.storedPaymentMethodData = {
+      paymentMethodId: card.stripePaymentMethodId,
+      cardLast4: card.cardLast4,
+      cardBrand: card.cardBrand,
+      cardholderName: card.cardholderName
+    };
+
+    console.log('✅ Selected saved card:', card.cardLast4);
+  }
+
+// ===== TOGGLE SAVED CARDS DISPLAY =====
+
+  toggleSavedCards(): void {
+    this.showSavedCards = !this.showSavedCards;
+  }
+
+// ===== USE NEW CARD =====
+
+  useNewCard(): void {
+    this.selectedSavedCard = null;
+    this.storedPaymentMethodData = null;
+    this.cardDetailsEntered = false;
+    this.paymentMethodSelected = false;
+    this.showSavedCards = false;
+    this.openCardDetailsModal();
+  }
+
+// ===== DELETE SAVED CARD =====
+
+  async deleteSavedCard(card: CustomerPaymentMethodDto): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.customerPaymentMethodService.deletePaymentMethod(card.stripePaymentMethodId)
+      );
+
+      if (response.response !== undefined) {
+        // Remove from local array
+        this.savedPaymentMethods = this.savedPaymentMethods.filter(c => c.id !== card.id);
+
+        // If this was the selected card, clear selection
+        if (this.selectedSavedCard?.id === card.id) {
+          this.selectedSavedCard = null;
+          this.storedPaymentMethodData = null;
+          this.cardDetailsEntered = false;
+          this.paymentMethodSelected = false;
+        }
+
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Payment method deleted successfully'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error deleting payment method:', error);
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to delete payment method'
+      });
+    }
+  }
+
+// ===== SAVE CARD DETAILS =====
+
+  async saveCardDetails() {
+    if (!this.allFieldsComplete) {
+      this.validateAllFields();
+      return;
+    }
+
+    if (!this.stripe || !this.cardNumber || this.isElementsDestroyed || !this.isModalOpen) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Payment form is not ready. Please close and reopen the modal.'
+      });
+      return;
+    }
+
+    this.isSavingCard = true;
+
+    try {
+      console.log('💳 Creating payment method...');
+
+      const { error, paymentMethod } = await this.stripe.createPaymentMethod({
+        type: 'card',
+        card: this.cardNumber,
+        billing_details: {
+          name: this.cardholderName,
+          email: this.userDetails?.email,
+          phone: this.userDetails?.phoneNumber,
+        },
+      });
+
+      if (error) {
+        console.error('❌ Stripe createPaymentMethod error:', error);
+        this.cardNumberError = error.message || 'Invalid card details';
+        return;
+      }
+
+      if (paymentMethod?.card) {
+        // Store payment method data immediately
+        this.storedPaymentMethodData = {
+          paymentMethodId: paymentMethod.id,
+          cardLast4: paymentMethod.card.last4 || '',
+          cardBrand: paymentMethod.card.brand?.toUpperCase() || '',
+          cardholderName: this.cardholderName
+        };
+
+        this.cardLast4 = this.storedPaymentMethodData.cardLast4;
+        this.cardBrand = this.storedPaymentMethodData.cardBrand;
+        this.cardDetailsEntered = true;
+        this.paymentMethodSelected = true;
+        this.showError = false;
+
+        // Save to backend if requested
+        if (this.saveCardForFuture) {
+          await this.saveCardToBackend(paymentMethod);
+        }
+
+        console.log('✅ Card details saved successfully');
+        this.closeCardModal();
+      } else {
+        throw new Error('Failed to create payment method');
+      }
+
+    } catch (error) {
+      console.error('❌ Error validating card:', error);
+
+      if (error instanceof Error && (error.message.includes('Element') || error.message.includes('mounted'))) {
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Payment form disconnected. Please close and reopen the modal.'
+        });
+      } else {
+        this.cardNumberError = 'Failed to validate card details';
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Failed to validate card. Please check your details and try again.'
+        });
+      }
+    } finally {
+      this.isSavingCard = false;
+    }
+  }
+
+// ===== SAVE CARD TO BACKEND =====
+
+  private async saveCardToBackend(paymentMethod: any): Promise<void> {
+    try {
+      const saveDto: SaveCustomerPaymentMethodDto = {
+        paymentMethodId: paymentMethod.id,
+        cardLast4: paymentMethod.card.last4,
+        cardBrand: paymentMethod.card.brand.toUpperCase(),
+        cardholderName: this.cardholderName,
+        isDefault: this.savedPaymentMethods.length === 0 // First card becomes default
+      };
+
+      const response = await firstValueFrom(
+        this.customerPaymentMethodService.savePaymentMethod(saveDto)
+      );
+
+      if (response.response) {
+        this.savedPaymentMethods.push(response.response);
+        console.log('✅ Card saved to backend successfully');
+
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Card saved for future payments'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error saving card to backend:', error);
+      // Don't fail the payment flow if saving fails
+      this.notificationService.showNotification({
+        type: 'warning',
+        message: 'Card validated but not saved for future use'
+      });
+    }
+  }
+
+  // Protection Fee Calculation Methods - Add these to your component
+
+// ===== CALCULATE PROTECTION FEE =====
+
+  async calculateProtectionFee() {
     if (this.serviceAmount <= 0) {
       this.protectionFee = 0;
       this.totalAmount = this.serviceAmount;
@@ -197,6 +824,7 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
       }
     } catch (error) {
       console.error('❌ Error calculating protection fee:', error);
+
       // Fallback calculation: 10% with min 5, max 100
       this.protectionFee = Math.min(Math.max(this.serviceAmount * 0.1, 5), 100);
       this.totalAmount = this.serviceAmount + this.protectionFee;
@@ -209,565 +837,12 @@ export class ServicePaymentComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
-  // ✅ NEW: Get protection fee explanation
-  get protectionFeeExplanation(): string {
-    if (!this.protectionFeeDetails) {
-      return 'Protection fee helps ensure service quality';
-    }
+// ===== PROTECTION FEE UTILITIES =====
 
-    return this.protectionFeeDetails.description || 'Client protection fee for service quality assurance';
-  }
-
-  // ✅ NEW: Get fee percentage for display
   get protectionFeePercentage(): number {
     if (!this.protectionFeeDetails || this.serviceAmount <= 0) {
       return 0;
     }
-
     return (this.protectionFee / this.serviceAmount) * 100;
-  }
-
-  get allFieldsComplete(): boolean {
-    return this.cardNumberComplete &&
-      this.cardExpiryComplete &&
-      this.cardCvcComplete &&
-      this.cardholderNameValid;
-  }
-
-  private async initializeStripe() {
-    try {
-      this.stripe = await loadStripe('pk_test_51RY4TaRP4R8qcMUlWSJwbW6GBjetIiG7jc4fLrsUcl7xMS8uTMcI2mfDHId8YRAku8lllViJiAY0mVPObrvgLYke00QP5RVa7S');
-      if (!this.stripe) {
-        throw new Error('Failed to load Stripe');
-      }
-      console.log('✅ Stripe initialized successfully');
-    } catch (error) {
-      console.error('Error initializing Stripe:', error);
-      this.notificationService.showNotification({
-        type: 'error',
-        message: 'Failed to initialize payment system'
-      });
-    }
-  }
-
-  // ✅ UPDATED: Enhanced modal opening
-  openCardDetailsModal() {
-    this.showCardModal = true;
-
-    // ✅ Use Angular's change detection to ensure DOM is ready
-    setTimeout(() => {
-      this.setupStripeElements();
-    }, 150); // Slightly longer delay to ensure DOM is fully rendered
-  }
-
-  // ✅ UPDATED: Don't destroy elements when closing modal
-  closeCardModal(event?: Event) {
-    if (event) {
-      event.preventDefault();
-    }
-    this.showCardModal = false;
-    // ✅ Only destroy if card details weren't entered
-    this.conditionallyDestroyElements();
-    this.clearErrors();
-  }
-
-  // ✅ NEW: Conditional element destruction
-  private conditionallyDestroyElements() {
-    if (!this.cardDetailsEntered) {
-      this.safeDestroyElements();
-    }
-  }
-
-  // ✅ UPDATED: Robust element setup with retry logic
-  private async setupStripeElements(): Promise<void> {
-    if (!this.stripe) {
-      console.error('❌ Stripe not initialized');
-      return;
-    }
-
-    // ✅ Ensure DOM elements exist
-    if (!this.cardNumberElement?.nativeElement ||
-      !this.cardExpiryElement?.nativeElement ||
-      !this.cardCvcElement?.nativeElement) {
-      console.error('❌ Card DOM elements not available');
-
-      if (this.elementMountRetries < this.maxRetries) {
-        this.elementMountRetries++;
-        console.log(`🔄 Retrying element setup (attempt ${this.elementMountRetries})`);
-        setTimeout(() => this.setupStripeElements(), 200);
-        return;
-      } else {
-        this.notificationService.showNotification({
-          type: 'error',
-          message: 'Failed to load payment form. Please refresh the page.'
-        });
-        return;
-      }
-    }
-
-    try {
-      // ✅ Clean up existing elements first
-      await this.safeDestroyElements();
-
-      // ✅ Create new elements instance
-      this.elements = this.stripe.elements();
-
-      const elementStyle = {
-        base: {
-          fontSize: '16px',
-          color: '#424770',
-          fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-          '::placeholder': {
-            color: '#aab7c4',
-          },
-        },
-        invalid: {
-          color: '#9e2146',
-        },
-      };
-
-      // ✅ Create elements
-      this.cardNumber = this.elements.create('cardNumber', {
-        style: elementStyle,
-        placeholder: '1234 5678 9012 3456'
-      });
-
-      this.cardExpiry = this.elements.create('cardExpiry', {
-        style: elementStyle,
-        placeholder: 'MM/YY'
-      });
-
-      this.cardCvc = this.elements.create('cardCvc', {
-        style: elementStyle,
-        placeholder: '123'
-      });
-
-      // ✅ Mount elements with error handling
-      await this.mountElementSafely(this.cardNumber, this.cardNumberElement.nativeElement, 'cardNumber');
-      await this.mountElementSafely(this.cardExpiry, this.cardExpiryElement.nativeElement, 'cardExpiry');
-      await this.mountElementSafely(this.cardCvc, this.cardCvcElement.nativeElement, 'cardCvc');
-
-      // ✅ Setup event listeners
-      this.setupElementEventListeners();
-
-      // ✅ Set default cardholder name
-      if (this.userDetails?.userFullName && !this.cardholderName) {
-        this.cardholderName = this.userDetails.userFullName;
-        this.validateCardholderName();
-      }
-
-      this.isElementsMounted = true;
-      this.elementMountRetries = 0;
-      console.log('✅ Stripe elements mounted successfully');
-
-    } catch (error) {
-      console.error('❌ Error setting up Stripe elements:', error);
-      this.isElementsMounted = false;
-      this.notificationService.showNotification({
-        type: 'error',
-        message: 'Failed to load payment form. Please try again.'
-      });
-    }
-  }
-
-  // ✅ NEW: Safe element mounting with verification
-  private async mountElementSafely(element: any, domElement: HTMLElement, elementName: string): Promise<void> {
-    try {
-      // Check if DOM element is still in the document
-      if (!document.contains(domElement)) {
-        throw new Error(`DOM element for ${elementName} is not in document`);
-      }
-
-      element.mount(domElement);
-
-      // Wait a bit and verify mount was successful
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      console.log(`✅ ${elementName} mounted successfully`);
-    } catch (error) {
-      console.error(`❌ Failed to mount ${elementName}:`, error);
-      throw error;
-    }
-  }
-
-  // ✅ NEW: Setup event listeners separately
-  private setupElementEventListeners(): void {
-    if (!this.cardNumber || !this.cardExpiry || !this.cardCvc) return;
-
-    this.cardNumber.on('change', (event) => {
-      this.cardNumberComplete = event.complete;
-      this.cardNumberError = event.error ? event.error.message : null;
-      if (event.brand) {
-        this.cardBrand = event.brand.toUpperCase();
-      }
-    });
-
-    this.cardNumber.on('ready', () => {
-      console.log('✅ Card number element ready');
-    });
-
-    this.cardExpiry.on('change', (event) => {
-      this.cardExpiryComplete = event.complete;
-      this.cardExpiryError = event.error ? event.error.message : null;
-    });
-
-    this.cardExpiry.on('ready', () => {
-      console.log('✅ Card expiry element ready');
-    });
-
-    this.cardCvc.on('change', (event) => {
-      this.cardCvcComplete = event.complete;
-      this.cardCvcError = event.error ? event.error.message : null;
-    });
-
-    this.cardCvc.on('ready', () => {
-      console.log('✅ Card CVC element ready');
-    });
-  }
-
-  // ✅ UPDATED: Safe element destruction
-  private async safeDestroyElements(): Promise<void> {
-    try {
-      if (this.cardNumber) {
-        this.cardNumber.destroy();
-        this.cardNumber = null;
-      }
-      if (this.cardExpiry) {
-        this.cardExpiry.destroy();
-        this.cardExpiry = null;
-      }
-      if (this.cardCvc) {
-        this.cardCvc.destroy();
-        this.cardCvc = null;
-      }
-      this.isElementsMounted = false;
-      console.log('✅ Stripe elements destroyed safely');
-    } catch (error) {
-      console.error('❌ Error destroying elements:', error);
-      // Continue anyway
-      this.cardNumber = null;
-      this.cardExpiry = null;
-      this.cardCvc = null;
-      this.isElementsMounted = false;
-    }
-  }
-
-  // ✅ NEW: Verify elements are ready for use
-  private verifyElementsReady(): boolean {
-    // Check Stripe elements exist
-    const elementsExist = !!(this.stripe && this.cardNumber && this.cardExpiry && this.cardCvc);
-
-    // Check ViewChild elements exist
-    const viewChildElements = [
-      this.cardNumberElement?.nativeElement,
-      this.cardExpiryElement?.nativeElement,
-      this.cardCvcElement?.nativeElement
-    ];
-
-    const domElementsExist = viewChildElements.every(el => !!el);
-
-    // Only check document.contains if all elements exist
-    const domElementsInDocument = domElementsExist &&
-      viewChildElements.every(el => document.contains(el!));
-
-    console.log('Element verification:', {
-      elementsExist,
-      domElementsExist,
-      domElementsInDocument,
-      isElementsMounted: this.isElementsMounted
-    });
-
-    return elementsExist && domElementsExist && domElementsInDocument && this.isElementsMounted;
-  }
-
-  onCardholderNameChange() {
-    this.validateCardholderName();
-  }
-
-  private validateCardholderName() {
-    const name = this.cardholderName.trim();
-    if (!name) {
-      this.cardholderNameError = 'Numele titularului este obligatoriu';
-      this.cardholderNameValid = false;
-    } else if (name.length < 2) {
-      this.cardholderNameError = 'Numele trebuie să aibă cel puțin 2 caractere';
-      this.cardholderNameValid = false;
-    } else {
-      this.cardholderNameError = null;
-      this.cardholderNameValid = true;
-    }
-  }
-
-  // ✅ UPDATED: Enhanced save card details with element verification
-  async saveCardDetails() {
-    if (!this.allFieldsComplete) {
-      this.validateAllFields();
-      return;
-    }
-
-    // ✅ Verify elements are still mounted and functional
-    if (!this.verifyElementsReady()) {
-      console.log('🔄 Elements not ready, attempting to remount...');
-      await this.setupStripeElements();
-
-      // Wait a bit for remounting
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      if (!this.verifyElementsReady()) {
-        this.notificationService.showNotification({
-          type: 'error',
-          message: 'Payment form not ready. Please close and reopen the card form.'
-        });
-        return;
-      }
-    }
-
-    this.isSavingCard = true;
-
-    try {
-      const { error, paymentMethod } = await this.stripe!.createPaymentMethod({
-        type: 'card',
-        card: this.cardNumber!,
-        billing_details: {
-          name: this.cardholderName,
-          email: this.userDetails?.email,
-          phone: this.userDetails?.phoneNumber,
-        },
-      });
-
-      if (error) {
-        console.error('❌ Stripe createPaymentMethod error:', error);
-        this.cardNumberError = error.message || 'Invalid card details';
-        return;
-      }
-
-      if (paymentMethod?.card) {
-        this.cardLast4 = paymentMethod.card.last4 || '';
-        this.cardBrand = paymentMethod.card.brand?.toUpperCase() || '';
-        this.cardDetailsEntered = true;
-        this.paymentMethodSelected = true;
-        this.showError = false;
-
-        console.log('✅ Card details saved successfully');
-        this.closeCardModal();
-      } else {
-        throw new Error('Failed to create payment method');
-      }
-
-    } catch (error) {
-      console.error('❌ Error validating card:', error);
-
-      // Check if it's a mounting issue
-      if ((error as Error)?.message?.includes('Element') || (error as Error)?.message?.includes('mounted')) {
-        this.notificationService.showNotification({
-          type: 'error',
-          message: 'Card form disconnected. Please close and reopen the card form.'
-        });
-        this.recreateStripeElements();
-      } else {
-        this.cardNumberError = 'Failed to validate card details';
-        this.notificationService.showNotification({
-          type: 'error',
-          message: 'Failed to validate card. Please check your details and try again.'
-        });
-      }
-    } finally {
-      this.isSavingCard = false;
-    }
-  }
-
-  private validateAllFields() {
-    this.validateCardholderName();
-    if (!this.cardNumberComplete) {
-      this.cardNumberError = 'Numărul cardului este incomplet';
-    }
-    if (!this.cardExpiryComplete) {
-      this.cardExpiryError = 'Data de expirare este incompletă';
-    }
-    if (!this.cardCvcComplete) {
-      this.cardCvcError = 'Codul cardului este incomplet';
-    }
-  }
-
-  private clearErrors() {
-    this.cardNumberError = null;
-    this.cardExpiryError = null;
-    this.cardCvcError = null;
-    this.cardholderNameError = null;
-  }
-
-  // ✅ UPDATED: Enhanced payment processing with element verification
-  async processPayment() {
-    if (!this.cardDetailsEntered || !this.serviceDetails || !this.userDetails || !this.feeCalculationLoaded) {
-      this.showError = true;
-      this.notificationService.showNotification({
-        type: 'error',
-        message: 'Please complete all required fields before proceeding.'
-      });
-      return;
-    }
-
-    // ✅ Critical verification before payment
-    if (!this.verifyElementsReady()) {
-      console.error('❌ Stripe elements not ready for payment');
-      this.notificationService.showNotification({
-        type: 'error',
-        message: 'Payment form not ready. Please reopen the card form and try again.'
-      });
-      return;
-    }
-
-    this.isProcessing = true;
-
-    try {
-      console.log('🚀 Starting escrow payment process...');
-
-      const paymentIntentResponse = await this.createPaymentIntent();
-
-      if (!paymentIntentResponse.response) {
-        throw new Error(paymentIntentResponse.errorMessage?.message || 'Failed to create payment intent');
-      }
-
-      const { clientSecret, paymentIntentId } = paymentIntentResponse.response;
-      console.log('✅ Escrow payment intent created:', paymentIntentId);
-
-      console.log('💳 Confirming payment with Stripe...');
-      const { error, paymentIntent } = await this.stripe!.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: this.cardNumber!,
-          billing_details: {
-            name: this.cardholderName,
-            email: this.userDetails?.email,
-            phone: this.userDetails?.phoneNumber,
-          },
-        },
-      });
-
-      if (error) {
-        console.error('❌ Stripe payment failed:', error);
-
-        // Handle element-specific errors
-        if (error.message?.includes('Element') || error.message?.includes('mounted')) {
-          this.notificationService.showNotification({
-            type: 'error',
-            message: 'Payment form disconnected. Please refresh the page and try again.'
-          });
-        } else {
-          this.notificationService.showNotification({
-            type: 'error',
-            message: error.message || 'Payment failed. Please try again.'
-          });
-        }
-        return;
-      }
-
-      if (paymentIntent?.status === 'succeeded') {
-        console.log('✅ Stripe payment succeeded - money now in escrow');
-        await this.confirmPaymentWithBackend(paymentIntentId);
-        console.log('✅ Escrow payment process completed successfully');
-
-        // Now safe to destroy elements
-        await this.safeDestroyElements();
-      }
-
-    } catch (error) {
-      console.error('❌ Payment error:', error);
-      this.notificationService.showNotification({
-        type: 'error',
-        message: 'Payment failed. Please try again.'
-      });
-    } finally {
-      this.isProcessing = false;
-    }
-  }
-
-  // ✅ UPDATED: Create payment intent with new escrow structure
-  private async createPaymentIntent() {
-    const paymentFlowState = this.paymentFlowService.getCurrentState();
-
-    const paymentIntentDto: PaymentIntentCreateDTO = {
-      replyId: paymentFlowState.replyId!,
-      serviceAmount: this.serviceAmount,     // ✅ NEW: Separate service amount
-      protectionFee: this.protectionFee,    // ✅ NEW: Separate protection fee
-      totalAmount: this.totalAmount,        // ✅ NEW: Total amount
-      currency: 'ron',
-      description: `Escrow payment: ${this.serviceDetails?.description || 'Professional service'}`,
-      metadata: {
-        replyId: paymentFlowState.replyId!,
-        conversationId: paymentFlowState.conversationId!,
-        userId: this.userDetails?.userId || '',
-        specialistId: this.specialistDetails?.userId || '',
-        paymentType: 'escrow'                // ✅ NEW: Mark as escrow payment
-      }
-    };
-
-    console.log('💳 Creating escrow payment intent:', paymentIntentDto);
-    return await firstValueFrom(this.paymentService.createPaymentIntent(paymentIntentDto));
-  }
-
-  // ✅ UPDATED: Confirm payment with new escrow structure
-  private async confirmPaymentWithBackend(paymentIntentId: string): Promise<void> {
-    const paymentFlowState = this.paymentFlowService.getCurrentState();
-
-    const confirmationDto: PaymentConfirmationDTO = {
-      paymentIntentId: paymentIntentId,
-      replyId: paymentFlowState.replyId!,
-      serviceAmount: this.serviceAmount,     // ✅ NEW: Service amount
-      protectionFee: this.protectionFee,    // ✅ NEW: Protection fee
-      totalAmount: this.totalAmount,        // ✅ NEW: Total amount
-      paymentMethod: `${this.cardBrand} •••• ${this.cardLast4}`
-    };
-
-    try {
-      const confirmResponse = await firstValueFrom(
-        this.paymentService.confirmPayment(confirmationDto)
-      );
-
-      if (confirmResponse.response !== undefined) {
-        this.notificationService.showNotification({
-          type: 'success',
-          message: 'Payment completed successfully! Money is now securely held in escrow.'
-        });
-
-        this.paymentFlowService.completePayment();
-        console.log('💳 Escrow payment flow completed - service task will be created');
-      } else {
-        throw new Error(confirmResponse.errorMessage?.message || 'Failed to confirm payment');
-      }
-    } catch (error) {
-      console.error('❌ Backend confirmation failed:', error);
-      throw error;
-    }
-  }
-
-  cancelPayment() {
-    console.log('🚫 Payment cancelled by user');
-    this.paymentFlowService.cancelPaymentFlow();
-    this.notificationService.showNotification({
-      type: 'info',
-      message: 'Payment cancelled'
-    });
-  }
-
-  // ✅ NEW: Helper methods for template
-  get hasValidServiceAmount(): boolean {
-    return this.serviceAmount > 0;
-  }
-
-  get isLoadingFeeCalculation(): boolean {
-    return !this.feeCalculationLoaded && this.serviceAmount > 0;
-  }
-
-  get protectionFeeDisplayText(): string {
-    if (!this.feeCalculationLoaded) {
-      return 'Calculating...';
-    }
-
-    if (this.protectionFee === 0) {
-      return 'No protection fee';
-    }
-
-    const percentage = this.protectionFeePercentage;
-    return `${percentage.toFixed(1)}% protection fee`;
   }
 }

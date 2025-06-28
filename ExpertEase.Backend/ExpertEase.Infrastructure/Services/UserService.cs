@@ -1,8 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
-using ExpertEase.Application.DataTransferObjects.CategoryDTOs;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
-using ExpertEase.Application.DataTransferObjects.SpecialistDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Errors;
 using ExpertEase.Application.Requests;
@@ -23,7 +21,8 @@ public class UserService(
     IRepository<WebAppDatabaseContext> repository,
     ILoginService loginService,
     IMailService mailService,
-    HttpClient httpClient) : IUserService
+    HttpClient httpClient,
+    IStripeAccountService stripeAccountService) : IUserService
 {
     public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
@@ -254,19 +253,17 @@ public class UserService(
 
         await repository.AddAsync(newUser, cancellationToken);
         
-        var customerService = new Stripe.CustomerService();
-        var stripeCustomer = await customerService.CreateAsync(new CustomerCreateOptions
-        {
-            Email = user.Email,
-            Name = user.FullName,
-            Metadata = new Dictionary<string, string>
-            {
-                { "user_id", newUser.Id.ToString() }
-            }
-        }, cancellationToken: cancellationToken);
+        var stripeCustomerId = await stripeAccountService.CreateCustomer(newUser.Email, newUser.FullName, newUser.Id);
+        Console.WriteLine("Stripe customer id: " + stripeCustomerId.Result);
 
+        if (stripeCustomerId.Result == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new ErrorMessage(HttpStatusCode.Forbidden,
+                "Stripe customer id doesn't exist"));
+        }
+        
         // Update user with Stripe customer ID
-        newUser.StripeCustomerId = stripeCustomer.Id;
+        newUser.StripeCustomerId = stripeCustomerId.Result;
         await repository.UpdateAsync(newUser, cancellationToken);
 
         // var fullName = $"{user.LastName} {user.FirstName}";

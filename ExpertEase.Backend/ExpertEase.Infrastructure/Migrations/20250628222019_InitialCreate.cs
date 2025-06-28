@@ -41,7 +41,7 @@ namespace ExpertEase.Infrastructure.Migrations
                     Role = table.Column<string>(type: "text", nullable: false),
                     AuthProvider = table.Column<int>(type: "integer", nullable: false),
                     ProfilePictureUrl = table.Column<string>(type: "text", nullable: true),
-                    StripeCustomerId = table.Column<string>(type: "text", nullable: false),
+                    StripeCustomerId = table.Column<string>(type: "text", nullable: true),
                     Rating = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)

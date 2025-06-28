@@ -1,4 +1,4 @@
-<!-- Updated service-payment.component.html with fixed DOM element handling -->
+<!-- Updated service-payment.component.html with saved payment methods -->
 <div class="payment-overlay">
   <div class="payment-container">
     <div class="payment-header">
@@ -69,7 +69,7 @@
         </div>
       </section>
 
-      <!-- ✅ NEW: Escrow Information Section -->
+      <!-- Escrow Information Section -->
       <section class="payment-section escrow-info">
         <h3>🔒 Plată cu protecție escrow</h3>
         <div class="escrow-explanation">
@@ -97,11 +97,76 @@
         </div>
       </section>
 
-      <!-- Payment Method -->
+      <!-- ✅ NEW: Payment Method Section with Saved Cards -->
       <section class="payment-section">
-        <h3>Plata</h3>
+        <h3>Metoda de plată</h3>
+
+        <!-- ✅ NEW: Saved Cards Section -->
+        <div class="saved-cards-section" *ngIf="hasSavedCards">
+          <div class="saved-cards-header">
+            <button class="toggle-saved-cards-btn" (click)="toggleSavedCards()">
+              <span>{{ showSavedCards ? 'Ascunde' : 'Arată' }} cardurile salvate ({{ savedPaymentMethods.length }})</span>
+              <span class="toggle-icon">{{ showSavedCards ? '▲' : '▼' }}</span>
+            </button>
+          </div>
+
+          <!-- Saved Cards List -->
+          <div class="saved-cards-list" *ngIf="showSavedCards">
+            <div class="saved-card"
+                 *ngFor="let card of savedPaymentMethods"
+                 [class.selected]="selectedSavedCard?.id === card.id"
+                 (click)="selectSavedCard(card)">
+              <div class="card-info">
+                <div class="card-brand-icon">
+                  <span class="brand-text">{{ card.cardBrand }}</span>
+                </div>
+                <div class="card-details">
+                  <span class="card-number">•••• •••• •••• {{ card.cardLast4 }}</span>
+                  <span class="cardholder-name">{{ card.cardholderName }}</span>
+                </div>
+                <div class="card-badges">
+                  <span class="default-badge" *ngIf="card.isDefault">Default</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="delete-card-btn"
+                        (click)="deleteSavedCard(card); $event.stopPropagation()"
+                        title="Șterge cardul">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <!-- Use New Card Option -->
+            <div class="new-card-option" (click)="useNewCard()">
+              <div class="new-card-content">
+                <span class="plus-icon">+</span>
+                <span>Folosește un card nou</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ UPDATED: Card Payment Option -->
         <div class="payment-method">
+          <!-- Selected Saved Card Display -->
+          <div class="selected-card-display" *ngIf="selectedSavedCard">
+            <div class="card-payment-option selected">
+              <img src="assets/icons/card.svg" alt="Card bancar" class="payment-icon">
+              <div class="payment-text">
+                <strong>{{ selectedSavedCard.cardBrand }} •••• {{ selectedSavedCard.cardLast4 }}</strong>
+                <p>{{ selectedSavedCard.cardholderName }}</p>
+                <span class="saved-card-label">Card salvat</span>
+              </div>
+              <div class="card-actions">
+                <button class="edit-card-btn" (click)="useNewCard()">Schimbă</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Default Card Option (when no saved card selected) -->
           <div class="card-payment-option"
+               *ngIf="!selectedSavedCard"
                [class.selected]="paymentMethodSelected"
                (click)="openCardDetailsModal()">
             <img src="assets/icons/card.svg" alt="Card bancar" class="payment-icon">
@@ -116,8 +181,8 @@
             <span class="selection-indicator" *ngIf="paymentMethodSelected">✓</span>
           </div>
 
-          <!-- Card details summary (shown after card is entered) -->
-          <div class="card-summary" *ngIf="cardDetailsEntered">
+          <!-- Card details summary (shown after new card is entered) -->
+          <div class="card-summary" *ngIf="cardDetailsEntered && !selectedSavedCard">
             <div class="card-info">
               <span class="card-last4">**** **** **** {{ cardLast4 }}</span>
               <span class="card-brand">{{ cardBrand }}</span>
@@ -131,7 +196,7 @@
         </div>
       </section>
 
-      <!-- ✅ UPDATED: Enhanced Price Details with Escrow Information -->
+      <!-- Price Details Section -->
       <section class="payment-section price-section">
         <h3>Detalii preț</h3>
         <div class="price-breakdown">
@@ -140,7 +205,6 @@
             <span class="price-value">{{ serviceAmount | currency:'RON':'symbol':'1.2-2' }}</span>
           </div>
 
-          <!-- ✅ NEW: Enhanced protection fee display -->
           <div class="price-item protection-fee-item">
             <span class="price-label">
               Taxă de protecție pentru client:
@@ -179,7 +243,7 @@
             </span>
           </div>
 
-          <!-- ✅ NEW: Escrow guarantee message -->
+          <!-- Escrow guarantee message -->
           <div class="escrow-guarantee" *ngIf="feeCalculationLoaded">
             <div class="guarantee-icon">🛡️</div>
             <div class="guarantee-text">
@@ -213,7 +277,7 @@
   </div>
 </div>
 
-<!-- ✅ FIXED: Card Details Modal with proper DOM element handling -->
+<!-- ✅ UPDATED: Card Details Modal with Save Option -->
 <div class="card-modal-overlay"
      *ngIf="showCardModal"
      (click)="closeCardModal($event)">
@@ -227,11 +291,9 @@
       <div class="form-group">
         <label id="cardNumber">Numărul cardului</label>
         <div class="input-container">
-          <!-- ✅ FIXED: Added unique ID and kept template reference -->
           <div id="card-number-element"
                #cardNumberElement
-               class="stripe-element"
-               [attr.data-mounted]="isElementsMounted"></div>
+               class="stripe-element"></div>
         </div>
         <div class="field-error" *ngIf="cardNumberError">{{ cardNumberError }}</div>
       </div>
@@ -252,11 +314,9 @@
         <div class="form-group half">
           <label id="cardExpiry">Data de expirare</label>
           <div class="input-container">
-            <!-- ✅ FIXED: Added unique ID and kept template reference -->
             <div id="card-expiry-element"
                  #cardExpiryElement
-                 class="stripe-element"
-                 [attr.data-mounted]="isElementsMounted"></div>
+                 class="stripe-element"></div>
           </div>
           <div class="field-error" *ngIf="cardExpiryError">{{ cardExpiryError }}</div>
         </div>
@@ -264,14 +324,27 @@
         <div class="form-group half">
           <label id="cardCvc">Codul cardului</label>
           <div class="input-container">
-            <!-- ✅ FIXED: Added unique ID and kept template reference -->
             <div id="card-cvc-element"
                  #cardCvcElement
-                 class="stripe-element"
-                 [attr.data-mounted]="isElementsMounted"></div>
+                 class="stripe-element"></div>
           </div>
           <div class="field-error" *ngIf="cardCvcError">{{ cardCvcError }}</div>
         </div>
+      </div>
+
+      <!-- ✅ NEW: Save Card Option -->
+      <div class="form-group save-card-option">
+        <label class="checkbox-label">
+          <input type="checkbox"
+                 [(ngModel)]="saveCardForFuture"
+                 class="checkbox-input">
+          <span class="checkbox-text">
+            Salvează acest card pentru plăți viitoare
+          </span>
+        </label>
+        <p class="save-card-info">
+          Cardul va fi salvat în siguranță și criptat pentru a facilita plățile viitoare.
+        </p>
       </div>
 
       <div class="security-info">
@@ -283,7 +356,9 @@
     <div class="card-modal-actions">
       <button class="cancel-btn" (click)="closeCardModal()">Anulează</button>
       <button class="save-btn" (click)="saveCardDetails()" [disabled]="!allFieldsComplete || isSavingCard">
-        <span *ngIf="!isSavingCard">Salvează datele</span>
+        <span *ngIf="!isSavingCard">
+          {{ saveCardForFuture ? 'Salvează și continuă' : 'Continuă' }}
+        </span>
         <span *ngIf="isSavingCard">Se verifică...</span>
       </button>
     </div>

@@ -85,7 +85,8 @@ builder.Services.AddScoped<ILoginService, LoginService>()
     .AddScoped<IPhotoService, PhotoService>()
     .AddScoped<IStripeAccountService, StripeAccountService>()
     .AddScoped<IPaymentService, PaymentService>()
-    .AddScoped<IProtectionFeeConfigurationService, ProtectionFeeConfigurationService>();
+    .AddScoped<IProtectionFeeConfigurationService, ProtectionFeeConfigurationService>()
+    .AddScoped<ICustomerPaymentMethodService, CustomerPaymentMethodService>();
 builder.Services.AddScoped<IConversationNotifier, ConversationNotifier>();
 builder.Services.AddSingleton<IMessageUpdateQueue, MessageUpdateWorker>();
 builder.Services.AddMemoryCache();

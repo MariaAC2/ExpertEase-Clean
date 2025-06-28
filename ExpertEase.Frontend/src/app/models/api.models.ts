@@ -296,16 +296,30 @@ export interface UserPaymentDetailsDTO {
   email: string;
   phoneNumber: string;
 }
-//
-// {
-//   "replyId": "urn:uuid:17654980-b101-0271-6b83-315612a9fe1b",
-//   "amount": -28767995.184812814,
-//   "currency": "qui aliqua E",
-//   "description": "exercitation sint ad nisi",
-//   "metadata": {
-//   "dolore8a": "reprehenderit sunt"
-// }
-// }
+export interface SaveCustomerPaymentMethodDto {
+  paymentMethodId: string;
+  cardLast4: string;
+  cardBrand: string;
+  cardholderName: string;
+  isDefault: boolean;
+}
+
+/**
+ * Interface for customer payment method response
+ * Maps to CustomerPaymentMethodDto from backend
+ */
+export interface CustomerPaymentMethodDto {
+  id: string;
+  userId: string;
+  stripeCustomerId: string;
+  stripePaymentMethodId: string;
+  cardLast4: string;
+  cardBrand: string;
+  cardholderName: string;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface PaymentIntentCreateDTO {
   replyId: string;

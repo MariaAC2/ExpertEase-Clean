@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpertEase.Infrastructure.Migrations
 {
     [DbContext(typeof(WebAppDatabaseContext))]
-    [Migration("20250628210456_InitialCreate")]
+    [Migration("20250628222019_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -548,7 +548,6 @@ namespace ExpertEase.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("StripeCustomerId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")

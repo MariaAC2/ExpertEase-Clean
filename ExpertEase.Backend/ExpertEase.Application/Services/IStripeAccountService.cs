@@ -53,4 +53,6 @@ public interface IStripeAccountService
     /// Gets account status and capabilities
     /// </summary>
     Task<ServiceResponse<StripeAccountStatusDTO>> GetAccountStatus(string accountId);
+
+    Task<ServiceResponse<string>> CreateCustomer(string email, string fullName, Guid userId);
 }

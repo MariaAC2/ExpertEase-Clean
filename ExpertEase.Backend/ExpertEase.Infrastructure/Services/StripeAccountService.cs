@@ -344,4 +344,47 @@ public class StripeAccountService : IStripeAccountService
 
         return $"{parts[0]}_{parts[1]}";
     }
+    
+    public async Task<ServiceResponse<string>> CreateCustomer(string email, string fullName, Guid userId)
+    {
+        try
+        {
+            Console.WriteLine($"👤 Creating Stripe customer for: {email}");
+        
+            var customerService = new CustomerService();
+        
+            var customerOptions = new CustomerCreateOptions
+            {
+                Email = email,
+                Name = fullName,
+                Description = $"ExpertEase platform user: {fullName}",
+                Metadata = new Dictionary<string, string>
+                {
+                    { "user_id", userId.ToString() },
+                    { "platform", "ExpertEase" },
+                    { "created_at", DateTime.UtcNow.ToString("O") }
+                }
+            };
+
+            var customer = await customerService.CreateAsync(customerOptions);
+        
+            Console.WriteLine($"✅ Stripe customer created successfully: {customer.Id}");
+            Console.WriteLine($"📧 Email: {customer.Email}");
+            Console.WriteLine($"👤 Name: {customer.Name}");
+        
+            return ServiceResponse.CreateSuccessResponse(customer.Id);
+        }
+        catch (StripeException ex)
+        {
+            Console.WriteLine($"❌ Stripe error creating customer: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse<string>(
+                new(HttpStatusCode.BadRequest, $"Failed to create Stripe customer: {ex.Message}"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ General error creating customer: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse<string>(
+                new(HttpStatusCode.InternalServerError, $"Error creating customer: {ex.Message}"));
+        }
+    }
 }
