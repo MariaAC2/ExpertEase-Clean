@@ -145,10 +145,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.loadExchanges();
     this.loadCurrentUserDetails();
 
-    // Find existing service task after a delay to allow conversations to load
+    // ✅ FAST: Load service task using new API
     setTimeout(() => {
-      this.findServiceTaskFromAcceptedReply();
-    }, 8000); // Increased delay to ensure conversations are fully loaded
+      this.loadServiceTaskForCurrentConversation();
+    }, 2000);
   }
 
   ngOnDestroy(): void {
@@ -180,9 +180,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return itemWrapper.typed as ReplyDTO;
   }
 
-  // Public methods for manual testing
+  // Public methods for manual testing/refreshing
+  public async refreshServiceTask(): Promise<void> {
+    console.log('🔄 Manually refreshing service task...');
+    await this.loadCurrentServiceTaskFast();
+  }
+
   public async findMyServiceTask(): Promise<void> {
-    await this.findServiceTaskFromAcceptedReply();
+    await this.loadCurrentServiceTaskFast();
   }
 
   // Add these methods to the MessagesComponent class
@@ -223,6 +228,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
         .subscribe(() => {
           this.refreshCurrentConversation();
           this.loadExchanges(false);
+          // ✅ Also refresh service task when conversation updates
+          setTimeout(() => {
+            this.loadCurrentServiceTaskFast();
+          }, 1000);
         });
 
       // Subscribe to payment completion events
@@ -240,6 +249,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     switch (update.type) {
       case 'refresh-current':
         this.refreshCurrentConversation();
+        // ✅ Refresh service task when conversation refreshes
+        setTimeout(() => {
+          this.loadCurrentServiceTaskFast();
+        }, 500);
         break;
       case 'refresh-list':
         this.loadExchanges(false);
@@ -247,6 +260,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
       case 'refresh-both':
         this.refreshCurrentConversation();
         this.loadExchanges(false);
+        // ✅ Refresh service task when both refresh
+        setTimeout(() => {
+          this.loadCurrentServiceTaskFast();
+        }, 500);
         break;
     }
   }
@@ -321,15 +338,25 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Select a conversation
+   * Select a conversation and load service task
    */
   selectConversation(conversation: UserConversationDTO): void {
+    // Clear current service task when switching conversations
+    this.currentServiceTask = null;
+    this.isServiceConfirmationVisible = false;
+    this.chatOverlayVisible = false;
+
     this.messagesState.setSelectedUserInfo({
       userId: conversation.userId,
       fullName: conversation.userFullName,
       profilePictureUrl: conversation.userProfilePictureUrl
     });
     this.loadConversationMessages(conversation.userId);
+
+    // ✅ Load service task immediately for new conversation
+    setTimeout(() => {
+      this.loadCurrentServiceTaskFast();
+    }, 1000);
   }
 
   /**
@@ -554,22 +581,21 @@ export class MessagesComponent implements OnInit, OnDestroy {
   // Add these methods to the MessagesComponent class
 
   /**
-   * Wait for conversation to be loaded before looking for replies
+   * Wait for conversation to be selected before loading service task
    */
-  private async waitForConversationToLoad(): Promise<void> {
+  private async waitForConversationSelection(): Promise<void> {
     return new Promise((resolve) => {
       const checkConversation = () => {
-        const conversationItems = this.messagesState.getTypedConversationItems();
         const selectedUser = this.messagesState.selectedUser;
 
-        console.log('⏳ Checking: selectedUser =', selectedUser, 'items =', conversationItems.length);
+        console.log('⏳ Checking for selected user:', selectedUser);
 
-        if (selectedUser && conversationItems.length > 0) {
-          console.log('✅ Conversation is loaded!');
+        if (selectedUser) {
+          console.log('✅ User selected:', selectedUser);
           resolve();
         } else {
-          console.log('⏳ Still waiting for conversation to load...');
-          setTimeout(checkConversation, 1000); // Check every second
+          console.log('⏳ Still waiting for user selection...');
+          setTimeout(checkConversation, 500);
         }
       };
 
@@ -578,192 +604,132 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Find service task from accepted reply
+   * Load service task for current conversation (FAST VERSION - SINGLE API CALL)
    */
-  private async findServiceTaskFromAcceptedReply(): Promise<void> {
+  private async loadServiceTaskForCurrentConversation(): Promise<void> {
     try {
-      console.log('🔍 Waiting for conversation to load...');
+      console.log('🔄 Loading service task for current conversation...');
 
-      // Wait for a conversation to be selected and loaded
-      await this.waitForConversationToLoad();
+      // Wait for conversation to be selected
+      await this.waitForConversationSelection();
 
-      console.log('✅ Conversation loaded, now looking for accepted replies...');
-
-      // Get current conversation items
-      const conversationItems = this.messagesState.getTypedConversationItems();
-      console.log('📄 Total conversation items:', conversationItems.length);
-
-      // Find accepted replies
-      const acceptedReplies = conversationItems.filter(item => {
-        if (item.type === 'reply' && item.typed) {
-          const replyDto = item.typed as ReplyDTO;
-          return replyDto.status === 'Accepted';
-        }
-        return false;
-      });
-
-      console.log('✅ Found accepted replies:', acceptedReplies.length);
-
-      if (acceptedReplies.length > 0) {
-        // Get the most recent accepted reply
-        const latestAcceptedReply = acceptedReplies[acceptedReplies.length - 1].typed as ReplyDTO;
-        console.log('🎯 Latest accepted reply:', latestAcceptedReply);
-
-        // Get the service task for this reply
-        await this.getServiceTaskFromReply(latestAcceptedReply.id);
-      } else {
-        console.log('❌ No accepted replies found in current conversation');
-        // Try to find from all conversations
-        await this.findAcceptedReplyFromAllConversations();
-      }
+      // Load service task for selected user
+      await this.loadCurrentServiceTaskFast();
 
     } catch (error) {
-      console.error('❌ Error finding service task from accepted reply:', error);
+      console.error('❌ Error loading service task for conversation:', error);
     }
   }
 
   /**
-   * Get service task from specific reply ID
+   * Load current service task using the new fast API (SINGLE API CALL)
    */
-  private async getServiceTaskFromReply(replyId: string): Promise<void> {
+  private async loadCurrentServiceTaskFast(): Promise<void> {
     try {
-      console.log('📋 Getting service task for reply:', replyId);
-
-      // Step 1: Get reply details
-      const replyResponse = await firstValueFrom(
-        this.replyService.getReply(replyId)
-      );
-
-      if (!replyResponse?.response) {
-        console.error('❌ Reply not found:', replyId);
+      const selectedUser = this.messagesState.selectedUser;
+      if (!selectedUser) {
+        console.log('❌ No selected user to get service task for');
         return;
       }
 
-      const reply = replyResponse.response;
-      console.log('✅ Reply details:', reply);
+      console.log('⚡ Loading current service task for user:', selectedUser);
 
-      // Step 2: Find payment for this reply
-      await this.findPaymentForReply(replyId);
-
-    } catch (error) {
-      console.error('❌ Error getting service task from reply:', error);
-    }
-  }
-
-  /**
-   * Find payment for specific reply
-   */
-  private async findPaymentForReply(replyId: string): Promise<void> {
-    try {
-      console.log('💳 Looking for payment for reply:', replyId);
-
-      // Get payment history and find by reply ID
-      const paymentHistoryResponse = await firstValueFrom(
-        this.paymentService.getPaymentHistory({ page: 1, pageSize: 50 })
+      // Single API call to get current service task
+      const response = await firstValueFrom(
+        this.taskService.getCurrentServiceTask(selectedUser)
       );
 
-      if (paymentHistoryResponse?.response?.data) {
-        const payments = paymentHistoryResponse.response.data;
-        console.log('📄 All payments:', payments);
+      if (response?.response) {
+        this.currentServiceTask = response.response;
+        console.log('✅ Service task loaded instantly:', this.currentServiceTask);
 
-        // Find payment for this reply
-        const replyPayment = payments.find((payment: any) =>
-          payment.replyId === replyId
-        );
+        this.showServiceConfirmation();
 
-        if (replyPayment) {
-          console.log('💰 Found payment for reply:', replyPayment);
-          // Get the service task
-          await this.loadServiceTaskFromPaymentId(replyPayment.id);
-        } else {
-          console.log('❌ No payment found for reply:', replyId);
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Service task loaded!'
+        });
+      } else {
+        console.log('ℹ️ No current service task found for this conversation');
+
+        if (response?.errorMessage) {
+          console.log('ℹ️ Details:', response.errorMessage.message);
         }
       }
 
     } catch (error) {
-      console.error('❌ Error finding payment for reply:', error);
+      console.error('❌ Error loading current service task:', error);
     }
   }
 
   /**
-   * Find accepted replies from all conversations
+   * Check if current user should see service task
    */
-  private async findAcceptedReplyFromAllConversations(): Promise<void> {
-    try {
-      console.log('🔍 Searching all conversations for accepted replies...');
-
-      const exchanges = this.messagesState.exchanges;
-      console.log('📚 Total exchanges:', exchanges.length);
-
-      for (const exchange of exchanges) {
-        console.log('🔎 Checking exchange with:', exchange.userFullName);
-
-        // Load this conversation temporarily to check for accepted replies
-        const tempConversationResponse = await firstValueFrom(
-          this.exchangeService.getExchange(exchange.userId, { page: 1, pageSize: 50 })
-        );
-
-        if (tempConversationResponse?.response?.data) {
-          const items = tempConversationResponse.response.data;
-
-          const acceptedReplies = items.filter((item: ConversationItemDTO) => {
-            if (item.type === 'reply') {
-              const replyDto = item as unknown as ReplyDTO;
-              return replyDto.status === 'Accepted';
-            }
-            return false;
-          });
-
-          if (acceptedReplies.length > 0) {
-            console.log('✅ Found accepted replies in conversation with:', exchange.userFullName);
-            const latestReply = acceptedReplies[acceptedReplies.length - 1];
-
-            // Convert to ReplyDTO to get the replyId
-            const replyDto = latestReply as unknown as ReplyDTO;
-
-            // Get service task for this reply
-            await this.getServiceTaskFromReply(replyDto.id);
-            break; // Found one, stop searching
-          }
-        }
-      }
-
-    } catch (error) {
-      console.error('❌ Error searching all conversations:', error);
+  private shouldShowServiceTask(): boolean {
+    if (!this.currentServiceTask || !this.userId) {
+      return false;
     }
+
+    // User should see service task if they are either the client or specialist
+    return this.userId === this.currentServiceTask.userId ||
+      this.userId === this.currentServiceTask.specialistId;
   }
 
   /**
-   * Load service task from payment ID
+   * Enhanced show service confirmation with role check
    */
-  private async loadServiceTaskFromPaymentId(paymentId: string): Promise<void> {
-    try {
-      console.log('📋 Loading service task for payment:', paymentId);
-
-      const paymentStatusResponse = await firstValueFrom(
-        this.paymentService.getPaymentStatus(paymentId)
-      );
-
-      if (paymentStatusResponse?.response?.serviceTaskId) {
-        const serviceTaskResponse = await firstValueFrom(
-          this.taskService.getServiceTask(paymentStatusResponse.response.serviceTaskId)
-        );
-
-        if (serviceTaskResponse?.response) {
-          this.currentServiceTask = serviceTaskResponse.response;
-          console.log('✅ Service task loaded from reply flow:', this.currentServiceTask);
-
-          this.showServiceConfirmation();
-
-          this.notificationService.showNotification({
-            type: 'success',
-            message: 'Service task found and displayed!'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error loading service task from payment:', error);
+  private showServiceConfirmation(): void {
+    if (!this.currentServiceTask) {
+      console.warn('⚠️ Attempting to show service confirmation without service task');
+      return;
     }
+
+    if (!this.shouldShowServiceTask()) {
+      console.warn('⚠️ Current user should not see this service task');
+      return;
+    }
+
+    console.log('🎉 Showing service confirmation with task details');
+    console.log('👤 Current user role in service:', {
+      userId: this.userId,
+      isClient: this.userId === this.currentServiceTask.userId,
+      isSpecialist: this.userId === this.currentServiceTask.specialistId
+    });
+
+    this.isServiceConfirmationVisible = true;
+    this.chatOverlayVisible = true;
+  }
+
+  /**
+   * Hide service confirmation overlay
+   */
+  hideServiceConfirmation(): void {
+    this.isServiceConfirmationVisible = false;
+    this.chatOverlayVisible = false;
+  }
+
+  /**
+   * Handle service task completion
+   */
+  onServiceTaskCompleted(event: { replyId: string; taskId: string }): void {
+    console.log('Service task completed:', event);
+    if (this.currentServiceTask) {
+      this.currentServiceTask.status = 'Completed';
+      this.currentServiceTask.completedAt = new Date();
+    }
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Handle service task cancellation
+   */
+  onServiceTaskCancelled(event: { replyId: string; taskId: string }): void {
+    console.log('Service task cancelled:', event);
+    if (this.currentServiceTask) {
+      this.currentServiceTask.status = 'Cancelled';
+      this.currentServiceTask.cancelledAt = new Date();
+    }
+    this.cdr.detectChanges();
   }
 
   // Add these methods to the MessagesComponent class
@@ -875,12 +841,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
       message: 'Payment completed successfully! Getting service details...'
     });
 
-    // Wait for backend processing then get service task
+    // ✅ UPDATED: Use fast service task loading after payment completion
     setTimeout(async () => {
       console.log('🔄 Getting service task from payment...');
 
-      // Get service task created by the backend
+      // Get service task created by the backend (keep existing method for payment flow)
       await this.getServiceTaskFromPayment(paymentDetails.id);
+
+      // ✅ Also refresh using fast method as backup
+      setTimeout(() => {
+        this.loadCurrentServiceTaskFast();
+      }, 1000);
 
       // Refresh conversations after getting service task
       this.refreshCurrentConversation();
@@ -968,64 +939,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get service task with retry mechanism
-   */
-  private async getServiceTaskFromPaymentWithRetry(
-    paymentId: string,
-    maxRetries: number = 3,
-    currentAttempt: number = 1
-  ): Promise<void> {
-    try {
-      console.log(`🔄 Attempt ${currentAttempt}/${maxRetries} - Getting service task for payment: ${paymentId}`);
-
-      // Get payment status
-      const paymentStatusResponse = await firstValueFrom(
-        this.paymentService.getPaymentStatus(paymentId)
-      );
-
-      if (!paymentStatusResponse?.response?.serviceTaskId) {
-        throw new Error('ServiceTaskId not available yet');
-      }
-
-      // Get service task
-      const serviceTaskResponse = await firstValueFrom(
-        this.taskService.getServiceTask(paymentStatusResponse.response.serviceTaskId)
-      );
-
-      if (!serviceTaskResponse?.response) {
-        throw new Error('Service task not found');
-      }
-
-      // Success!
-      this.currentServiceTask = serviceTaskResponse.response;
-      console.log('✅ Service task retrieved successfully on attempt', currentAttempt);
-
-      this.showServiceConfirmation();
-
-      this.notificationService.showNotification({
-        type: 'success',
-        message: 'Service confirmed successfully!'
-      });
-
-    } catch (error) {
-      console.error(`❌ Attempt ${currentAttempt} failed:`, error);
-
-      if (currentAttempt < maxRetries) {
-        // Exponential backoff: 2s, 4s, 8s
-        const delay = Math.pow(2, currentAttempt) * 1000;
-        console.log(`⏱️ Waiting ${delay}ms before retry...`);
-
-        setTimeout(() => {
-          this.getServiceTaskFromPaymentWithRetry(paymentId, maxRetries, currentAttempt + 1);
-        }, delay);
-      } else {
-        console.warn('⚠️ Failed to get service task after all retries');
-        this.handleServiceTaskRetrievalFailure('Maximum retries exceeded');
-      }
-    }
-  }
-
-  /**
    * Handle service task retrieval failure
    */
   private handleServiceTaskRetrievalFailure(reason: string): void {
@@ -1035,58 +948,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
       type: 'warning',
       message: 'Payment completed but service details are still being processed. They will appear shortly.'
     });
+
+    // ✅ Fallback: Try using the fast method
+    setTimeout(() => {
+      console.log('🔄 Trying fast service task loading as fallback...');
+      this.loadCurrentServiceTaskFast();
+    }, 2000);
   }
 
   // Add these methods to the MessagesComponent class
-
-  /**
-   * Show service confirmation overlay
-   */
-  private showServiceConfirmation(): void {
-    if (!this.currentServiceTask) {
-      console.warn('⚠️ Attempting to show service confirmation without service task');
-      return;
-    }
-
-    console.log('🎉 Showing service confirmation with task details');
-
-    this.isServiceConfirmationVisible = true;
-    this.chatOverlayVisible = true;
-
-    // Don't auto-hide when we have service task details - let user close manually
-  }
-
-  /**
-   * Hide service confirmation overlay
-   */
-  hideServiceConfirmation(): void {
-    this.isServiceConfirmationVisible = false;
-    this.chatOverlayVisible = false;
-  }
-
-  /**
-   * Handle service task completion
-   */
-  onServiceTaskCompleted(event: { replyId: string; taskId: string }): void {
-    console.log('Service task completed:', event);
-    if (this.currentServiceTask) {
-      this.currentServiceTask.status = 'Completed';
-      this.currentServiceTask.completedAt = new Date();
-    }
-    this.cdr.detectChanges();
-  }
-
-  /**
-   * Handle service task cancellation
-   */
-  onServiceTaskCancelled(event: { replyId: string; taskId: string }): void {
-    console.log('Service task cancelled:', event);
-    if (this.currentServiceTask) {
-      this.currentServiceTask.status = 'Cancelled';
-      this.currentServiceTask.cancelledAt = new Date();
-    }
-    this.cdr.detectChanges();
-  }
 
   /**
    * Open media picker for photo upload

@@ -205,12 +205,14 @@
 
       <!-- Service confirmation overlay -->
       <div *ngIf="isServiceConfirmationVisible && currentServiceTask" class="service-message-overlay">
-        <app-service-message
-          [serviceTask]="currentServiceTask"
-          [replyId]="currentServiceTask.replyId"
-          (taskCompleted)="onServiceTaskCompleted($event)"
-          (taskCancelled)="onServiceTaskCancelled($event)">
-        </app-service-message>
+        <div class="overlay-background">
+          <app-service-message
+            [serviceTask]="currentServiceTask"
+            [replyId]="currentServiceTask.replyId"
+            (taskCompleted)="onServiceTaskCompleted($event)"
+            (taskCancelled)="onServiceTaskCancelled($event)">
+          </app-service-message>
+        </div>
       </div>
     </div>
 
