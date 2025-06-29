@@ -18,4 +18,6 @@ public interface IReplyService
     Task<ServiceResponse> UpdateReply(ReplyUpdateDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateReplyStatus(StatusUpdateDTO reply, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteReply(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse> ConfirmReplyPayment(Guid replyId, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default);
 }

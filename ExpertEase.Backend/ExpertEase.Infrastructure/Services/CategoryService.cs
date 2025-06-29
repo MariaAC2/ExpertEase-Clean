@@ -58,7 +58,7 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
                 ErrorCodes.CannotAdd));
         }
         
-        var specialist = await repository.GetAsync(new SpecialistSpec(requestingUser.Id), cancellationToken);
+        var specialist = await repository.GetAsync(new SpecialistProfileSpec(requestingUser.Id), cancellationToken);
         
         if (specialist == null)
         {
@@ -107,7 +107,7 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
     public async Task<ServiceResponse<List<CategoryDTO>>> GetCategoriesForSpecialist(Guid specialistId, string? search = null,
         CancellationToken cancellationToken = default)
     {
-        var specialist = await repository.GetAsync(new SpecialistSpec(specialistId), cancellationToken);
+        var specialist = await repository.GetAsync(new SpecialistProfileSpec(specialistId), cancellationToken);
 
         if (specialist == null)
         {
@@ -131,7 +131,7 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
     
     public async Task<ServiceResponse<CategoryDTO>> GetCategoryForSpecialist(Guid categoryId, Guid specialistUserId, CancellationToken cancellationToken = default)
     {
-        var specialist = await repository.GetAsync(new SpecialistSpec(specialistUserId), cancellationToken);
+        var specialist = await repository.GetAsync(new SpecialistProfileSpec(specialistUserId), cancellationToken);
 
         if (specialist == null)
         {
@@ -221,7 +221,7 @@ public class CategoryService(IRepository<WebAppDatabaseContext> repository) : IC
                 ErrorCodes.CannotDelete));
         }
 
-        var specialist = await repository.GetAsync(new SpecialistSpec(requestingUser.Id), cancellationToken);
+        var specialist = await repository.GetAsync(new SpecialistProfileSpec(requestingUser.Id), cancellationToken);
 
         if (specialist == null)
         {

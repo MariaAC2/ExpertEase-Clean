@@ -39,12 +39,7 @@ public class Payment : BaseEntity
     public decimal RefundedAmount { get; set; } = 0;     // Amount refunded to client
     public decimal PlatformRevenue { get; set; } = 0;    // Platform's actual revenue
     public bool FeeCollected { get; set; } = false;     // Whether platform fee is secured
-    
     public Guid? ServiceTaskId { get; set; }
-    
-    // ✅ REMOVED: GetProtectionFeeDetails and SetProtectionFeeDetails methods
-    // These are now handled by helper classes in the infrastructure layer
-    
     // ✅ NEW: Business logic helpers (domain-only, no DTO dependencies)
     public bool CanBeReleased => Status == PaymentStatusEnum.Completed && TransferredAmount == 0;
     public bool CanBeRefunded => Status == PaymentStatusEnum.Completed || Status == PaymentStatusEnum.Escrowed;

@@ -27,3 +27,8 @@ public sealed class UserSpec : Specification<User>
         Query.Where(u => ids.Contains(u.Id));
     }
 }
+
+public sealed class SpecialistSpec : Specification<User>
+{
+    
+}

@@ -76,4 +76,17 @@ public class ConversationNotifier(IHubContext<ConversationHub> hubContext) : ICo
         return hubContext.Clients.Group(receiverUserId.ToString())
             .SendAsync("ReceiveReplyUpdated", payload);
     }
+
+    // ✅ Just add these two methods to your existing service
+    public Task NotifyPaymentConfirmed(Guid receiverUserId, object payload)
+    {
+        return hubContext.Clients.Group(receiverUserId.ToString())
+            .SendAsync("ReceivePaymentConfirmed", payload);
+    }
+    
+    public Task NotifyPaymentFailed(Guid receiverUserId, object payload)
+    {
+        return hubContext.Clients.Group(receiverUserId.ToString())
+            .SendAsync("ReceivePaymentFailed", payload);
+    }
 }

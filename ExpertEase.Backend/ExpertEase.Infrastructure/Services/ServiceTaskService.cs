@@ -51,7 +51,7 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
 
             var result = await AddServiceTask(serviceTask, cancellationToken);
         
-            if (result.Error != null)
+            if (!result.IsSuccess)
                 return ServiceResponse.CreateErrorResponse<ServiceTask>(result.Error);
 
             // Update payment with service task ID
@@ -75,10 +75,27 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
             return ServiceResponse.CreateErrorResponse<ServiceTask>(new (HttpStatusCode.NotFound, "Payment not found", ErrorCodes.EntityNotFound));
         }
         
+        var user = await repository.GetAsync(new UserSpec(service.UserId), cancellationToken);
+
+        if (user == null)
+        {
+            return ServiceResponse.CreateErrorResponse<ServiceTask>(new ErrorMessage(HttpStatusCode.NotFound, "User not found", ErrorCodes.EntityNotFound));
+        }
+        
+        var specialist = await repository.GetAsync(new UserSpec(service.SpecialistId), cancellationToken);
+        if (specialist == null)
+        {
+            return ServiceResponse.CreateErrorResponse<ServiceTask>(new ErrorMessage(HttpStatusCode.NotFound, "Specialist not found", ErrorCodes.EntityNotFound));
+        }
+        
         var serviceTask = new ServiceTask 
         {
             UserId = service.UserId,
+            User = user,
             SpecialistId = service.SpecialistId,
+            Specialist = specialist,
+            PaymentId = service.PaymentId,
+            Payment = payment,
             StartDate = service.StartDate,
             EndDate = service.EndDate,
             Address = service.Address,

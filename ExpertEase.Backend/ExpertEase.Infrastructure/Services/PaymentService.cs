@@ -14,6 +14,7 @@ using ExpertEase.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using ExpertEase.Application.DataTransferObjects.StripeAccountDTOs;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ExpertEase.Infrastructure.Services;
 
@@ -25,6 +26,9 @@ public class PaymentService(
     IRepository<WebAppDatabaseContext> repository,
     IStripeAccountService stripeAccountService,
     IProtectionFeeConfigurationService feeConfigurationService,
+    IConversationNotifier notificationService, // ✅ Use your existing service
+    IServiceScopeFactory serviceScopeFactory,
+    IServiceTaskService serviceTaskService,
     ILogger<PaymentService> logger)
     : IPaymentService
 {
@@ -99,7 +103,7 @@ public class PaymentService(
         {
             logger.LogInformation("🔒 Confirming payment for escrow: {PaymentIntentId}", confirmationDTO.PaymentIntentId);
 
-            // ✅ Step 1: Get payment record
+            // Get payment record
             var payment = await GetPaymentByStripeId(confirmationDTO.PaymentIntentId, cancellationToken);
             if (payment == null)
             {
@@ -109,35 +113,176 @@ public class PaymentService(
                     ErrorCodes.EntityNotFound));
             }
 
-            // ✅ Step 2: Verify payment with Stripe
+            // Verify payment with Stripe
             var stripePaymentIntent = await VerifyStripePaymentStatus(confirmationDTO.PaymentIntentId, cancellationToken);
             if (stripePaymentIntent is not { Status: "succeeded" })
             {
+                // Notify payment failure
+                await NotifyPaymentFailureToUsers(payment, $"Stripe verification failed: {stripePaymentIntent?.Status ?? "unknown"}");
+
                 return ServiceResponse.CreateErrorResponse(new(
                     HttpStatusCode.BadRequest,
                     $"Payment verification failed. Stripe status: {stripePaymentIntent?.Status ?? "unknown"}",
                     ErrorCodes.TechnicalError));
             }
 
-            // ✅ Step 3: Update payment to ESCROWED status
+            // Update payment to ESCROWED status
             await UpdatePaymentToEscrowed(payment, stripePaymentIntent, cancellationToken);
 
-            // ✅ Step 4: Create service task (now that payment is secured)
-            await CreateServiceTaskFromPayment(payment, cancellationToken);
+            // ✅ Confirm reply acceptance using scoped service
+            await ConfirmReplyAcceptance(payment.ReplyId, cancellationToken);
+            
+            // ✅ REPLACE THE TODO WITH THIS - Create service task
+            logger.LogInformation("📋 Creating service task for payment: {PaymentId}", payment.Id);
+            
+            var serviceTaskResult = await serviceTaskService.CreateServiceTaskFromPayment(payment.Id, cancellationToken);
+            if (!serviceTaskResult.IsSuccess)
+            {
+                logger.LogError("❌ Failed to create service task for payment {PaymentId}: {Error}", 
+                    payment.Id, serviceTaskResult.Error?.Message);
+                
+                // Don't fail the payment, but log the error
+                // You might want to add this to a retry queue or manual review
+            }
+
+            // ✅ Send payment confirmation notifications
+            await NotifyPaymentSuccessToUsers(payment);
 
             logger.LogInformation("✅ Payment confirmed and escrowed: {PaymentIntentId}", confirmationDTO.PaymentIntentId);
-            logger.LogInformation("💰 Amounts - Total: {TotalAmount}, Service: {ServiceAmount}, Platform Fee: {ProtectionFee}",
-                payment.TotalAmount, payment.ServiceAmount, payment.ProtectionFee);
 
             return ServiceResponse.CreateSuccessResponse();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "❌ Error confirming payment: {PaymentIntentId}", confirmationDTO.PaymentIntentId);
+            
+            // Try to notify about the failure
+            try
+            {
+                var payment = await GetPaymentByStripeId(confirmationDTO.PaymentIntentId, cancellationToken);
+                if (payment != null)
+                {
+                    await NotifyPaymentFailureToUsers(payment, ex.Message);
+                }
+            }
+            catch (Exception notificationEx)
+            {
+                logger.LogError(notificationEx, "❌ Failed to send payment failure notification");
+            }
+
             return ServiceResponse.CreateErrorResponse(new(
                 HttpStatusCode.InternalServerError,
                 $"Payment confirmation failed: {ex.Message}",
                 ErrorCodes.TechnicalError));
+        }
+    }
+
+    // ✅ Helper method to confirm reply without circular dependency
+    private async Task ConfirmReplyAcceptance(Guid replyId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var scope = serviceScopeFactory.CreateScope();
+            var replyService = scope.ServiceProvider.GetRequiredService<IReplyService>();
+            
+            var result = await replyService.ConfirmReplyPayment(replyId, null, cancellationToken);
+            if (result.IsSuccess)
+            {
+                logger.LogInformation("✅ Reply {ReplyId} confirmed after payment", replyId);
+            }
+            else
+            {
+                logger.LogError("❌ Failed to confirm reply {ReplyId}: {Error}", replyId, result.Error?.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Exception confirming reply {ReplyId}", replyId);
+        }
+    }
+
+    // ✅ Helper method to notify payment success to both users
+    private async Task NotifyPaymentSuccessToUsers(Payment payment)
+    {
+        try
+        {
+            // Get reply details for notifications
+            var reply = await repository.GetAsync(new ReplySpec(payment.ReplyId), cancellationToken: default);
+            if (reply == null) return;
+
+            // Client notification
+            var clientPayload = new
+            {
+                Type = "PaymentConfirmed",
+                PaymentId = payment.Id,
+                ReplyId = payment.ReplyId,
+                RequestId = reply.RequestId,
+                Amount = payment.TotalAmount,
+                Status = "Confirmed",
+                Message = "Your payment has been processed successfully! The service is now confirmed.",
+                Timestamp = DateTime.UtcNow
+            };
+
+            // Specialist notification
+            var specialistPayload = new
+            {
+                Type = "PaymentConfirmed",
+                PaymentId = payment.Id,
+                ReplyId = payment.ReplyId,
+                RequestId = reply.RequestId,
+                Amount = payment.ServiceAmount,
+                Status = "Confirmed",
+                Message = "Great news! Payment has been confirmed for your service.",
+                Timestamp = DateTime.UtcNow
+            };
+
+            // Send notifications
+            await notificationService.NotifyPaymentConfirmed(reply.Request.SenderUserId, clientPayload);
+            await notificationService.NotifyPaymentConfirmed(reply.Request.ReceiverUserId, specialistPayload);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Failed to send payment success notifications");
+        }
+    }
+
+    // ✅ Helper method to notify payment failure to both users
+    private async Task NotifyPaymentFailureToUsers(Payment payment, string reason)
+    {
+        try
+        {
+            var reply = await repository.GetAsync(new ReplySpec(payment.ReplyId), cancellationToken: default);
+            if (reply == null) return;
+
+            var clientPayload = new
+            {
+                Type = "PaymentFailed",
+                PaymentId = payment.Id,
+                payment.ReplyId,
+                reply.RequestId,
+                Status = "Failed",
+                Reason = reason,
+                Message = "Payment processing failed. Please try again.",
+                Timestamp = DateTime.UtcNow
+            };
+
+            var specialistPayload = new
+            {
+                Type = "PaymentFailed",
+                PaymentId = payment.Id,
+                payment.ReplyId,
+                reply.RequestId,
+                Status = "Failed",
+                Message = "Payment for your service failed.",
+                Timestamp = DateTime.UtcNow
+            };
+
+            await notificationService.NotifyPaymentFailed(reply.Request.SenderUserId, clientPayload);
+            await notificationService.NotifyPaymentFailed(reply.Request.ReceiverUserId, specialistPayload);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Failed to send payment failure notifications");
         }
     }
 

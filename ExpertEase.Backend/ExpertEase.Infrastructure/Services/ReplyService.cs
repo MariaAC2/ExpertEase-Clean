@@ -121,176 +121,163 @@ public class ReplyService(IRepository<WebAppDatabaseContext> repository,
         return ServiceResponse.CreateSuccessResponse(result);
     }
     
-
-
-public async Task<ServiceResponse> UpdateReplyStatus(StatusUpdateDTO reply, UserDTO? requestingUser = null,
-    CancellationToken cancellationToken = default)
-{
-    if (requestingUser == null)
+    public async Task<ServiceResponse> UpdateReplyStatus(StatusUpdateDTO reply, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default)
     {
-        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-            "Cannot add replies without being authenticated", ErrorCodes.CannotUpdate));
-    }
-    if (requestingUser.Role == UserRoleEnum.Specialist)
-    {
-        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-            "Only user and admin can accept or reject replies", ErrorCodes.CannotUpdate));
-    }
-    
-    var entity = await repository.GetAsync(new ReplySpec(reply.Id), cancellationToken);
-    
-    if (entity == null)
-    {
-        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
-            "Reply not found", ErrorCodes.EntityNotFound));
-    }
-
-    if (entity.Status is not StatusEnum.Pending)
-    {
-        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-            "Only pending replies can be updated", ErrorCodes.CannotUpdate));
-    }
-
-    // Store original data for notifications
-    var specialistId = entity.Request.ReceiverUserId; // The specialist who sent the reply
-    var clientId = requestingUser.Id; // The client performing the action
-
-    switch (reply.Status)
-    {
-        // Handle different status updates
-        case StatusEnum.Cancelled:
-            entity.Status = StatusEnum.Cancelled;
-            await repository.UpdateAsync(entity, cancellationToken);
-        
-            // 🆕 Update Firestore
-            await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Cancelled, cancellationToken);
-            
-            // 🆕 Send notification
-            await SendReplyCancelledNotification(entity, specialistId);
-            break;
-            
-        case StatusEnum.Rejected:
+        if (requestingUser == null)
         {
-            entity.Status = StatusEnum.Rejected;
-            await repository.UpdateAsync(entity, cancellationToken);
-        
-            // 🆕 Update Firestore
-            await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Rejected, cancellationToken);
-            
-            // 🆕 Send notification
-            await SendReplyRejectedNotification(entity, specialistId);
-        
-            var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
-        
-            if (request == null)
-                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-        
-            var activeReplies = request.Replies
-                .Where(r => r.Status != StatusEnum.Cancelled)
-                .ToList();
-
-            if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
-            request.Status = StatusEnum.Failed;
-            await repository.UpdateAsync(request, cancellationToken);
-            break;
-        }
-        case StatusEnum.Accepted:
-        {
-            entity.Status = StatusEnum.Accepted;
-            await repository.UpdateAsync(entity, cancellationToken);
-
-            // Update Firestore
-            await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Accepted, cancellationToken);
-
-            // Send notification
-            await SendReplyAcceptedNotification(entity, specialistId);
-
-            var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
-                    
-            if (request == null)
-                return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
-
-            request.Status = StatusEnum.Completed;
-            await repository.UpdateAsync(request, cancellationToken);
-
-            // ✅ UPDATED: Create escrow payment intent instead of old payment
-            try
-            {
-                // Get specialist's Stripe account
-                var specialistProfile = await repository.GetAsync(new SpecialistProfileProjectionSpec(request.ReceiverUserId), cancellationToken);
-                if (specialistProfile?.StripeAccountId == null)
-                {
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, 
-                        "Specialist has no connected Stripe account", ErrorCodes.Invalid));
-                }
-
-                // ✅ NEW: Calculate protection fee using configuration service
-                var serviceAmount = entity.Price;
-                var feeBreakdown = protectionFeeService.CalculateProtectionFee(serviceAmount); // ✅ Use injected service
-                
-                // ✅ NEW: Create modern escrow payment intent
-                var paymentIntentDto = new PaymentIntentCreateDTO
-                {
-                    ReplyId = entity.Id,
-                    ServiceAmount = serviceAmount,                    // Amount for specialist
-                    ProtectionFee = feeBreakdown.FinalFee,           // Platform fee
-                    TotalAmount = serviceAmount + feeBreakdown.FinalFee, // Total to charge client
-                    Currency = "ron",
-                    Description = $"Payment for service: {request.Description}",
-                    ProtectionFeeDetails = new ProtectionFeeDetailsDTO
-                    {
-                        BaseServiceAmount = serviceAmount,
-                        FeeType = feeBreakdown.FeeType,
-                        FeePercentage = feeBreakdown.PercentageRate,
-                        FixedFeeAmount = feeBreakdown.FixedAmount,
-                        MinimumFee = feeBreakdown.MinimumFee,
-                        MaximumFee = feeBreakdown.MaximumFee,
-                        CalculatedFee = feeBreakdown.FinalFee,
-                        FeeJustification = feeBreakdown.Justification,
-                        CalculatedAt = DateTime.UtcNow
-                    },
-                    Metadata = new Dictionary<string, string>
-                    {
-                        { "request_id", request.Id.ToString() },
-                        { "reply_id", entity.Id.ToString() },
-                        { "specialist_id", specialistId.ToString() },
-                        { "client_id", clientId.ToString() },
-                        { "service_type", "reply_acceptance" }
-                    }
-                };
-
-                // ✅ NEW: Create escrow payment intent (money will be held safely)
-                var paymentResponse = await paymentService.CreatePaymentIntent(paymentIntentDto, cancellationToken);
-
-                if (!paymentResponse.IsSuccess)
-                {
-                    
-                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, 
-                        $"Payment intent creation failed: {paymentResponse.Error?.Message}", 
-                        ErrorCodes.TransactionFailed));
-                }
-
-                // ✅ SUCCESS: Reply accepted and payment intent created
-                // Frontend will handle the payment flow, then call ConfirmPayment
-                // After confirmation, money will be escrowed until service completion
-                
-                return ServiceResponse.CreateSuccessResponse();
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, 
-                    $"Payment creation failed: {ex.Message}", ErrorCodes.TransactionFailed));
-            }
-        }
-        case StatusEnum.Pending:
-        case StatusEnum.Completed:
-        case StatusEnum.Failed:
-        default:
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
-                "Other types of status codes not permitted", ErrorCodes.CannotUpdate));
+                "Cannot add replies without being authenticated", ErrorCodes.CannotUpdate));
+        }
+        if (requestingUser.Role == UserRoleEnum.Specialist)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Only user and admin can accept or reject replies", ErrorCodes.CannotUpdate));
+        }
+        
+        var entity = await repository.GetAsync(new ReplySpec(reply.Id), cancellationToken);
+        
+        if (entity == null)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
+                "Reply not found", ErrorCodes.EntityNotFound));
+        }
+
+        if (entity.Status is not StatusEnum.Pending)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                "Only pending replies can be updated", ErrorCodes.CannotUpdate));
+        }
+
+        // Store original data for notifications
+        var specialistId = entity.Request.ReceiverUserId; // The specialist who sent the reply
+        var clientId = requestingUser.Id; // The client performing the action
+
+        switch (reply.Status)
+        {
+            // Handle different status updates
+            case StatusEnum.Cancelled:
+                entity.Status = StatusEnum.Cancelled;
+                await repository.UpdateAsync(entity, cancellationToken);
+            
+                // 🆕 Update Firestore
+                await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Cancelled, cancellationToken);
+                
+                // 🆕 Send notification
+                await SendReplyCancelledNotification(entity, specialistId);
+                break;
+                
+            case StatusEnum.Rejected:
+            {
+                entity.Status = StatusEnum.Rejected;
+                await repository.UpdateAsync(entity, cancellationToken);
+            
+                // 🆕 Update Firestore
+                await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Rejected, cancellationToken);
+                
+                // 🆕 Send notification
+                await SendReplyRejectedNotification(entity, specialistId);
+            
+                var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+            
+                if (request == null)
+                    return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
+            
+                var activeReplies = request.Replies
+                    .Where(r => r.Status != StatusEnum.Cancelled)
+                    .ToList();
+
+                if (activeReplies.Count is 0 or not 5) return ServiceResponse.CreateErrorResponse(new  (HttpStatusCode.Forbidden, "Replies not found", ErrorCodes.CannotUpdate));
+                request.Status = StatusEnum.Failed;
+                await repository.UpdateAsync(request, cancellationToken);
+                break;
+            }
+            case StatusEnum.Accepted:
+            {
+                // ✅ UPDATED: Don't mark as Accepted yet - just create payment intent
+                // Reply will be marked as Accepted after payment confirmation
+                
+                var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+                        
+                if (request == null)
+                    return ServiceResponse.CreateErrorResponse(new (HttpStatusCode.Forbidden, "Request not found", ErrorCodes.EntityNotFound));
+
+                // ✅ Create escrow payment intent but keep reply as Pending
+                try
+                {
+                    // Get specialist's Stripe account
+                    var specialistProfile = await repository.GetAsync(new SpecialistProfileProjectionSpec(request.ReceiverUserId), cancellationToken);
+                    if (specialistProfile?.StripeAccountId == null)
+                    {
+                        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest, 
+                            "Specialist has no connected Stripe account", ErrorCodes.Invalid));
+                    }
+
+                    // Calculate protection fee
+                    var serviceAmount = entity.Price;
+                    var feeBreakdown = protectionFeeService.CalculateProtectionFee(serviceAmount);
+                    
+                    // Create escrow payment intent
+                    var paymentIntentDto = new PaymentIntentCreateDTO
+                    {
+                        ReplyId = entity.Id,
+                        ServiceAmount = serviceAmount,
+                        ProtectionFee = feeBreakdown.FinalFee,
+                        TotalAmount = serviceAmount + feeBreakdown.FinalFee,
+                        Currency = "ron",
+                        Description = $"Payment for service: {request.Description}",
+                        ProtectionFeeDetails = new ProtectionFeeDetailsDTO
+                        {
+                            BaseServiceAmount = serviceAmount,
+                            FeeType = feeBreakdown.FeeType,
+                            FeePercentage = feeBreakdown.PercentageRate,
+                            FixedFeeAmount = feeBreakdown.FixedAmount,
+                            MinimumFee = feeBreakdown.MinimumFee,
+                            MaximumFee = feeBreakdown.MaximumFee,
+                            CalculatedFee = feeBreakdown.FinalFee,
+                            FeeJustification = feeBreakdown.Justification,
+                            CalculatedAt = DateTime.UtcNow
+                        },
+                        Metadata = new Dictionary<string, string>
+                        {
+                            { "request_id", request.Id.ToString() },
+                            { "reply_id", entity.Id.ToString() },
+                            { "specialist_id", specialistId.ToString() },
+                            { "client_id", clientId.ToString() },
+                            { "service_type", "reply_acceptance" }
+                        }
+                    };
+
+                    // Create payment intent (money will be held safely in escrow after payment)
+                    var paymentResponse = await paymentService.CreatePaymentIntent(paymentIntentDto, cancellationToken);
+
+                    if (!paymentResponse.IsSuccess)
+                    {
+                        return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, 
+                            $"Payment intent creation failed: {paymentResponse.Error?.Message}", 
+                            ErrorCodes.TransactionFailed));
+                    }
+
+                    // ✅ SUCCESS: Payment intent created, frontend will handle payment
+                    // Reply remains Pending until payment is confirmed via PaymentService.ConfirmPayment
+                    
+                    return ServiceResponse.CreateSuccessResponse();
+                }
+                catch (Exception ex)
+                {
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError, 
+                        $"Payment creation failed: {ex.Message}", ErrorCodes.TransactionFailed));
+                }
+            }
+            case StatusEnum.Pending:
+            case StatusEnum.Completed:
+            case StatusEnum.Failed:
+            default:
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                    "Other types of status codes not permitted", ErrorCodes.CannotUpdate));
+        }
+        return ServiceResponse.CreateSuccessResponse();
     }
-    return ServiceResponse.CreateSuccessResponse();
-}
 
     // 🆕 Private methods for sending notifications
     private async Task SendReplyAcceptedNotification(Reply reply, Guid specialistId)
@@ -479,5 +466,61 @@ public async Task<ServiceResponse> UpdateReplyStatus(StatusUpdateDTO reply, User
         await repository.DeleteAsync<Reply>(id, cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse();
+    }
+    
+    public async Task<ServiceResponse> ConfirmReplyPayment(Guid replyId, UserDTO? requestingUser = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            
+            var entity = await repository.GetAsync(new ReplySpec(replyId), cancellationToken);
+            
+            if (entity == null)
+            {
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound,
+                    "Reply not found", ErrorCodes.EntityNotFound));
+            }
+
+            if (entity.Status != StatusEnum.Pending)
+            {
+                // Don't fail if already accepted - payment might have been processed multiple times
+                if (entity.Status == StatusEnum.Accepted)
+                {
+                    return ServiceResponse.CreateSuccessResponse();
+                }
+                
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.Forbidden,
+                    "Reply is not in pending state", ErrorCodes.CannotUpdate));
+            }
+
+            // Store original data for notifications
+            var specialistId = entity.Request.ReceiverUserId;
+
+            // ✅ NOW mark the reply as accepted after payment confirmation
+            entity.Status = StatusEnum.Accepted;
+            await repository.UpdateAsync(entity, cancellationToken);
+
+            // Update Firestore
+            await UpdateFirestoreReplyStatus(entity.Id, StatusEnum.Accepted, cancellationToken);
+
+            // Send notification to specialist
+            await SendReplyAcceptedNotification(entity, specialistId);
+
+            // Update request status to completed
+            var request = await repository.GetAsync(new RequestSpec(entity.RequestId), cancellationToken);
+            if (request != null)
+            {
+                request.Status = StatusEnum.Completed;
+                await repository.UpdateAsync(request, cancellationToken);
+            }
+
+            return ServiceResponse.CreateSuccessResponse();
+        }
+        catch (Exception ex)
+        {
+            return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.InternalServerError,
+                $"Reply confirmation failed: {ex.Message}", ErrorCodes.TechnicalError));
+        }
     }
 }

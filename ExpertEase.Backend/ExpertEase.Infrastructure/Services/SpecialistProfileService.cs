@@ -37,7 +37,7 @@ public class SpecialistProfileService(
             return ServiceResponse.CreateErrorResponse<BecomeSpecialistResponseDTO>(CommonErrors.UserNotFound);
         }
         
-        var existingSpecialist = await repository.GetAsync(new SpecialistSpec(becomeSpecialistProfile.UserId), cancellationToken);
+        var existingSpecialist = await repository.GetAsync(new SpecialistProfileSpec(becomeSpecialistProfile.UserId), cancellationToken);
         if (existingSpecialist != null)
         {
             return ServiceResponse.CreateErrorResponse<BecomeSpecialistResponseDTO>(new(HttpStatusCode.Conflict, "The specialist already exists!", ErrorCodes.UserAlreadyExists));

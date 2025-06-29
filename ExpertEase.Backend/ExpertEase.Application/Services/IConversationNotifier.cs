@@ -14,4 +14,6 @@ public interface IConversationNotifier
     public Task NotifyReplyRejected(Guid receiverUserId, object payload);
     public Task NotifyReplyCancelled(Guid receiverUserId, object payload);
     public Task NotifyReplyUpdated(Guid receiverUserId, object payload);
+    public Task NotifyPaymentConfirmed(Guid paymentId, object payload);
+    public Task NotifyPaymentFailed(Guid paymentId, object payload);
 }

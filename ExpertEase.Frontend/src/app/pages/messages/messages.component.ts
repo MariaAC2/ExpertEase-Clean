@@ -475,16 +475,24 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   async acceptReply(replyId: string): Promise<void> {
+    console.log('🚀 Initiating payment flow for reply:', replyId);
+
     const result = await this.conversationActions.acceptReply(replyId);
     if (!result.success) {
       this.notificationService.showNotification({
         type: 'error',
-        message: result.error || 'Failed to accept reply'
+        message: result.error || 'Failed to initiate payment for reply'
       });
-      return; // Don't proceed to payment if acceptance failed
+      return;
     }
 
-    // ✅ Trigger payment flow after successful acceptance
+    // ✅ Show informative notification about the process
+    this.notificationService.showNotification({
+      type: 'info',
+      message: 'Payment required to confirm service booking. Please complete payment.'
+    });
+
+    // ✅ Trigger payment flow - payment component will handle the rest
     this.triggerPaymentFlowForReply(replyId);
   }
 
@@ -585,11 +593,23 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   private handlePaymentCompletion(paymentDetails: any): void {
-    console.log('Payment completed in messages:', paymentDetails);
-    this.currentPaymentDetails = paymentDetails;
-    this.createServiceTaskFromPayment(paymentDetails);
-    this.showServiceConfirmation();
-    this.loadExchanges(false);
+    console.log('💳 Payment completed in messages component:', paymentDetails);
+
+    // ✅ Enhanced: Wait a moment for backend processing then refresh
+    setTimeout(() => {
+      console.log('🔄 Refreshing conversations after payment completion...');
+      this.refreshCurrentConversation();
+      this.loadExchanges(false);
+    }, 1500); // Slightly longer delay to ensure backend processing completes
+
+    // ✅ Optional: Create service task if needed
+    if (paymentDetails) {
+      this.currentPaymentDetails = paymentDetails;
+      this.createServiceTaskFromPayment(paymentDetails);
+
+      // ✅ Show service confirmation overlay
+      this.showServiceConfirmation();
+    }
   }
 
   private async createServiceTaskFromPayment(paymentDetails: any): Promise<void> {
@@ -607,6 +627,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     try {
       // Using firstValueFrom for better async/await support
       const response = await firstValueFrom(this.taskService.addTaskFromPayment(paymentDetails.id));
+      console.log('The service task in question: ', response.response?.serviceTask);
 
       if (response.response?.serviceTask) {
         this.currentServiceTask = response.response.serviceTask;
