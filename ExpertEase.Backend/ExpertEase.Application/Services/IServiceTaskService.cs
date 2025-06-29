@@ -12,6 +12,8 @@ public interface IServiceTaskService
     Task<ServiceResponse> CreateServiceTaskFromPayment(Guid paymentId, CancellationToken cancellationToken = default);
     Task<ServiceResponse<ServiceTask>> AddServiceTask(ServiceTaskAddDTO service, CancellationToken cancellationToken = default);
     Task<ServiceResponse<ServiceTaskDTO>> GetServiceTask(Guid id, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<ServiceTaskDTO>> GetCurrentServiceTask(Guid otherUserId,
+        UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse<PagedResponse<ServiceTaskDTO>>> GetServiceTasks(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateServiceTask(ServiceTaskUpdateDTO serviceTask, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateServiceTaskStatus(JobStatusUpdateDTO serviceTask, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

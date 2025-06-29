@@ -205,25 +205,12 @@
 
       <!-- Service confirmation overlay -->
       <div *ngIf="isServiceConfirmationVisible && currentServiceTask" class="service-message-overlay">
-        <div class="overlay-background" (click)="hideServiceConfirmation()"></div>
-        <div class="service-message-container">
-          <div class="overlay-header">
-            <h2>✅ Serviciu confirmat și plătit!</h2>
-            <button class="close-overlay-btn" (click)="hideServiceConfirmation()">×</button>
-          </div>
-          <app-service-message
-            [serviceTask]="currentServiceTask"
-            [replyId]="currentServiceTask.replyId"
-            (taskCompleted)="onServiceTaskCompleted($event)"
-            (taskCancelled)="onServiceTaskCancelled($event)">
-          </app-service-message>
-          <div class="overlay-footer">
-            <p>Ambele părți au fost notificate prin email cu detaliile serviciului.</p>
-            <button class="close-overlay-btn secondary" (click)="hideServiceConfirmation()">
-              Închide
-            </button>
-          </div>
-        </div>
+        <app-service-message
+          [serviceTask]="currentServiceTask"
+          [replyId]="currentServiceTask.replyId"
+          (taskCompleted)="onServiceTaskCompleted($event)"
+          (taskCancelled)="onServiceTaskCancelled($event)">
+        </app-service-message>
       </div>
     </div>
 

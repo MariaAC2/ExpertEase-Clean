@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using ExpertEase.Application.DataTransferObjects.ServiceTaskDTOs;
 using ExpertEase.Domain.Entities;
+using ExpertEase.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExpertEase.Application.Specifications;
@@ -34,6 +35,11 @@ public class ServiceTaskProjectionSpec: Specification<ServiceTask, ServiceTaskDT
     public ServiceTaskProjectionSpec(Guid id) : this()
     {
         Query.Where(e => e.Id == id);
+    }
+    
+    public ServiceTaskProjectionSpec(Guid userId, Guid specialistId) : this()
+    {
+        Query.Where(e => e.UserId == userId && e.SpecialistId == specialistId && e.Status == JobStatusEnum.Confirmed);
     }
 
     public ServiceTaskProjectionSpec(string? search) : this(true)

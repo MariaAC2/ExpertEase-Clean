@@ -30,6 +30,16 @@ export class TaskService {
       { headers }
     );
   }
+  getCurrentServiceTask(otherUserId: string){
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+    return this.http.get<RequestResponse<ServiceTaskDTO>>(
+      `${this.baseUrl}/GetCurrent/${otherUserId}`,
+      { headers }
+    );
+  }
   updateServiceTask(task: ServiceTaskUpdateDTO){
     const token = this.authService.getToken();
     const headers = new HttpHeaders({

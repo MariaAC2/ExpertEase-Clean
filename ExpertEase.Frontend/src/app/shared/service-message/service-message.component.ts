@@ -1,6 +1,7 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {CurrencyPipe, DatePipe, NgClass, NgIf} from "@angular/common";
 import {JobStatusEnum, ServiceTaskDTO, StatusEnum} from '../../models/api.models';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-service-message',
@@ -13,7 +14,7 @@ import {JobStatusEnum, ServiceTaskDTO, StatusEnum} from '../../models/api.models
   templateUrl: './service-message.component.html',
   styleUrl: './service-message.component.scss'
 })
-export class ServiceMessageComponent {
+export class ServiceMessageComponent implements OnInit {
   @Input() serviceTask: ServiceTaskDTO = {
     id: '',
     replyId: '',
@@ -35,6 +36,15 @@ export class ServiceMessageComponent {
 
   @Output() taskCompleted = new EventEmitter<{ replyId: string; taskId: string }>();
   @Output() taskCancelled = new EventEmitter<{ replyId: string; taskId: string }>();
+
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
+
+  ngOnInit(): void {
+    this.userRole = this.authService.getUserRole();
+    console.log(this.userRole);
+  }
 
   completeTask() {
     this.taskCompleted.emit({ replyId: this.replyId, taskId: this.serviceTask.id });

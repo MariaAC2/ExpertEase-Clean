@@ -36,6 +36,17 @@ public class ServiceTaskController(IUserService userService, IServiceTaskService
             CreateErrorMessageResult<ServiceTaskDTO>(currentUser.Error);
     }
     
+    [Authorize]
+    [HttpGet("{otherUserId:guid}")]
+    public async Task<ActionResult<RequestResponse<ServiceTaskDTO>>> GetCurrent([FromRoute] Guid otherUserId)
+    {
+        var currentUser = await GetCurrentUser();
+
+        return currentUser.Result != null ? 
+            CreateRequestResponseFromServiceResponse(await specialistService.GetCurrentServiceTask(otherUserId, currentUser.Result)) : 
+            CreateErrorMessageResult<ServiceTaskDTO>(currentUser.Error);
+    }
+    
     // trebuie sa adaug get page aici
     
     [Authorize(Roles = "Specialist")]

@@ -102,7 +102,7 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
             Address = service.Address,
             Description = service.Description,
             Price = service.Price,
-            Status = JobStatusEnum.PendingPayment,
+            Status = JobStatusEnum.Confirmed,
         };
         
         await repository.AddAsync(serviceTask, cancellationToken);
@@ -113,6 +113,47 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
     public async Task<ServiceResponse<ServiceTaskDTO>> GetServiceTask(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await repository.GetAsync(new ServiceTaskProjectionSpec(id), cancellationToken);
+        
+        return result != null ? 
+            ServiceResponse.CreateSuccessResponse(result) : 
+            ServiceResponse.CreateErrorResponse<ServiceTaskDTO>(CommonErrors.EntityNotFound);
+    }
+
+    // ✅ Alternative approach: Create multiple specs for different query patterns
+    public async Task<ServiceResponse<ServiceTaskDTO>> GetCurrentServiceTask(Guid otherUserId, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
+    {
+        if (requestingUser == null)
+        {
+            return ServiceResponse.CreateErrorResponse<ServiceTaskDTO>(new(
+                HttpStatusCode.Unauthorized,
+                "User authentication required",
+                ErrorCodes.Invalid));
+        }
+
+        ServiceTaskDTO? result = null;
+
+        // ✅ Try both role combinations to find the service task
+        switch (requestingUser.Role)
+        {
+            case UserRoleEnum.Client:
+                // Look for service task where current user is client and other user is specialist
+                result = await repository.GetAsync(
+                    new ServiceTaskProjectionSpec(requestingUser.Id, otherUserId), 
+                    cancellationToken);
+                break;
+                
+            case UserRoleEnum.Specialist:
+                // Look for service task where current user is specialist and other user is client
+                result = await repository.GetAsync(
+                    new ServiceTaskProjectionSpec(otherUserId, requestingUser.Id), 
+                    cancellationToken);
+                break;
+                
+            default:
+                return ServiceResponse.CreateErrorResponse<ServiceTaskDTO>(new(
+                    HttpStatusCode.BadRequest,
+                    "Invalid user role"));
+        }
         
         return result != null ? 
             ServiceResponse.CreateSuccessResponse(result) : 

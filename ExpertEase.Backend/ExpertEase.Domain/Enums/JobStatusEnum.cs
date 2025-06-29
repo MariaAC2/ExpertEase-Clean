@@ -6,5 +6,4 @@ public enum JobStatusEnum
     Completed,
     Cancelled,
     Reviewed,
-    PendingPayment
 }
