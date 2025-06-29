@@ -464,6 +464,7 @@ public class PaymentService(
             var status = new PaymentStatusResponseDTO
             {
                 PaymentId = payment.Id,
+                ServiceTaskId = payment.ServiceTaskId ?? null,
                 Status = payment.Status.GetStatusMessage(),
                 IsEscrowed = payment.IsInEscrow(),
                 CanBeReleased = payment.CanBeReleased(),

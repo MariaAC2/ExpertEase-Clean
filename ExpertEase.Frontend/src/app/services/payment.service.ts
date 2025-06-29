@@ -4,7 +4,7 @@ import {
   CalculateProtectionFeeRequestDTO, CalculateProtectionFeeResponseDTO,
   PaymentConfirmationDTO, PaymentDetailsDTO,
   PaymentIntentCreateDTO,
-  PaymentIntentResponseDTO, PaymentRefundDTO,
+  PaymentIntentResponseDTO, PaymentRefundDTO, PaymentStatusResponseDTO,
   RequestResponse
 } from '../models/api.models';
 import { Observable } from 'rxjs';
@@ -110,6 +110,18 @@ export class PaymentService {
     return this.http.post<{ received: boolean; error?: string }>(
       `${this.baseUrl}/StripeWebhook`,
       payload
+    );
+  }
+
+  getPaymentStatus(paymentId: string): Observable<RequestResponse<PaymentStatusResponseDTO>> {
+    const token = this.authService.getToken();
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    return this.http.get<RequestResponse<PaymentStatusResponseDTO>>(
+      `${this.baseUrl}/GetPaymentStatus/${paymentId}`,
+      { headers }
     );
   }
 }

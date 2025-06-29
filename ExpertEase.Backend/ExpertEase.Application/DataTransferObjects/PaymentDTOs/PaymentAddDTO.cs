@@ -135,6 +135,7 @@ public class PaymentReleaseDTO
 public class PaymentStatusResponseDTO
 {
     public Guid PaymentId { get; set; }
+    public Guid? ServiceTaskId { get; set; }
     public string Status { get; set; } = null!;
     public bool IsEscrowed { get; set; }
     public bool CanBeReleased { get; set; }

@@ -55,12 +55,13 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
                 return ServiceResponse.CreateErrorResponse<ServiceTask>(result.Error);
 
             // Update payment with service task ID
+            Console.WriteLine("Service Task Id: " + result.Result?.Id);
             payment.ServiceTaskId = result.Result?.Id;
             await repository.UpdateAsync(payment, cancellationToken);
 
             return ServiceResponse.CreateSuccessResponse();
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Console.WriteLine($"Error creating service task from payment: {ex.Message}");
             return ServiceResponse.CreateErrorResponse<ServiceTask>(new(HttpStatusCode.InternalServerError, "Service task creation failed", ErrorCodes.TechnicalError));

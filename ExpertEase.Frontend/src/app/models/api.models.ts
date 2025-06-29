@@ -451,6 +451,7 @@ export interface PaymentReportDTO {
 
 export interface PaymentStatusResponseDTO {
   paymentId: string;
+  serviceTaskId: string;
   status: string;
   isEscrowed: boolean;          // NEW: Is money in escrow
   canBeReleased: boolean;       // NEW: Can be released to specialist

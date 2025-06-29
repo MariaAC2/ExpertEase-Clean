@@ -12,6 +12,7 @@ public class ServiceTaskProjectionSpec: Specification<ServiceTask, ServiceTaskDT
         Query.Select(e => new ServiceTaskDTO
         {
             Id = e.Id,
+            PaymentId = e.PaymentId,
             UserId = e.UserId,
             SpecialistId = e.SpecialistId,
             StartDate = e.StartDate,

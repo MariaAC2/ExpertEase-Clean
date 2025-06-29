@@ -73,7 +73,7 @@ public class PaymentController(IUserService userService, IPaymentService payment
     /// ✅ NEW: Get detailed payment status including escrow information
     /// </summary>
     [Authorize]
-    [HttpGet("{paymentId:guid}/status")]
+    [HttpGet("{paymentId:guid}")]
     public async Task<ActionResult<RequestResponse<PaymentStatusResponseDTO>>> GetPaymentStatus(
         [FromRoute] Guid paymentId)
     {
@@ -81,8 +81,6 @@ public class PaymentController(IUserService userService, IPaymentService payment
         
         if (currentUser.Result == null)
             return CreateErrorMessageResult<PaymentStatusResponseDTO>(currentUser.Error);
-
-        // TODO: Add authorization logic - only allow users related to the payment
         
         return CreateRequestResponseFromServiceResponse(
             await paymentService.GetPaymentStatus(paymentId));

@@ -19,17 +19,15 @@
     <div class="big-price">
       {{ serviceTask.price | currency:'RON':'symbol':'1.2-2' }}
     </div>
-    <div *ngIf="serviceTask.status === 'Confirmed'">
-      <p *ngIf="userRole === 'Client'" class="status-button status-pending">În așteptare...</p>
+    <p *ngIf="userRole === 'Client'" class="status-button">În așteptare...</p>
 
-      <div *ngIf="userRole === 'Specialist'" class="action-buttons">
-        <button class="accept-btn" (click)="completeTask()">
-          Confirmă
-        </button>
-        <button class="reject-btn" (click)="cancelTask()">
-          Anulează
-        </button>
-      </div>
+    <div *ngIf="userRole === 'Specialist'" class="action-buttons">
+      <button class="accept-btn" (click)="completeTask()">
+        Confirmă
+      </button>
+      <button class="reject-btn" (click)="cancelTask()">
+        Anulează
+      </button>
     </div>
   </div>
 </div>

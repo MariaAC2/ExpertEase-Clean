@@ -24,6 +24,7 @@ public class ServiceTaskController(IUserService userService, IServiceTaskService
             ? CreateRequestResponseFromServiceResponse(await specialistService.CreateServiceTaskFromPayment(paymentId))
             : CreateErrorMessageResult(currentUser.Error);
     }
+    
     [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RequestResponse<ServiceTaskDTO>>> GetById([FromRoute] Guid id)

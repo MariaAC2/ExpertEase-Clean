@@ -431,6 +431,7 @@ public static class PaymentExtensions
         return new PaymentStatusResponseDTO
         {
             PaymentId = payment.Id,
+            ServiceTaskId = payment.ServiceTaskId ?? null,
             Status = payment.Status.GetStatusMessage(),
             IsEscrowed = payment.IsInEscrow(),
             CanBeReleased = payment.CanBeReleased(),
