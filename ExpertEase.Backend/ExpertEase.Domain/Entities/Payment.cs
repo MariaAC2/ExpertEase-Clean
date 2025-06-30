@@ -27,7 +27,10 @@ public class Payment : BaseEntity
     public DateTime? PaidAt { get; set; }           // When client paid
     public DateTime? EscrowReleasedAt { get; set; } // When money sent to specialist
     public DateTime? CancelledAt { get; set; }
+    public string? RefundReference { get; set; } // Stripe Transfer ID (e.g., "tr_1234567890")
     public DateTime? RefundedAt { get; set; }
+    
+    public bool IsRefunded { get; set; }
     
     public string? Currency { get; set; } = "RON";
     
@@ -40,6 +43,12 @@ public class Payment : BaseEntity
     public decimal PlatformRevenue { get; set; } = 0;    // Platform's actual revenue
     public bool FeeCollected { get; set; } = false;     // Whether platform fee is secured
     public Guid? ServiceTaskId { get; set; }
+    
+    // 🆕 Add these fields for money transfer tracking
+    public string? TransferReference { get; set; } // Stripe Transfer ID (e.g., "tr_1234567890")
+    public DateTime? TransferredAt { get; set; }    // When the money was transferred
+    public bool IsTransferred { get; set; }
+    
     // ✅ NEW: Business logic helpers (domain-only, no DTO dependencies)
     public bool CanBeReleased => Status == PaymentStatusEnum.Completed && TransferredAmount == 0;
     public bool CanBeRefunded => Status == PaymentStatusEnum.Completed || Status == PaymentStatusEnum.Escrowed;

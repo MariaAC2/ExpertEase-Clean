@@ -37,6 +37,8 @@ import { ReplyService } from '../../services/reply.service';
 import { PhotoBubbleComponent } from '../../shared/photo-bubble/photo-bubble.component';
 import { PhotoService } from '../../services/photo.service';
 import { PaymentService } from '../../services/payment.service';
+import {ReviewService} from '../../services/review.service';
+import {ReviewFormComponent} from '../../shared/review-form/review-form.component';
 
 @Component({
   selector: 'app-messages',
@@ -58,7 +60,8 @@ import { PaymentService } from '../../services/payment.service';
     ServicePaymentComponent,
     NgClass,
     NotificationDisplayComponent,
-    PhotoBubbleComponent
+    PhotoBubbleComponent,
+    ReviewFormComponent
   ],
   styleUrl: './messages.component.scss'
 })
@@ -78,6 +81,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   // Reply form state
   isReplyFormVisible: boolean = false;
+  isReviewFormVisible: boolean = false;
   currentRequestId: string | null = null;
   chatOverlayVisible: boolean = false;
   replyFormData = {
@@ -91,10 +95,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
     price: null as number | null
   };
 
+  reviewFormData = {
+    receiverUserId: '',
+    rating: 5,
+    content: ''
+  };
+
   // Service confirmation state
   isServiceConfirmationVisible: boolean = false;
   currentPaymentDetails: any;
   currentServiceTask: any;
+  currentServiceTaskForReview: any;
   showPaymentFlow: boolean = false;
 
   // Photo upload state
@@ -129,6 +140,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private readonly photoService: PhotoService,
     private readonly replyService: ReplyService,
     private readonly paymentService: PaymentService,
+    private readonly reviewService: ReviewService,
   ) {}
 
   async ngOnInit() {
@@ -208,34 +220,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(notification => this.notificationService.showNotification(notification));
 
-      // Subscribe to conversation updates
+      // 🆕 Enhanced conversation update subscription with review events
       this.signalRHandler.conversationUpdate$
         .pipe(takeUntil(this.destroy$))
         .subscribe(update => this.handleConversationUpdate(update));
 
-      // Subscribe to payment flow state changes
-      this.paymentFlowService.paymentFlow$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(state => {
-          console.log('💳 Payment flow state changed:', state);
-          this.showPaymentFlow = state.isActive;
-          this.cdr.detectChanges();
-        });
-
-      // Subscribe to conversation action refresh events
-      this.conversationActions.refresh$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.refreshCurrentConversation();
-          this.loadExchanges(false);
-          // ✅ Also refresh service task when conversation updates
-          setTimeout(() => {
-            this.loadCurrentServiceTaskFast();
-          }, 1000);
-        });
-
-      // Subscribe to payment completion events
-      this.subscribeToPaymentCompletion();
+      // ... rest of existing initialization code ...
 
     } catch (error) {
       console.error('Failed to initialize services:', error);
@@ -249,10 +239,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     switch (update.type) {
       case 'refresh-current':
         this.refreshCurrentConversation();
-        // ✅ Refresh service task when conversation refreshes
-        setTimeout(() => {
-          this.loadCurrentServiceTaskFast();
-        }, 500);
         break;
       case 'refresh-list':
         this.loadExchanges(false);
@@ -260,12 +246,118 @@ export class MessagesComponent implements OnInit, OnDestroy {
       case 'refresh-both':
         this.refreshCurrentConversation();
         this.loadExchanges(false);
-        // ✅ Refresh service task when both refresh
-        setTimeout(() => {
-          this.loadCurrentServiceTaskFast();
-        }, 500);
+        break;
+      case 'service-completed':
+        this.handleServiceCompletedEvent(update.data);
+        break;
+      case 'review-prompt':
+        console.log('📝 Review prompt event received:', update.data);
+        this.handleReviewPromptEvent(update.data);
         break;
     }
+  }
+
+  private handleServiceCompletedEvent(data: any): void {
+    console.log('🎉 Service completed event received:', data);
+
+    // Refresh service task
+    setTimeout(() => {
+      this.loadCurrentServiceTaskFast();
+    }, 500);
+
+    // Show completion notification if not already shown
+    this.notificationService.showNotification({
+      type: 'success',
+      message: 'Serviciul a fost finalizat cu succes! Poți lăsa o recenzie.'
+    });
+  }
+
+  private handleReviewPromptEvent(data: any): void {
+    console.log('📝 Review prompt event received:', data);
+
+    // Auto-open review form if current service task matches
+    if (this.currentServiceTask?.id === data.TaskId) {
+      // Show notification first
+      this.notificationService.showNotification({
+        type: 'info',
+        message: 'Poți lăsa o recenzie pentru serviciul finalizat!'
+      });
+
+      // Optional: Auto-open review form after a delay
+      setTimeout(() => {
+        this.openReviewForm();
+      }, 2000);
+    }
+  }
+
+  openReviewForm(): void {
+    if (!this.currentServiceTask) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Nu s-a găsit informația despre serviciu pentru recenzie.'
+      });
+      return;
+    }
+
+    // Determine who to review based on current user role
+    const receiverUserId = this.determineReviewReceiver();
+
+    if (!receiverUserId) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Nu s-a putut determina cui să îi dai recenzia.'
+      });
+      return;
+    }
+
+    // Set up the review form data
+    this.reviewFormData = {
+      receiverUserId: receiverUserId,  // Who will receive the review
+      rating: 5,                      // Default 5 stars
+      content: ''                     // Empty review text
+    };
+
+    // 🆕 These lines make the review form visible:
+    this.isReviewFormVisible = true;    // Show the review form overlay
+    this.chatOverlayVisible = true;     // Block chat interaction
+    this.cdr.detectChanges();          // Update the UI
+  }
+
+  /**
+   * Hide the review form
+   */
+  hideReviewForm(): void {
+    this.isReviewFormVisible = false;   // Hide the review form overlay
+    this.chatOverlayVisible = false;    // Unblock chat interaction
+    this.reviewFormData = {             // Reset form data
+      receiverUserId: '',
+      rating: 5,
+      content: ''
+    };
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Determine who should receive the review
+   */
+  private determineReviewReceiver(): string | null {
+    if (!this.currentServiceTask || !this.userId) {
+      return null;
+    }
+
+    const task = this.currentServiceTask;
+
+    // If current user is the client, review the specialist
+    if (this.userId === task.userId) {
+      return task.specialistId;
+    }
+
+    // If current user is the specialist, review the client
+    if (this.userId === task.specialistId) {
+      return task.userId;
+    }
+
+    return null;
   }
 
   /**
@@ -711,12 +803,57 @@ export class MessagesComponent implements OnInit, OnDestroy {
   /**
    * Handle service task completion
    */
-  onServiceTaskCompleted(event: { replyId: string; taskId: string }): void {
-    console.log('Service task completed:', event);
-    if (this.currentServiceTask) {
-      this.currentServiceTask.status = 'Completed';
-      this.currentServiceTask.completedAt = new Date();
+  /**
+   * Handle service task completion - ACTUALLY call the backend API
+   */
+  async onServiceTaskCompleted(event: { replyId: string; taskId: string }): Promise<void> {
+    console.log('🎉 Service task completed locally:', event);
+
+    if (!this.currentServiceTask) {
+      console.error('❌ No current service task to complete');
+      return;
     }
+
+    try {
+      // Show immediate feedback
+      this.notificationService.showNotification({
+        type: 'info',
+        message: 'Se finalizează serviciul și se procesează transferul de bani...'
+      });
+
+      // 🆕 ACTUALLY call the backend API using your existing method
+      console.log('📞 Calling backend to complete service task:', event.taskId);
+
+      const updateResult = await firstValueFrom(
+        this.taskService.completeServiceTask(event.taskId)
+      );
+
+      if (updateResult) {
+        console.log('✅ Service task completed successfully on backend');
+
+        // Update local state
+        this.currentServiceTask.status = 'Completed';
+        this.currentServiceTask.completedAt = new Date();
+        this.currentServiceTaskForReview = this.currentServiceTask;
+
+        // Show success notification
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Serviciul a fost finalizat cu succes! Plata este în curs de transfer.'
+        });
+      } else {
+        throw new Error('Failed to complete service task');
+      }
+
+    } catch (error) {
+      console.error('❌ Error completing service task:', error);
+
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'A apărut o eroare la finalizarea serviciului. Te rugăm să încerci din nou.'
+      });
+    }
+
     this.cdr.detectChanges();
   }
 
@@ -724,12 +861,75 @@ export class MessagesComponent implements OnInit, OnDestroy {
    * Handle service task cancellation
    */
   onServiceTaskCancelled(event: { replyId: string; taskId: string }): void {
-    console.log('Service task cancelled:', event);
+    console.log('❌ Service task cancelled:', event);
+
     if (this.currentServiceTask) {
       this.currentServiceTask.status = 'Cancelled';
       this.currentServiceTask.cancelledAt = new Date();
+
+      this.notificationService.showNotification({
+        type: 'warning',
+        message: 'Serviciul a fost anulat. Se procesează rambursarea...'
+      });
     }
+
     this.cdr.detectChanges();
+  }
+
+  async onReviewSubmit(reviewData: any): Promise<void> {
+    if (!this.currentServiceTaskForReview) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Nu s-a găsit serviciul pentru care să lași recenzia.'
+      });
+      return;
+    }
+
+    try {
+      console.log('📝 Submitting review:', reviewData);
+
+      // Submit review using the review service
+      const response = await firstValueFrom(
+        this.reviewService.addReview(this.currentServiceTaskForReview.id, {
+          receiverUserId: reviewData.receiverUserId,
+          rating: reviewData.rating,
+          content: reviewData.content
+        })
+      );
+
+      if (response) {
+        this.notificationService.showNotification({
+          type: 'success',
+          message: 'Recenzia a fost trimisă cu succes! Mulțumim pentru feedback.'
+        });
+
+        this.hideReviewForm();
+
+        // The backend will automatically:
+        // 1. Send review notification to the other party
+        // 2. Check if both parties have reviewed
+        // 3. Update service task status to 'Reviewed' if both reviewed
+        // 4. Send appropriate SignalR notifications
+
+        // Refresh service task to get updated status
+        setTimeout(() => {
+          this.loadCurrentServiceTaskFast();
+        }, 1000);
+
+        // Clear the service task for review since review is completed
+        this.currentServiceTaskForReview = null;
+
+      } else {
+        throw new Error('Failed to submit review');
+      }
+
+    } catch (error) {
+      console.error('❌ Error submitting review:', error);
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'A apărut o eroare la trimiterea recenziei. Te rugăm să încerci din nou.'
+      });
+    }
   }
 
   // Add these methods to the MessagesComponent class

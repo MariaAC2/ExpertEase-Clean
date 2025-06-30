@@ -15,7 +15,9 @@ using ExpertEase.Infrastructure.Repositories;
 
 namespace ExpertEase.Infrastructure.Services;
 
-public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository, 
+public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
+    IConversationNotifier conversationNotifier,
+    IStripeAccountService stripeAccountService,
     IReviewService reviewService): IServiceTaskService
 {
     public async Task<ServiceResponse> CreateServiceTaskFromPayment(
@@ -183,34 +185,371 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
         return ServiceResponse.CreateSuccessResponse();
     }
     
-    public async Task<ServiceResponse> UpdateServiceTaskStatus(JobStatusUpdateDTO serviceTask, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse> UpdateServiceTaskStatus(
+        JobStatusUpdateDTO serviceTask, 
+        UserDTO? requestingUser = null, 
+        CancellationToken cancellationToken = default)
     {
         var task = await repository.GetAsync(new ServiceTaskSpec(serviceTask.Id), cancellationToken);
         
         if (task == null)
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Service task with this id not found!", ErrorCodes.EntityNotFound));
 
-        if (serviceTask.Status == JobStatusEnum.Completed)
+        var oldStatus = task.Status;
+        var newStatus = serviceTask.Status;
+
+        // 🆕 Handle status transitions
+        switch (newStatus)
         {
-            // create and send review
-            // create transfer
-            task.CompletedAt = DateTime.UtcNow;
-            task.Status = JobStatusEnum.Completed;
-            // var addTransferResult = await transactionService.AddTransfer(task, cancellationToken);
-            //
-            // if (!addTransferResult.IsOk)
-            // {
-            //     return addTransferResult;
-            // }
-        }
-        else if (serviceTask.Status == JobStatusEnum.Cancelled)
-        {
-            task.CancelledAt = DateTime.UtcNow;
-            task.Status = JobStatusEnum.Cancelled;
+            case JobStatusEnum.Completed:
+                var completionResult = await HandleServiceCompletion(task, requestingUser, cancellationToken);
+                if (!completionResult.IsSuccess)
+                {
+                    return completionResult; // Don't update status if completion fails
+                }
+                break;
+                
+            case JobStatusEnum.Cancelled:
+                await HandleServiceCancellation(task, requestingUser, cancellationToken);
+                break;
+                
+            case JobStatusEnum.Reviewed:
+                await HandleServiceReviewed(task, requestingUser, cancellationToken);
+                break;
         }
 
         await repository.UpdateAsync(task, cancellationToken);
+        
+        // Send status change notifications
+        await NotifyStatusChange(task, oldStatus, newStatus);
+        
         return ServiceResponse.CreateSuccessResponse();
+    }
+
+    // 🆕 Handle service completion (specialist clicks "Serviciu Finalizat")
+    private async Task<ServiceResponse> HandleServiceCompletion(ServiceTask task, UserDTO? requestingUser, CancellationToken cancellationToken)
+    {
+        try
+        {
+            Console.WriteLine($"✅ Processing service completion for task {task.Id}");
+            
+            // Step 1: Transfer money to specialist
+            var transferResult = await TransferMoneyToSpecialist(task, cancellationToken);
+            if (!transferResult.IsSuccess)
+            {
+                Console.WriteLine($"❌ Money transfer failed: {transferResult.Error?.Message}");
+                return transferResult; // Don't complete service if transfer fails
+            }
+
+            // Step 2: Update task status
+            task.Status = JobStatusEnum.Completed;
+            task.CompletedAt = DateTime.UtcNow;
+            task.TransferReference = transferResult.Result;
+            
+            Console.WriteLine($"✅ Service {task.Id} completed successfully with transfer {transferResult.Result}");
+            
+            // Step 3: Notify both parties about completion and review opportunity
+            await NotifyBothPartiesForReviews(task);
+            
+            return ServiceResponse.CreateSuccessResponse();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error completing service {task.Id}: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse(new(
+                HttpStatusCode.InternalServerError, 
+                "Failed to complete service and transfer money", 
+                ErrorCodes.TechnicalError));
+        }
+    }
+
+    // 🆕 Handle service cancellation
+    private async Task HandleServiceCancellation(ServiceTask task, UserDTO? requestingUser, CancellationToken cancellationToken)
+    {
+        task.Status = JobStatusEnum.Cancelled;
+        task.CancelledAt = DateTime.UtcNow;
+        
+        Console.WriteLine($"❌ Service {task.Id} cancelled");
+
+        // Process refund for cancelled services
+        await ProcessCancellationRefund(task, cancellationToken);
+        
+        // Notify both parties about cancellation
+        var cancellationPayload = new
+        {
+            TaskId = task.Id,
+            Message = "Serviciul a fost anulat.",
+            CancelledAt = task.CancelledAt
+        };
+        
+        await conversationNotifier.NotifyServiceStatusChanged(task.UserId, cancellationPayload);
+        await conversationNotifier.NotifyServiceStatusChanged(task.SpecialistId, cancellationPayload);
+    }
+
+    // 🆕 Handle when service moves to reviewed state (both parties completed reviews)
+    private async Task HandleServiceReviewed(ServiceTask task, UserDTO? requestingUser, CancellationToken cancellationToken)
+    {
+        task.Status = JobStatusEnum.Reviewed;
+        task.ReviewedAt = DateTime.UtcNow;
+        
+        Console.WriteLine($"⭐ Service {task.Id} marked as reviewed - both parties left reviews");
+        
+        // Notify both parties that review process is complete
+        var reviewCompletedPayload = new
+        {
+            TaskId = task.Id,
+            Message = "Procesul de recenzie a fost finalizat. Mulțumim pentru feedback!",
+            task.ReviewedAt
+        };
+        
+        await conversationNotifier.NotifyServiceStatusChanged(task.UserId, reviewCompletedPayload);
+        await conversationNotifier.NotifyServiceStatusChanged(task.SpecialistId, reviewCompletedPayload);
+    }
+
+    // 🆕 Transfer money to specialist
+    private async Task<ServiceResponse<string>> TransferMoneyToSpecialist(ServiceTask task, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get payment details
+            var payment = await repository.GetAsync(new PaymentSpec(task.PaymentId), cancellationToken);
+            if (payment == null)
+            {
+                return ServiceResponse.CreateErrorResponse<string>(new(
+                    HttpStatusCode.NotFound, 
+                    "Payment not found for this service task", 
+                    ErrorCodes.EntityNotFound));
+            }
+
+            // Get specialist's Stripe account
+            var specialist = await repository.GetAsync(new UserSpec(task.SpecialistId), cancellationToken);
+            if (specialist?.SpecialistProfile.StripeAccountId == null)
+            {
+                return ServiceResponse.CreateErrorResponse<string>(new(
+                    HttpStatusCode.BadRequest, 
+                    "Specialist doesn't have a Stripe account configured", 
+                    ErrorCodes.Invalid));
+            }
+
+            Console.WriteLine($"💰 Transferring money for completed service:");
+            Console.WriteLine($"   - Service Task: {task.Id}");
+            Console.WriteLine($"   - Payment Intent: {payment.StripePaymentIntentId}");
+            Console.WriteLine($"   - Service Amount: {task.Price} RON");
+            Console.WriteLine($"   - Specialist Account: {specialist.SpecialistProfile.StripeAccountId}");
+
+            // Transfer the service amount to specialist
+            var transferResult = await stripeAccountService.TransferToSpecialist(
+                payment.StripePaymentIntentId,
+                specialist.SpecialistProfile.StripeAccountId,
+                task.Price,
+                $"Payment for completed service: {task.Description}"
+            );
+
+            if (transferResult.IsSuccess)
+            {
+                Console.WriteLine($"✅ Transfer successful: {transferResult.Result}");
+                
+                // Update payment record
+                payment.TransferReference = transferResult.Result;
+                payment.TransferredAt = DateTime.UtcNow;
+                payment.IsTransferred = true;
+                await repository.UpdateAsync(payment, cancellationToken);
+            }
+
+            return transferResult;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Transfer error: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse<string>(new(
+                HttpStatusCode.InternalServerError, 
+                $"Transfer failed: {ex.Message}", 
+                ErrorCodes.TechnicalError));
+        }
+    }
+
+    // 🆕 Process refund for cancelled services
+    private async Task ProcessCancellationRefund(ServiceTask task, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var payment = await repository.GetAsync(new PaymentSpec(task.PaymentId), cancellationToken);
+            if (payment == null || payment.IsTransferred)
+            {
+                Console.WriteLine($"⚠️ Cannot refund: Payment not found or already transferred");
+                return;
+            }
+
+            Console.WriteLine($"💸 Processing refund for cancelled service {task.Id}");
+
+            var refundResult = await stripeAccountService.RefundPayment(
+                payment.StripePaymentIntentId,
+                task.Price,
+                $"Service cancelled: {task.Description}"
+            );
+
+            if (refundResult.IsSuccess)
+            {
+                Console.WriteLine($"✅ Refund successful: {refundResult.Result}");
+                
+                // Update payment record
+                payment.RefundReference = refundResult.Result;
+                payment.RefundedAt = DateTime.UtcNow;
+                payment.IsRefunded = true;
+                await repository.UpdateAsync(payment, cancellationToken);
+
+                // Notify client about refund
+                await conversationNotifier.NotifyServiceStatusChanged(task.UserId, new
+                {
+                    TaskId = task.Id,
+                    Message = $"Serviciul a fost anulat și suma de {task.Price} RON va fi returnată în 5-10 zile lucrătoare.",
+                    RefundAmount = task.Price,
+                    RefundId = refundResult.Result
+                });
+            }
+            else
+            {
+                Console.WriteLine($"❌ Refund failed: {refundResult.Error?.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Refund processing error: {ex.Message}");
+        }
+    }
+
+    // 🆕 Notify both parties for reviews after completion
+    private async Task NotifyBothPartiesForReviews(ServiceTask task)
+    {
+        Console.WriteLine($"🎯 Starting review notifications for service task {task.Id}");
+        Console.WriteLine($"   - Client: {task.User?.FullName} (ID: {task.UserId})");
+        Console.WriteLine($"   - Specialist: {task.Specialist?.FullName} (ID: {task.SpecialistId})");
+
+        var reviewPayload = new
+        {
+            TaskId = task.Id,
+            Message = "Serviciul a fost finalizat cu succes și plata a fost transferată! Poți lăsa o recenzie pentru a ajuta comunitatea.",
+            ServiceDescription = task.Description,
+            CompletedAt = task.CompletedAt,
+            TransferCompleted = !string.IsNullOrEmpty(task.TransferReference)
+        };
+
+        try
+        {
+            // Notify client - they can review the specialist
+            Console.WriteLine($"📤 Sending service completion notification to CLIENT: {task.User?.FullName}");
+            await conversationNotifier.NotifyServiceCompleted(task.UserId, reviewPayload);
+            
+            Console.WriteLine($"📝 Sending review prompt to CLIENT to review SPECIALIST");
+            await conversationNotifier.NotifyReviewPrompt(task.UserId, new
+            {
+                TaskId = task.Id,
+                ReviewTargetId = task.SpecialistId,
+                ReviewTargetName = task.Specialist?.FullName ?? "Specialist",
+                ReviewTargetRole = "specialist",
+                Message = $"Poți lăsa o recenzie pentru specialistul {task.Specialist?.FullName ?? "Specialist"}!"
+            });
+
+            // Notify specialist - they can review the client
+            Console.WriteLine($"📤 Sending service completion notification to SPECIALIST: {task.Specialist?.FullName}");
+            await conversationNotifier.NotifyServiceCompleted(task.SpecialistId, reviewPayload);
+            
+            Console.WriteLine($"📝 Sending review prompt to SPECIALIST to review CLIENT");
+            await conversationNotifier.NotifyReviewPrompt(task.SpecialistId, new
+            {
+                TaskId = task.Id,
+                ReviewTargetId = task.UserId,
+                ReviewTargetName = task.User?.FullName ?? "Client",
+                ReviewTargetRole = "client",
+                Message = $"Poți lăsa o recenzie pentru clientul {task.User?.FullName ?? "Client"}!"
+            });
+
+            Console.WriteLine($"✅ All review notifications sent successfully for service task {task.Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error sending review notifications: {ex.Message}");
+            Console.WriteLine($"   Stack trace: {ex.StackTrace}");
+        }
+    }
+
+    // 🆕 Send status change notifications
+    private async Task NotifyStatusChange(ServiceTask task, JobStatusEnum oldStatus, JobStatusEnum newStatus)
+    {
+        var statusPayload = new
+        {
+            TaskId = task.Id,
+            OldStatus = oldStatus.ToString(),
+            NewStatus = newStatus.ToString(),
+            UpdatedAt = DateTime.UtcNow,
+            HasMoneyTransfer = newStatus == JobStatusEnum.Completed
+        };
+
+        await conversationNotifier.NotifyServiceStatusChanged(task.UserId, statusPayload);
+        await conversationNotifier.NotifyServiceStatusChanged(task.SpecialistId, statusPayload);
+    }
+
+    // 🆕 Method to be called when reviews are submitted
+    public async Task<ServiceResponse> CheckAndUpdateReviewStatus(Guid taskId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var task = await repository.GetAsync(new ServiceTaskSpec(taskId), cancellationToken);
+            if (task == null)
+                return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Service task not found", ErrorCodes.EntityNotFound));
+
+            // Only update if task is currently completed (not already reviewed)
+            if (task.Status != JobStatusEnum.Completed)
+            {
+                Console.WriteLine($"⚠️ Service task {taskId} is not in Completed status (current: {task.Status}), skipping review check");
+                return ServiceResponse.CreateSuccessResponse();
+            }
+
+            // Check if both parties have submitted reviews
+            var reviewsResponse = await reviewService.GetReviewsForServiceTask(taskId, cancellationToken);
+            
+            if (!reviewsResponse.IsSuccess || reviewsResponse.Result == null)
+            {
+                Console.WriteLine($"❌ Failed to get reviews for task {taskId}: {reviewsResponse.Error?.Message}");
+                return ServiceResponse.CreateSuccessResponse(); // Don't fail the whole operation
+            }
+
+            var reviews = reviewsResponse.Result;
+            Console.WriteLine($"📊 Found {reviews.Count} reviews for service task {taskId}");
+
+            // 🆕 IMPORTANT: Check if both CLIENT and SPECIALIST have reviewed
+            var clientReviewed = reviews.Any(r => r.SenderUserId == task.UserId);
+            var specialistReviewed = reviews.Any(r => r.SenderUserId == task.SpecialistId);
+
+            Console.WriteLine($"👤 Client ({task.User?.FullName}) reviewed: {clientReviewed}");
+            Console.WriteLine($"🔧 Specialist ({task.Specialist?.FullName}) reviewed: {specialistReviewed}");
+
+            // If both client and specialist have left reviews, mark as reviewed
+            if (clientReviewed && specialistReviewed)
+            {
+                Console.WriteLine($"⭐ Both parties have reviewed service task {taskId} - updating to Reviewed status");
+                
+                task.Status = JobStatusEnum.Reviewed;
+                task.ReviewedAt = DateTime.UtcNow;
+                await repository.UpdateAsync(task, cancellationToken);
+                
+                await HandleServiceReviewed(task, null, cancellationToken);
+            }
+            else
+            {
+                Console.WriteLine($"📝 Waiting for more reviews - Client: {clientReviewed}, Specialist: {specialistReviewed}");
+            }
+
+            return ServiceResponse.CreateSuccessResponse();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error checking review status for task {taskId}: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse(new(
+                HttpStatusCode.InternalServerError, 
+                "Error checking review status", 
+                ErrorCodes.TechnicalError));
+        }
     }
     
     public async Task<ServiceResponse> DeleteServiceTask(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default)

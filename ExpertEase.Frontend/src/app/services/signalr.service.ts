@@ -315,11 +315,47 @@ export class SignalRService {
   }
 
   /**
+   * Listen for service completion notifications
+   */
+  public onServiceCompleted(callback: (payload: any) => void): void {
+    this.on('ServiceCompleted', callback);
+  }
+
+  /**
+   * Listen for review received notifications
+   */
+  public onReviewReceived(callback: (payload: any) => void): void {
+    this.on('ReviewReceived', callback);
+  }
+
+  /**
+   * Listen for review prompt notifications
+   */
+  public onReviewPrompt(callback: (payload: any) => void): void {
+    this.on('ReviewPrompt', callback);
+  }
+
+  /**
+   * Listen for service status changes
+   */
+  public onServiceStatusChanged(callback: (payload: any) => void): void {
+    this.on('ServiceStatusChanged', callback);
+  }
+
+  public removeReviewListeners(): void {
+    this.off('ServiceCompleted');
+    this.off('ReviewReceived');
+    this.off('ReviewPrompt');
+    this.off('ServiceStatusChanged');
+  }
+
+  /**
    * Remove all listeners
    */
   public removeAllListeners(): void {
     this.removeMessageListeners();
     this.removeRequestListeners();
     this.removeReplyListeners();
+    this.removeReviewListeners(); // 🆕 Add this line
   }
 }

@@ -189,6 +189,22 @@ public class StripeAccountService : IStripeAccountService
     {
         try
         {
+            // 🆕 Check if we're in test mode and ensure sufficient funds
+            var isTestMode = _stripeConfiguration.SecretKey.StartsWith("sk_test_");
+            
+            if (isTestMode)
+            {
+                Console.WriteLine($"🧪 Test mode detected, ensuring sufficient funds...");
+                var fundsResult = await EnsureSufficientFunds(amount);
+                if (!fundsResult.IsSuccess)
+                {
+                    return ServiceResponse.CreateErrorResponse<string>(fundsResult.Error);
+                }
+                
+                // Wait a moment for funds to be available
+                await Task.Delay(1000);
+            }
+
             Console.WriteLine($"🔄 Transferring {amount} RON to specialist {specialistAccountId}");
             Console.WriteLine($"📝 Reason: {reason}");
 
@@ -206,6 +222,7 @@ public class StripeAccountService : IStripeAccountService
                     { "transfer_reason", reason },
                     { "platform", "ExpertEase" },
                     { "transfer_type", "service_completion" },
+                    { "test_mode", isTestMode.ToString() },
                     { "created_at", DateTime.UtcNow.ToString("O") }
                 }
             };
@@ -220,6 +237,50 @@ public class StripeAccountService : IStripeAccountService
         catch (StripeException ex)
         {
             Console.WriteLine($"❌ Stripe transfer failed: {ex.Message}");
+            
+            // 🆕 If insufficient funds error, try to create funds and retry once
+            if (ex.Message.Contains("insufficient available funds") && _stripeConfiguration.SecretKey.StartsWith("sk_test_"))
+            {
+                Console.WriteLine($"🔄 Insufficient funds detected, creating test funds and retrying...");
+                
+                var fundsResult = await EnsureSufficientFunds(amount);
+                if (fundsResult.IsSuccess)
+                {
+                    await Task.Delay(2000); // Wait for funds to be available
+                    
+                    // Retry the transfer once
+                    try
+                    {
+                        var transferService = new TransferService();
+                        var transferOptions = new TransferCreateOptions
+                        {
+                            Amount = (long)(amount * 100),
+                            Currency = "ron",
+                            Destination = specialistAccountId,
+                            Description = reason + " (retry after funding)",
+                            Metadata = new Dictionary<string, string>
+                            {
+                                { "payment_intent_id", paymentIntentId },
+                                { "transfer_reason", reason },
+                                { "platform", "ExpertEase" },
+                                { "transfer_type", "service_completion_retry" },
+                                { "created_at", DateTime.UtcNow.ToString("O") }
+                            }
+                        };
+
+                        var transfer = await transferService.CreateAsync(transferOptions);
+                        Console.WriteLine($"✅ Transfer successful on retry: {transfer.Id}");
+                        return ServiceResponse.CreateSuccessResponse(transfer.Id);
+                    }
+                    catch (StripeException retryEx)
+                    {
+                        Console.WriteLine($"❌ Transfer failed even after funding: {retryEx.Message}");
+                        return ServiceResponse.CreateErrorResponse<string>(
+                            new(HttpStatusCode.BadRequest, $"Transfer failed after retry: {retryEx.Message}"));
+                    }
+                }
+            }
+            
             return ServiceResponse.CreateErrorResponse<string>(
                 new(HttpStatusCode.BadRequest, $"Transfer failed: {ex.Message}"));
         }
@@ -385,6 +446,87 @@ public class StripeAccountService : IStripeAccountService
             Console.WriteLine($"❌ General error creating customer: {ex.Message}");
             return ServiceResponse.CreateErrorResponse<string>(
                 new(HttpStatusCode.InternalServerError, $"Error creating customer: {ex.Message}"));
+        }
+    }
+    
+    // Add this method to your StripeAccountService for testing
+    public async Task<ServiceResponse<string>> CreateTestFunds(decimal amount)
+    {
+        try
+        {
+            Console.WriteLine($"💰 Creating test funds: {amount} RON");
+            
+            var paymentMethodService = new PaymentMethodService();
+            var paymentIntentService = new PaymentIntentService();
+            
+            // Create a payment method with the special test card
+            var paymentMethod = await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
+            {
+                Type = "card",
+                Card = new PaymentMethodCardOptions
+                {
+                    Number = "4000000000000077", // Special card that adds to available balance
+                    ExpMonth = 12,
+                    ExpYear = DateTime.Now.Year + 1,
+                    Cvc = "123"
+                }
+            });
+            
+            // Create and confirm a payment intent
+            var paymentIntent = await paymentIntentService.CreateAsync(new PaymentIntentCreateOptions
+            {
+                Amount = (long)(amount * 100), // Convert to cents
+                Currency = "ron",
+                PaymentMethod = paymentMethod.Id,
+                Description = "Test funds for platform transfers",
+                ConfirmationMethod = "manual",
+                Confirm = true,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "purpose", "test_funds" },
+                    { "platform", "ExpertEase" }
+                }
+            });
+            
+            Console.WriteLine($"✅ Test funds created: {paymentIntent.Id}");
+            Console.WriteLine($"💰 Amount: {amount} RON added to platform balance");
+            
+            return ServiceResponse.CreateSuccessResponse(paymentIntent.Id);
+        }
+        catch (StripeException ex)
+        {
+            Console.WriteLine($"❌ Error creating test funds: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse<string>(
+                new(HttpStatusCode.BadRequest, $"Test funds creation failed: {ex.Message}"));
+        }
+    }
+
+    // Call this before doing transfers in test mode
+    public async Task<ServiceResponse> EnsureSufficientFunds(decimal transferAmount)
+    {
+        try
+        {
+            // In test mode, create funds that are 2x the transfer amount to be safe
+            var fundsNeeded = transferAmount * 2;
+            
+            Console.WriteLine($"🧪 Test mode: Ensuring sufficient funds for transfer of {transferAmount} RON");
+            var result = await CreateTestFunds(fundsNeeded);
+            
+            if (result.IsSuccess)
+            {
+                Console.WriteLine($"✅ Test funds created, ready for transfer");
+                return ServiceResponse.CreateSuccessResponse();
+            }
+            else
+            {
+                return ServiceResponse.CreateErrorResponse(result.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            return ServiceResponse.CreateErrorResponse(new(
+                HttpStatusCode.InternalServerError, 
+                $"Error ensuring funds: {ex.Message}"));
         }
     }
 }

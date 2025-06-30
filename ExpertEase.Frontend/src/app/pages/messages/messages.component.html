@@ -51,7 +51,7 @@
 
     <!-- Chat Area -->
     <div class="chat-area" *ngIf="selectedUserInfo$ | async as userInfo; else noSelection"
-         [class.overlay-active]="chatOverlayVisible || isReplyFormVisible">
+         [class.overlay-active]="chatOverlayVisible || isReplyFormVisible || isReviewFormVisible">
       <!-- Chat Header -->
       <div class="chat-header">
         <div>{{ userInfo.fullName }}</div>
@@ -198,6 +198,15 @@
           </app-reply-form>
         </div>
       </div>
+
+      <div *ngIf="isReviewFormVisible" class="review-form-overlay">
+        <app-review-form
+          [reviewForm]="reviewFormData"
+          (formSubmit)="onReviewSubmit($event)"
+          (close)="hideReviewForm()">
+        </app-review-form>
+      </div>
+
       <app-service-payment
         *ngIf="showPaymentFlow"
         [ngClass]="{'payment-active': showPaymentFlow}">
@@ -210,7 +219,8 @@
             [serviceTask]="currentServiceTask"
             [replyId]="currentServiceTask.replyId"
             (taskCompleted)="onServiceTaskCompleted($event)"
-            (taskCancelled)="onServiceTaskCancelled($event)">
+            (taskCancelled)="onServiceTaskCancelled($event)"
+            (openReviewForm)="openReviewForm()">
           </app-service-message>
         </div>
       </div>

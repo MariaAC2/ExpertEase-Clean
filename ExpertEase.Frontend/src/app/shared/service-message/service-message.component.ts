@@ -32,10 +32,12 @@ export class ServiceMessageComponent implements OnInit {
   };
 
   userRole: string | null = '';
+  userId: string | null = '';
   @Input() replyId: string = '';
 
   @Output() taskCompleted = new EventEmitter<{ replyId: string; taskId: string }>();
   @Output() taskCancelled = new EventEmitter<{ replyId: string; taskId: string }>();
+  @Output() openReviewForm = new EventEmitter<void>(); // 🆕 Add review form event
 
   constructor(
     private readonly authService: AuthService,
@@ -43,7 +45,9 @@ export class ServiceMessageComponent implements OnInit {
 
   ngOnInit(): void {
     this.userRole = this.authService.getUserRole();
-    console.log(this.userRole);
+    this.userId = this.authService.getUserId();
+    console.log('User role:', this.userRole);
+    console.log('User ID:', this.userId);
   }
 
   completeTask() {
@@ -53,4 +57,69 @@ export class ServiceMessageComponent implements OnInit {
   cancelTask() {
     this.taskCancelled.emit({ replyId: this.replyId, taskId: this.serviceTask.id });
   }
+
+  // 🆕 Open review form
+  openReview() {
+    console.log('📝 Opening review form for service task:', this.serviceTask.id);
+    this.openReviewForm.emit();
+  }
+
+  // 🆕 Check if current user is the specialist
+  isSpecialist(): boolean {
+    return this.userId === this.serviceTask.specialistId;
+  }
+
+  // 🆕 Check if current user is the client
+  isClient(): boolean {
+    return this.userId === this.serviceTask.userId;
+  }
+
+  // 🆕 Get status message for display
+  getStatusMessage(): string {
+    switch (this.serviceTask.status) {
+      case JobStatusEnum.Confirmed:
+        if (this.isClient()) {
+          return 'Asteaptă, specialistul va ajunge imediat!';
+        } else if (this.isSpecialist()) {
+          return 'Serviciul este în desfășurare';
+        }
+        return 'Serviciul este confirmat';
+
+      case JobStatusEnum.Completed:
+        return 'Serviciul a fost finalizat cu succes!';
+
+      case JobStatusEnum.Cancelled:
+        return 'Serviciul a fost anulat';
+
+      case JobStatusEnum.Reviewed:
+        return 'Serviciul a fost evaluat';
+
+      default:
+        return 'Status necunoscut';
+    }
+  }
+
+  // 🆕 Get payment message for completed services
+  getPaymentMessage(): string {
+    if (this.serviceTask.status !== JobStatusEnum.Completed) return '';
+
+    if (this.isSpecialist()) {
+      return '💰 Plata a fost transferată în contul tău Stripe.';
+    } else if (this.isClient()) {
+      return '💳 Plata a fost procesată și transferată specialistului.';
+    }
+    return '';
+  }
+
+  // 🆕 Check if can show action buttons
+  canShowActions(): boolean {
+    return this.serviceTask.status === JobStatusEnum.Confirmed && this.isSpecialist();
+  }
+
+  // 🆕 Check if can show review button
+  canShowReviewButton(): boolean {
+    return this.serviceTask.status === JobStatusEnum.Completed;
+  }
+
+  protected readonly JobStatusEnum = JobStatusEnum;
 }

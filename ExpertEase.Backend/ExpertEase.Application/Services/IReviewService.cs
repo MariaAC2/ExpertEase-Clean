@@ -3,6 +3,7 @@ using ExpertEase.Application.DataTransferObjects.ReviewDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
 using ExpertEase.Application.Requests;
 using ExpertEase.Application.Responses;
+using ExpertEase.Domain.Entities;
 
 namespace ExpertEase.Application.Services;
 
@@ -14,7 +15,9 @@ public interface IReviewService
     Task<ServiceResponse<PagedResponse<ReviewDTO>>> GetReviewsList(Guid userId, PaginationQueryParams pagination,
         CancellationToken cancellationToken = default);
     Task<ServiceResponse<PagedResponse<ReviewAdminDTO>>> GetReviewsAdmin(PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
-    // public Task<ServiceResponse<int>> GetRequestCount(CancellationToken cancellationToken = default);
+
+    Task<ServiceResponse<List<Review>>> GetReviewsForServiceTask(Guid serviceTaskId,
+        CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddReview(Guid serviceTaskId, ReviewAddDTO review, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> UpdateRequest(ReviewUpdateDTO review, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
     Task<ServiceResponse> DeleteReview(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);

@@ -13,6 +13,16 @@ public sealed class ReviewSpec : Specification<Review>
     }
 }
 
+public sealed class ReviewByServiceTaskSpec : Specification<Review>
+{
+    public ReviewByServiceTaskSpec(Guid id)
+    {
+        Query.Include(e=> e.SenderUser);
+        Query.Include(e => e.ReceiverUser);
+        Query.Where(e => e.ServiceTaskId == id);
+    }
+}
+
 public sealed class ReviewSearchSpec : Specification<Review>
 {
     public ReviewSearchSpec(Review review)

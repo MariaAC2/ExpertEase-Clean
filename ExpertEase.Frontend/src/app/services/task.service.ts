@@ -70,7 +70,7 @@ export class TaskService {
       Authorization: `Bearer ${token}`
     });
     return this.http.patch(
-      `${this.baseUrl}/Complete/${taskId}`, {}, { headers }
+      `${this.baseUrl}/Cancel/${taskId}`, {}, { headers }
     );
   }
 }

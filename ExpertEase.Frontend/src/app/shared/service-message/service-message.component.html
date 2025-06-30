@@ -1,8 +1,9 @@
 <div class="request-wrapper">
   <div class="request-summary"
        [ngClass]="{
-       'rejected-bg': serviceTask.status === 'Cancelled',
-       'accepted-bg': serviceTask.status === 'Completed',
+       'rejected-bg': serviceTask.status === JobStatusEnum.Cancelled,
+       'accepted-bg': serviceTask.status === JobStatusEnum.Completed,
+       'reviewed-bg': serviceTask.status === JobStatusEnum.Reviewed
      }">
     <h3>Serviciu</h3>
 
@@ -19,15 +20,40 @@
     <div class="big-price">
       {{ serviceTask.price | currency:'RON':'symbol':'1.2-2' }}
     </div>
-    <p *ngIf="userRole === 'Client'" class="status-button">În așteptare...</p>
 
-    <div *ngIf="userRole === 'Specialist'" class="action-buttons">
+    <!-- Status message -->
+    <div class="status-message">
+      <p class="status-text">{{ getStatusMessage() }}</p>
+
+      <!-- Payment message for completed services -->
+      <p *ngIf="serviceTask.status === JobStatusEnum.Completed" class="payment-message">
+        {{ getPaymentMessage() }}
+      </p>
+    </div>
+
+    <!-- Action buttons for specialist when service is confirmed -->
+    <div *ngIf="canShowActions()" class="action-buttons">
       <button class="accept-btn" (click)="completeTask()">
-        Confirmă
+        Finalizează
       </button>
       <button class="reject-btn" (click)="cancelTask()">
         Anulează
       </button>
     </div>
+
+    <!-- Review section for completed services -->
+    <div *ngIf="canShowReviewButton()" class="review-section">
+      <p class="review-prompt">Cum a fost experiența ta?</p>
+      <button class="review-btn" (click)="openReview()">
+        Lasă o Recenzie
+      </button>
+    </div>
+
+    <!-- Message for reviewed services -->
+    <div *ngIf="serviceTask.status === JobStatusEnum.Reviewed" class="reviewed-section">
+      <p class="reviewed-message">Procesul de evaluare a fost finalizat</p>
+      <p class="thank-you">Mulțumim pentru feedback-ul tău!</p>
+    </div>
+
   </div>
 </div>

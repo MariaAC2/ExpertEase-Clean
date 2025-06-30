@@ -89,4 +89,28 @@ public class ConversationNotifier(IHubContext<ConversationHub> hubContext) : ICo
         return hubContext.Clients.Group(receiverUserId.ToString())
             .SendAsync("ReceivePaymentFailed", payload);
     }
+    
+    public Task NotifyServiceCompleted(Guid receiverUserId, object payload)
+    {
+        return hubContext.Clients.Group(receiverUserId.ToString())
+            .SendAsync("ServiceCompleted", payload);
+    }
+
+    public Task NotifyReviewReceived(Guid receiverUserId, object payload)
+    {
+        return hubContext.Clients.Group(receiverUserId.ToString())
+            .SendAsync("ReviewReceived", payload);
+    }
+
+    public Task NotifyReviewPrompt(Guid receiverUserId, object payload)
+    {
+        return hubContext.Clients.Group(receiverUserId.ToString())
+            .SendAsync("ReviewPrompt", payload);
+    }
+
+    public Task NotifyServiceStatusChanged(Guid receiverUserId, object payload)
+    {
+        return hubContext.Clients.Group(receiverUserId.ToString())
+            .SendAsync("ServiceStatusChanged", payload);
+    }
 }

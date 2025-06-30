@@ -55,6 +55,21 @@ public class UserDetailsReviewProjectionSpec : Specification<Review, ReviewDTO>
     }
 }
 
+public class ReviewByServiceTaskProjectionSpec : Specification<Review, ReviewDTO>
+{
+    public ReviewByServiceTaskProjectionSpec(Guid serviceTaskId)
+    {
+        Query.Where(e=> e.ReceiverUserId == serviceTaskId);
+        Query.Select(x => new ReviewDTO
+        {
+            SenderUserFullName = x.SenderUser.FullName,
+            SenderUserProfilePictureUrl = x.SenderUser.ProfilePictureUrl,
+            Rating = x.Rating,
+            Content = x.Content
+        });
+    }
+}
+
 public class ReviewAdminProjectionSpec : Specification<Review, ReviewAdminDTO>
 {
     public ReviewAdminProjectionSpec(bool orderByCreatedAt = false)

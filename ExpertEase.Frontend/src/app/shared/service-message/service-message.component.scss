@@ -11,14 +11,14 @@
 }
 
 .request-summary p {
-  margin: 6px 0; /* ↓ Reduce vertical spacing */
+  margin: 6px 0;
 }
 
- .request-summary h3 {
-   margin-top: 0;
-   font-size: 1rem;
-   text-align: center;
- }
+.request-summary h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  text-align: center;
+}
 
 .request-status {
   display: inline-block;
@@ -33,21 +33,6 @@
   justify-content: center;
 }
 
-.status-pending {
-  background-color: #fff5c4;
-  color: #856404;
-}
-
-.status-accepted {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.status-rejected {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
 .accepted-bg {
   background-color: #d4edda;
   border: 4px solid #155724;
@@ -58,6 +43,12 @@
   border: 4px solid #721c24;
 }
 
+// 🆕 Add reviewed background
+.reviewed-bg {
+  background-color: #fff3cd;
+  border: 4px solid #ffc107;
+}
+
 .action-buttons {
   margin-top: 12px;
   display: flex;
@@ -66,6 +57,7 @@
 
   button {
     padding: 8px 16px;
+    border: 2px solid transparent;
     border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
@@ -76,6 +68,7 @@
   .accept-btn {
     background-color: #d4edda;
     color: #155724;
+    border-color: #28a745;
 
     &:hover {
       background-color: #9BC2A3FF;
@@ -86,6 +79,7 @@
   .reject-btn {
     background-color: #f8d7da;
     color: #721c24;
+    border-color: #dc3545;
 
     &:hover {
       background-color: #be8a90;
@@ -95,9 +89,93 @@
 }
 
 .big-price {
-  font-size: 1.5rem;        /* Bigger text */
-  font-weight: 600;         /* Semi-bold */
-  color: #1a202c;           /* A dark neutral color */
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+// 🆕 Status message styling
+.status-message {
+  text-align: center;
+  margin: 10px 0;
+
+  .status-text {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 5px;
+  }
+
+  .payment-message {
+    font-size: 0.75rem;
+    color: #2d3748;
+    font-style: italic;
+    margin-top: 5px;
+  }
+}
+
+// 🆕 Review section styling
+.review-section {
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f7fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+
+  .review-prompt {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+  }
+
+  .review-btn {
+    background-color: #ffd700;
+    color: #2d3748;
+    border: 2px solid #f6c90e;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.8rem;
+
+    &:hover {
+      background-color: #f6c90e;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// 🆕 Reviewed section styling
+.reviewed-section {
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fffbeb;
+  border-radius: 6px;
+  border: 1px solid #fbbf24;
+
+  .reviewed-message {
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+  }
+
+  .thank-you {
+    font-size: 0.75rem;
+    color: #a16207;
+    font-style: italic;
+    margin: 0;
+  }
 }
