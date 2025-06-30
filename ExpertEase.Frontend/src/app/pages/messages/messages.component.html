@@ -51,7 +51,7 @@
 
     <!-- Chat Area -->
     <div class="chat-area" *ngIf="selectedUserInfo$ | async as userInfo; else noSelection"
-         [class.overlay-active]="chatOverlayVisible || isReplyFormVisible || isReviewFormVisible">
+         [class.overlay-active]="chatOverlayVisible || isReplyFormVisible">
       <!-- Chat Header -->
       <div class="chat-header">
         <div>{{ userInfo.fullName }}</div>
@@ -104,7 +104,7 @@
               [currentUserId]="userId">
             </app-message-bubble>
 
-            <!-- Photo bubble - NEW (uses ConversationItemDTO directly) -->
+            <!-- Photo bubble -->
             <app-photo-bubble
               *ngSwitchCase="'photo'"
               [photoItem]="asTypedPhoto(itemWrapper)"
@@ -138,6 +138,14 @@
           </ng-container>
         </ng-container>
 
+        <!-- Service Review Status Badge -->
+        <div *ngIf="hasSubmittedReview && currentServiceTask" class="service-review-status">
+          <div class="review-badge">
+            <span class="review-icon">⭐</span>
+            <span>Serviciul este complet - Recenzia a fost trimisă</span>
+          </div>
+        </div>
+
         <!-- Empty messages state -->
         <div *ngIf="!(conversationItems$ | async)?.length && (loading$ | async) === false" class="empty-messages">
           <div class="empty-state-icon">💬</div>
@@ -152,7 +160,7 @@
           </div>
         </div>
 
-        <!-- 🆕 Connection status indicator -->
+        <!-- Connection status indicator -->
         <div *ngIf="(signalRService.connectionState$ | async) === false" class="connection-status offline">
           <div class="status-indicator">
             <span class="status-dot offline"></span>
@@ -187,7 +195,7 @@
         </button>
       </div>
 
-      <!-- Reply Form Overlay -->
+      <!-- Reply Form Overlay (Separate - for making offers) -->
       <div *ngIf="isReplyFormVisible" class="reply-form-overlay">
         <div class="overlay-background" (click)="hideReplyForm()"></div>
         <div class="reply-form-container">
@@ -199,36 +207,39 @@
         </div>
       </div>
 
-      <div *ngIf="isReviewFormVisible" class="review-form-overlay">
-        <div class="overlay-background" (click)="hideReviewForm()"></div>
-        <div class="reply-form-container">
-          <app-review-form
-            [reviewForm]="reviewFormData"
-            (formSubmit)="onReviewSubmit($event)"
-            (close)="hideReviewForm()">
-          </app-review-form>
-        </div>
-      </div>
-
+      <!-- Service Payment Component -->
       <app-service-payment
         *ngIf="showPaymentFlow"
         [ngClass]="{'payment-active': showPaymentFlow}">
       </app-service-payment>
 
-      <!-- Service confirmation overlay -->
-      <div *ngIf="isServiceConfirmationVisible && currentServiceTask" class="service-message-overlay">
-        <div class="overlay-background">
-          <app-service-message
-            [serviceTask]="currentServiceTask"
-            [replyId]="currentServiceTask.replyId"
-            (taskCompleted)="onServiceTaskCompleted($event)"
-            (taskCancelled)="onServiceTaskCancelled($event)"
-            (openReviewForm)="openReviewForm()">
-          </app-service-message>
-        </div>
+      <!-- 🆕 UNIFIED SERVICE/REVIEW OVERLAY - Shows either service task OR review form in same place -->
+      <div *ngIf="isServiceConfirmationVisible && currentServiceTask && !hasSubmittedReview"
+           class="service-message-overlay">
+        <div class="overlay-background"
+             (click)="isReviewFormVisible ? hideReviewForm() : hideServiceConfirmation()"></div>
+
+        <!-- Show Service Task Message (when review form is NOT visible) -->
+        <app-service-message
+          *ngIf="!isReviewFormVisible"
+          [serviceTask]="currentServiceTask"
+          [replyId]="currentServiceTask.replyId"
+          (taskCompleted)="onServiceTaskCompleted($event)"
+          (taskCancelled)="onServiceTaskCancelled($event)"
+          (openReviewForm)="openReviewForm()">
+        </app-service-message>
+
+        <!-- Show Review Form (when review form IS visible) - Direct placement -->
+        <app-review-form
+          *ngIf="isReviewFormVisible"
+          [reviewForm]="reviewFormData"
+          (formSubmit)="onReviewSubmit($event)"
+          (close)="hideReviewForm()">
+        </app-review-form>
       </div>
     </div>
 
+    <!-- No Selection Template -->
     <ng-template #noSelection>
       <div class="chat-area empty">
         <div class="empty-state-icon">💬</div>
@@ -238,7 +249,22 @@
   </div>
 </div>
 
-<!-- 🆕 Global notification container (optional - implement based on your notification system) -->
+<!-- Review Completion Indicator (appears after review is submitted) -->
+<div *ngIf="hasSubmittedReview && currentServiceTask"
+     class="review-completion-indicator">
+  <div class="completion-message">
+    <div class="success-icon">✅</div>
+    <h3>Serviciul este complet!</h3>
+    <p>Mulțumim pentru recenzia ta!</p>
+    <small>{{ currentServiceTask.description || 'Serviciu finalizat' }}</small>
+    <button class="close-indicator-btn"
+            (click)="hasSubmittedReview = false">
+      ×
+    </button>
+  </div>
+</div>
+
+<!-- Global notification container -->
 <div class="notification-container" *ngIf="false">
   <app-notification-display></app-notification-display>
 </div>

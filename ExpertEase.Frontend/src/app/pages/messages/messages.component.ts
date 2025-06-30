@@ -82,6 +82,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   // Reply form state
   isReplyFormVisible: boolean = false;
   isReviewFormVisible: boolean = false;
+  hasSubmittedReview: boolean = false;
   currentRequestId: string | null = null;
   chatOverlayVisible: boolean = false;
   replyFormData = {
@@ -304,17 +305,23 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   async openReviewForm(): Promise<void> {
-    console.log('📝 Opening review form...');
+    console.log('📝 Opening review form in service task place...');
     console.log('🔍 Current service task state:', this.currentServiceTask);
 
-    // ✅ STEP 1: Try to load service task if not already loaded
+    // Check if review already submitted
+    if (this.hasSubmittedReview) {
+      this.notificationService.showNotification({
+        type: 'info',
+        message: 'Ai trimis deja o recenzie pentru acest serviciu.'
+      });
+      return;
+    }
+
+    // Validate service task exists and is completed
     if (!this.currentServiceTask) {
       console.log('📋 No service task loaded, attempting to load it...');
-
       try {
         await this.loadCurrentServiceTaskFast();
-
-        // Wait a moment for the task to be set
         await new Promise(resolve => setTimeout(resolve, 500));
 
         if (!this.currentServiceTask) {
@@ -335,14 +342,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       }
     }
 
-    console.log('✅ Service task found:', {
-      id: this.currentServiceTask.id,
-      status: this.currentServiceTask.status,
-      userId: this.currentServiceTask.userId,
-      specialistId: this.currentServiceTask.specialistId
-    });
-
-    // ✅ STEP 2: Validate service task status
+    // Validate service task status
     if (this.currentServiceTask.status !== 'Completed') {
       this.notificationService.showNotification({
         type: 'warning',
@@ -351,9 +351,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ STEP 3: Determine who to review
+    // Determine who to review
     const receiverUserId = this.determineReviewReceiver();
-
     if (!receiverUserId) {
       console.error('❌ Could not determine review receiver');
       this.notificationService.showNotification({
@@ -365,31 +364,40 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     console.log('👤 Review will be sent to:', receiverUserId);
 
-    // ✅ STEP 4: Set up the review form data
+    // Set up the review form data
     this.reviewFormData = {
       receiverUserId: receiverUserId,
       rating: 5,
       content: ''
     };
 
-    // ✅ STEP 5: Show the review form
+    // 🆕 KEY CHANGE: Show review form in the same overlay as service task
     this.isReviewFormVisible = true;
-    this.chatOverlayVisible = true;
-    this.cdr.detectChanges();
+    // Keep service confirmation visible (same overlay container)
+    // this.isServiceConfirmationVisible stays true
+    // this.chatOverlayVisible stays true
 
-    console.log('✅ Review form opened successfully');
+    this.cdr.detectChanges();
+    console.log('✅ Review form opened in service task place');
   }
   /**
    * Hide the review form
    */
   hideReviewForm(): void {
-    this.isReviewFormVisible = false;   // Hide the review form overlay
-    this.chatOverlayVisible = false;    // Unblock chat interaction
-    this.reviewFormData = {             // Reset form data
+    console.log('🔄 Hiding review form, returning to service task');
+
+    this.isReviewFormVisible = false;
+    // Keep the service confirmation visible
+    // this.isServiceConfirmationVisible stays true
+    // this.chatOverlayVisible stays true
+
+    // Reset form data
+    this.reviewFormData = {
       receiverUserId: '',
       rating: 5,
       content: ''
     };
+
     this.cdr.detectChanges();
   }
 
@@ -403,14 +411,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
 
     const task = this.currentServiceTask;
-
-    console.log('🔍 Determining review receiver:', {
-      currentUserId: this.userId,
-      taskUserId: task.userId,
-      taskSpecialistId: task.specialistId,
-      userIsClient: this.userId === task.userId,
-      userIsSpecialist: this.userId === task.specialistId
-    });
 
     // If current user is the client, review the specialist
     if (this.userId === task.userId) {
@@ -506,6 +506,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.isServiceConfirmationVisible = false;
     this.chatOverlayVisible = false;
 
+    // ✅ NEW: Reset review submission flag when changing conversations
+    this.hasSubmittedReview = false;
+
     this.messagesState.setSelectedUserInfo({
       userId: conversation.userId,
       fullName: conversation.userFullName,
@@ -513,7 +516,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
     this.loadConversationMessages(conversation.userId);
 
-    // ✅ Load service task immediately for new conversation
+    // Load service task immediately for new conversation
     setTimeout(() => {
       this.loadCurrentServiceTaskFast();
     }, 1000);
@@ -784,9 +787,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   /**
    * Load current service task using the new fast API (SINGLE API CALL)
    */
-  /**
-   * Load current service task using the new fast API (SINGLE API CALL)
-   */
   private async loadCurrentServiceTaskFast(): Promise<void> {
     try {
       const selectedUser = this.messagesState.selectedUser;
@@ -797,6 +797,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
       console.log('⚡ Loading current service task for user:', selectedUser);
 
+      // ✅ NEW: Reset review submission flag when loading new task
+      this.hasSubmittedReview = false;
+
       // Single API call to get current service task
       const response = await firstValueFrom(
         this.taskService.getCurrentServiceTask(selectedUser)
@@ -806,20 +809,33 @@ export class MessagesComponent implements OnInit, OnDestroy {
         this.currentServiceTask = response.response;
         console.log('✅ Service task loaded instantly:', this.currentServiceTask);
 
-        this.showServiceConfirmation();
+        // ✅ NEW: Check if review already exists for this task
+        if (this.currentServiceTask.hasUserReview ||
+          this.currentServiceTask.status === 'ReviewCompleted') {
+          console.log('📝 Review already exists for this service task');
+          this.hasSubmittedReview = true;
+        }
 
-        this.notificationService.showNotification({
-          type: 'success',
-          message: 'Service task loaded!'
-        });
+        // ✅ MODIFIED: Only show service confirmation if shouldShowServiceTask returns true
+        if (this.shouldShowServiceTask()) {
+          this.showServiceConfirmation();
+
+          this.notificationService.showNotification({
+            type: 'success',
+            message: 'Service task loaded!'
+          });
+        } else {
+          console.log('🚫 Service task exists but should not be shown to user');
+        }
       } else {
-        // ✅ Handle "not found" as normal state
+        // Handle "not found" as normal state
         console.log('ℹ️ No current service task found for this conversation');
 
         // Clear any existing service task state
         this.currentServiceTask = null;
         this.isServiceConfirmationVisible = false;
         this.chatOverlayVisible = false;
+        this.hasSubmittedReview = false;
 
         // Only log details if there's an actual error message
         if (response?.errorMessage) {
@@ -851,6 +867,25 @@ export class MessagesComponent implements OnInit, OnDestroy {
    */
   private shouldShowServiceTask(): boolean {
     if (!this.currentServiceTask || !this.userId) {
+      return false;
+    }
+
+    // ✅ NEW: Don't show service task if review has been submitted
+    if (this.hasSubmittedReview) {
+      console.log('📝 Review already submitted, hiding service task');
+      return false;
+    }
+
+    // ✅ NEW: Don't show if task status indicates review is complete
+    if (this.currentServiceTask.status === 'ReviewCompleted' ||
+      this.currentServiceTask.hasUserReview === true) {
+      console.log('📝 Review already exists for this task, hiding service task');
+      return false;
+    }
+
+    // ✅ NEW: Only show service task if it's completed but no review yet
+    if (this.currentServiceTask.status !== 'Completed') {
+      console.log('🚧 Service task not completed yet, hiding service task overlay');
       return false;
     }
 
@@ -888,8 +923,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
    * Hide service confirmation overlay
    */
   hideServiceConfirmation(): void {
-    this.isServiceConfirmationVisible = false;
-    this.chatOverlayVisible = false;
+    console.log('🔄 Hiding service confirmation');
+
+    // Only hide if review form is not visible
+    if (!this.isReviewFormVisible) {
+      this.isServiceConfirmationVisible = false;
+      this.chatOverlayVisible = false;
+    }
+
+    this.cdr.detectChanges();
   }
 
   /**
@@ -978,7 +1020,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ Validate review data
+    // Validate review data
     if (!reviewData.receiverUserId || !reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
       this.notificationService.showNotification({
         type: 'error',
@@ -988,12 +1030,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
 
     try {
-      console.log('📤 Sending review to backend...', {
-        serviceTaskId: this.currentServiceTask.id,
-        receiverUserId: reviewData.receiverUserId,
-        rating: reviewData.rating,
-        content: reviewData.content.substring(0, 50) + '...'
-      });
+      console.log('📤 Sending review to backend...');
 
       // Submit review using the review service
       const response = await firstValueFrom(
@@ -1007,17 +1044,29 @@ export class MessagesComponent implements OnInit, OnDestroy {
       if (response) {
         console.log('✅ Review submitted successfully');
 
+        // 🆕 KEY CHANGE: Mark review as submitted and hide entire overlay
+        this.hasSubmittedReview = true;
+        this.isReviewFormVisible = false;
+        this.isServiceConfirmationVisible = false;
+        this.chatOverlayVisible = false;
+
         this.notificationService.showNotification({
           type: 'success',
           message: 'Recenzia a fost trimisă cu succes! Mulțumim pentru feedback.'
         });
 
-        this.hideReviewForm();
+        // Update service task status locally
+        if (this.currentServiceTask) {
+          this.currentServiceTask.status = 'ReviewCompleted';
+          this.currentServiceTask.hasUserReview = true;
+        }
 
-        // ✅ Refresh service task to get updated status
-        setTimeout(() => {
-          this.loadCurrentServiceTaskFast();
-        }, 1000);
+        // Reset review form data
+        this.reviewFormData = {
+          receiverUserId: '',
+          rating: 5,
+          content: ''
+        };
 
       } else {
         throw new Error('Failed to submit review - no response');
@@ -1030,6 +1079,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
         message: 'A apărut o eroare la trimiterea recenziei. Te rugăm să încerci din nou.'
       });
     }
+
+    this.cdr.detectChanges();
   }
 
   // Add these methods to the MessagesComponent class

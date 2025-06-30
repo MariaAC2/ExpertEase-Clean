@@ -230,6 +230,8 @@
   pointer-events: none;
 }
 
+/* 🆕 USE THIS CSS - Final overlay styles without container wrapper */
+
 .service-message-overlay {
   position: absolute;
   top: 0;
@@ -242,6 +244,59 @@
   justify-content: center;
   padding: 1rem;
   box-sizing: border-box;
+
+  /* Direct positioning for service message and review form */
+  app-service-message,
+  app-review-form {
+    position: relative;
+    z-index: 101;
+
+    /* Let each component use its own styling */
+    max-width: 90vw;
+    max-height: 90vh;
+
+    /* Ensure they're centered */
+    margin: auto;
+  }
+}
+
+.overlay-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  z-index: 100;
+}
+
+/* 🚫 DISABLE the container styling you don't like */
+.service-message-container {
+  display: none !important;
+}
+
+/* Ensure both components work well in overlay */
+.service-message-overlay {
+  app-service-message {
+    /* Let service message use its own styling */
+    display: block;
+    width: auto;
+    height: auto;
+  }
+
+  app-review-form {
+    /* Let review form use its own styling */
+    display: block;
+    width: auto;
+    height: auto;
+
+    /* Remove any absolute positioning that might conflict */
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+  }
 }
 
 .overlay-background {
@@ -745,6 +800,88 @@
   }
 }
 
+.review-completion-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideInUp 0.5s ease-out;
+
+  @media (max-width: 768px) {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+  }
+}
+
+.completion-message {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 3px solid #28a745;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+  font-family: 'Roboto Mono', monospace;
+  max-width: 300px;
+
+  .success-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    animation: bounce 1s ease-out;
+  }
+
+  h3 {
+    color: #155724;
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  p {
+    color: #155724;
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+
+  small {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-style: italic;
+    display: block;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+    transform: scale(1);
+  }
+  40%, 43% {
+    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    transform: scale(1.1);
+  }
+  70% {
+    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    transform: scale(1.05);
+  }
+  90% {
+    transform: scale(1.02);
+  }
+}
+
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
@@ -775,6 +912,10 @@
   .reply-form-container,
   .service-message-container {
     animation: overlayFadeIn 0.3s ease-out;
+  }
+
+  &.review-complete {
+    display: none !important;
   }
 }
 

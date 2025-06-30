@@ -155,6 +155,7 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-G42JQABI.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-J6DFXX5M.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-SS7ZZ53B.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-P5KUH4XJ.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

@@ -1,30 +1,28 @@
-<div class="overlay">
-  <div class="request-form-wrapper">
-    <button class="close-button" (click)="closeForm()">×</button>
-    <h2>Trimite o recenzie</h2>
+<div class="request-form-wrapper">
+  <button class="close-button" (click)="closeForm()">×</button>
+  <h2>Trimite o recenzie</h2>
 
-    <form class="request-form" (ngSubmit)="submitReview()" #form="ngForm">
-      <div class="rating-container">
-        <span>Notă:</span>
-        <div class="star-rating">
-          <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
-            <img
-              [src]="i < reviewForm.rating ? 'assets/icons/star-filled.svg' : 'assets/icons/star.svg'"
-              alt="Star"
-              class="star"
-              (click)="reviewForm.rating = i + 1">
-          </ng-container>
-        </div>
+  <form class="request-form" (ngSubmit)="submitReview()" #form="ngForm">
+    <div class="rating-container">
+      <span>Notă:</span>
+      <div class="star-rating">
+        <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
+          <img
+            [src]="i < reviewForm.rating ? 'assets/icons/star-filled.svg' : 'assets/icons/star.svg'"
+            alt="Star"
+            class="star"
+            (click)="reviewForm.rating = i + 1">
+        </ng-container>
       </div>
+    </div>
 
-      <label>
-        Comentariu:
-        <textarea name="comment" [(ngModel)]="reviewForm.content" rows="4" required></textarea>
-      </label>
+    <label>
+      Comentariu:
+      <textarea name="comment" [(ngModel)]="reviewForm.content" rows="4" required></textarea>
+    </label>
 
-      <div class="center-button">
-        <button type="submit">Trimite recenzia</button>
-      </div>
-    </form>
-  </div>
+    <div class="center-button">
+      <button type="submit">Trimite recenzia</button>
+    </div>
+  </form>
 </div>
