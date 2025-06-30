@@ -17,7 +17,7 @@ namespace ExpertEase.Infrastructure.Services;
 public class ReviewService(IRepository<WebAppDatabaseContext> repository,
     IConversationNotifier conversationNotifier): IReviewService
 {
-        public async Task<ServiceResponse> AddReview(Guid serviceTaskId, ReviewAddDTO review, UserDTO? requestingUser = null,
+    public async Task<ServiceResponse> AddReview(Guid serviceTaskId, ReviewAddDTO review, UserDTO? requestingUser = null,
         CancellationToken cancellationToken = default)
     {
         if (requestingUser == null)

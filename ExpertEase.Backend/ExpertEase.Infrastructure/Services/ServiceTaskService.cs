@@ -191,14 +191,23 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
         CancellationToken cancellationToken = default)
     {
         var task = await repository.GetAsync(new ServiceTaskSpec(serviceTask.Id), cancellationToken);
-        
+    
         if (task == null)
             return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.NotFound, "Service task with this id not found!", ErrorCodes.EntityNotFound));
 
         var oldStatus = task.Status;
         var newStatus = serviceTask.Status;
 
-        // 🆕 Handle status transitions
+        // ✅ Validate status transitions
+        if (!IsValidStatusTransition(oldStatus, newStatus))
+        {
+            return ServiceResponse.CreateErrorResponse(new(
+                HttpStatusCode.BadRequest, 
+                $"Invalid status transition from {oldStatus} to {newStatus}", 
+                ErrorCodes.Invalid));
+        }
+
+        // Handle status transitions
         switch (newStatus)
         {
             case JobStatusEnum.Completed:
@@ -208,22 +217,34 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
                     return completionResult; // Don't update status if completion fails
                 }
                 break;
-                
+            
             case JobStatusEnum.Cancelled:
                 await HandleServiceCancellation(task, requestingUser, cancellationToken);
                 break;
-                
+            
             case JobStatusEnum.Reviewed:
                 await HandleServiceReviewed(task, requestingUser, cancellationToken);
                 break;
         }
 
         await repository.UpdateAsync(task, cancellationToken);
-        
+    
         // Send status change notifications
         await NotifyStatusChange(task, oldStatus, newStatus);
-        
+    
         return ServiceResponse.CreateSuccessResponse();
+    }
+    
+    private static bool IsValidStatusTransition(JobStatusEnum currentStatus, JobStatusEnum newStatus)
+    {
+        return currentStatus switch
+        {
+            JobStatusEnum.Confirmed => newStatus is JobStatusEnum.Completed or JobStatusEnum.Cancelled,
+            JobStatusEnum.Completed => newStatus is JobStatusEnum.Reviewed,
+            JobStatusEnum.Cancelled => false, // Cannot transition from cancelled
+            JobStatusEnum.Reviewed => false, // Cannot transition from reviewed
+            _ => false
+        };
     }
 
     // 🆕 Handle service completion (specialist clicks "Serviciu Finalizat")
@@ -233,6 +254,21 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
         {
             Console.WriteLine($"✅ Processing service completion for task {task.Id}");
             
+            // Validate task can be completed
+            if (task.Status == JobStatusEnum.Completed)
+            {
+                Console.WriteLine($"⚠️ Service task {task.Id} is already completed");
+                return ServiceResponse.CreateSuccessResponse(); // Already completed
+            }
+
+            if (task.Status == JobStatusEnum.Cancelled)
+            {
+                return ServiceResponse.CreateErrorResponse(new(
+                    HttpStatusCode.BadRequest, 
+                    "Cannot complete a cancelled service", 
+                    ErrorCodes.Invalid));
+            }
+
             // Step 1: Transfer money to specialist
             var transferResult = await TransferMoneyToSpecialist(task, cancellationToken);
             if (!transferResult.IsSuccess)
@@ -323,7 +359,7 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
 
             // Get specialist's Stripe account
             var specialist = await repository.GetAsync(new UserSpec(task.SpecialistId), cancellationToken);
-            if (specialist?.SpecialistProfile.StripeAccountId == null)
+            if (specialist?.SpecialistProfile?.StripeAccountId == null)
             {
                 return ServiceResponse.CreateErrorResponse<string>(new(
                     HttpStatusCode.BadRequest, 
@@ -337,7 +373,7 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
             Console.WriteLine($"   - Service Amount: {task.Price} RON");
             Console.WriteLine($"   - Specialist Account: {specialist.SpecialistProfile.StripeAccountId}");
 
-            // Transfer the service amount to specialist
+            // ✅ SIMPLIFIED: Just call transfer - StripeAccountService handles test funds automatically
             var transferResult = await stripeAccountService.TransferToSpecialist(
                 payment.StripePaymentIntentId,
                 specialist.SpecialistProfile.StripeAccountId,
@@ -354,6 +390,10 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
                 payment.TransferredAt = DateTime.UtcNow;
                 payment.IsTransferred = true;
                 await repository.UpdateAsync(payment, cancellationToken);
+            }
+            else
+            {
+                Console.WriteLine($"❌ Transfer failed: {transferResult.Error?.Message}");
             }
 
             return transferResult;
@@ -374,9 +414,22 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
         try
         {
             var payment = await repository.GetAsync(new PaymentSpec(task.PaymentId), cancellationToken);
-            if (payment == null || payment.IsTransferred)
+            if (payment == null)
             {
-                Console.WriteLine($"⚠️ Cannot refund: Payment not found or already transferred");
+                Console.WriteLine($"⚠️ Cannot refund: Payment not found for task {task.Id}");
+                return;
+            }
+
+            if (payment.IsTransferred)
+            {
+                Console.WriteLine($"⚠️ Cannot refund: Payment already transferred to specialist for task {task.Id}");
+                // Notify that refund is not possible
+                await conversationNotifier.NotifyServiceStatusChanged(task.UserId, new
+                {
+                    TaskId = task.Id,
+                    Message = "Serviciul a fost anulat, dar plata a fost deja transferată specialistului. Contactează suportul pentru asistență.",
+                    RefundNotPossible = true
+                });
                 return;
             }
 
@@ -398,23 +451,41 @@ public class ServiceTaskService(IRepository<WebAppDatabaseContext> repository,
                 payment.IsRefunded = true;
                 await repository.UpdateAsync(payment, cancellationToken);
 
-                // Notify client about refund
+                // Notify client about successful refund
                 await conversationNotifier.NotifyServiceStatusChanged(task.UserId, new
                 {
                     TaskId = task.Id,
                     Message = $"Serviciul a fost anulat și suma de {task.Price} RON va fi returnată în 5-10 zile lucrătoare.",
                     RefundAmount = task.Price,
-                    RefundId = refundResult.Result
+                    RefundId = refundResult.Result,
+                    RefundStatus = "processed"
                 });
             }
             else
             {
                 Console.WriteLine($"❌ Refund failed: {refundResult.Error?.Message}");
+                
+                // Notify about refund failure
+                await conversationNotifier.NotifyServiceStatusChanged(task.UserId, new
+                {
+                    TaskId = task.Id,
+                    Message = "Serviciul a fost anulat, dar a apărut o problemă cu returnarea banilor. Contactează suportul.",
+                    RefundStatus = "failed",
+                    Error = refundResult.Error?.Message
+                });
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Refund processing error: {ex.Message}");
+            
+            // Notify about refund error
+            await conversationNotifier.NotifyServiceStatusChanged(task.UserId, new
+            {
+                TaskId = task.Id,
+                Message = "Serviciul a fost anulat, dar a apărut o eroare în procesarea returnării. Contactează suportul.",
+                RefundStatus = "error"
+            });
         }
     }
 

@@ -39,7 +39,7 @@ public class ServiceTaskProjectionSpec: Specification<ServiceTask, ServiceTaskDT
     
     public ServiceTaskProjectionSpec(Guid userId, Guid specialistId) : this()
     {
-        Query.Where(e => e.UserId == userId && e.SpecialistId == specialistId && e.Status == JobStatusEnum.Confirmed);
+        Query.Where(e => e.UserId == userId && e.SpecialistId == specialistId && e.Status != JobStatusEnum.Reviewed);
     }
 
     public ServiceTaskProjectionSpec(string? search) : this(true)

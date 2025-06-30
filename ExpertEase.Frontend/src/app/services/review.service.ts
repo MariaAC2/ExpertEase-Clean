@@ -15,7 +15,7 @@ export class ReviewService {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
-    return this.http.post(`${this.baseUrl}task/${serviceTaskId}/confirm/reviews`, review, { headers });
+    return this.http.post(`${this.baseUrl}/Add/${serviceTaskId}`, review, { headers });
   }
 
   getReviews(page: number, pageSize: number) {

@@ -105,7 +105,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   isServiceConfirmationVisible: boolean = false;
   currentPaymentDetails: any;
   currentServiceTask: any;
-  currentServiceTaskForReview: any;
   showPaymentFlow: boolean = false;
 
   // Photo upload state
@@ -225,7 +224,25 @@ export class MessagesComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(update => this.handleConversationUpdate(update));
 
-      // ... rest of existing initialization code ...
+      // Subscribe to action refresh events
+      this.paymentFlowService.paymentFlow$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(state => {
+          console.log('💳 Payment flow state changed:', state);
+          this.showPaymentFlow = state.isActive;
+          this.cdr.detectChanges();
+        });
+
+      // Subscribe to action refresh events
+      this.conversationActions.refresh$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.refreshCurrentConversation();
+          this.loadExchanges(false);
+        });
+
+      // Subscribe to payment completion (keep existing logic)
+      this.subscribeToPaymentCompletion();
 
     } catch (error) {
       console.error('Failed to initialize services:', error);
@@ -716,6 +733,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
   /**
    * Load current service task using the new fast API (SINGLE API CALL)
    */
+  /**
+   * Load current service task using the new fast API (SINGLE API CALL)
+   */
   private async loadCurrentServiceTaskFast(): Promise<void> {
     try {
       const selectedUser = this.messagesState.selectedUser;
@@ -742,15 +762,36 @@ export class MessagesComponent implements OnInit, OnDestroy {
           message: 'Service task loaded!'
         });
       } else {
+        // ✅ Handle "not found" as normal state
         console.log('ℹ️ No current service task found for this conversation');
 
+        // Clear any existing service task state
+        this.currentServiceTask = null;
+        this.isServiceConfirmationVisible = false;
+        this.chatOverlayVisible = false;
+
+        // Only log details if there's an actual error message
         if (response?.errorMessage) {
           console.log('ℹ️ Details:', response.errorMessage.message);
+
+          // Only show notification for actual errors (not "not found")
+          if (response.errorMessage.code !== 'EntityNotFound') {
+            this.notificationService.showNotification({
+              type: 'warning',
+              message: 'Could not load service task details.'
+            });
+          }
         }
       }
 
     } catch (error) {
       console.error('❌ Error loading current service task:', error);
+
+      // Only show error notification for actual exceptions
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Failed to check for service tasks.'
+      });
     }
   }
 
@@ -834,7 +875,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
         // Update local state
         this.currentServiceTask.status = 'Completed';
         this.currentServiceTask.completedAt = new Date();
-        this.currentServiceTaskForReview = this.currentServiceTask;
 
         // Show success notification
         this.notificationService.showNotification({
@@ -877,7 +917,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   async onReviewSubmit(reviewData: any): Promise<void> {
-    if (!this.currentServiceTaskForReview) {
+    if (!this.currentServiceTask) {
       this.notificationService.showNotification({
         type: 'error',
         message: 'Nu s-a găsit serviciul pentru care să lași recenzia.'
@@ -890,7 +930,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
       // Submit review using the review service
       const response = await firstValueFrom(
-        this.reviewService.addReview(this.currentServiceTaskForReview.id, {
+        this.reviewService.addReview(this.currentServiceTask.id, {
           receiverUserId: reviewData.receiverUserId,
           rating: reviewData.rating,
           content: reviewData.content
@@ -917,7 +957,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         }, 1000);
 
         // Clear the service task for review since review is completed
-        this.currentServiceTaskForReview = null;
+        this.currentServiceTask = null;
 
       } else {
         throw new Error('Failed to submit review');
@@ -971,6 +1011,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // ✅ ADD THESE TWO LINES:
+      this.showPaymentFlow = true;
+      this.chatOverlayVisible = true;
+
       this.paymentFlowService.initiatePaymentFlow(
         replyId,
         serviceDetails,
@@ -995,7 +1039,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const serviceDetails = {
       replyId: replyId,
       startDate: new Date(),
-      endDate: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours later
+      endDate: new Date(Date.now() + 2 * 60 * 60 * 1000),
       description: 'Test service booking',
       address: 'Test service address',
       price: 150
@@ -1015,6 +1059,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
       phoneNumber: '0987654321'
     };
 
+    // ✅ ADD THESE TWO LINES:
+    this.showPaymentFlow = true;
+    this.chatOverlayVisible = true;
+
     this.paymentFlowService.initiatePaymentFlow(
       replyId,
       serviceDetails,
@@ -1031,6 +1079,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
    */
   private async handlePaymentCompletion(paymentDetails: any): Promise<void> {
     console.log('💳 Payment completed in messages component:', paymentDetails);
+
+    // ✅ ADD THESE TWO LINES:
+    this.showPaymentFlow = false;
+    this.chatOverlayVisible = false;
 
     // Store payment details
     this.currentPaymentDetails = paymentDetails;

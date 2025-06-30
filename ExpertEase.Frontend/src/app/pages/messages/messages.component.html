@@ -200,11 +200,14 @@
       </div>
 
       <div *ngIf="isReviewFormVisible" class="review-form-overlay">
-        <app-review-form
-          [reviewForm]="reviewFormData"
-          (formSubmit)="onReviewSubmit($event)"
-          (close)="hideReviewForm()">
-        </app-review-form>
+        <div class="overlay-background" (click)="hideReviewForm()"></div>
+        <div class="reply-form-container">
+          <app-review-form
+            [reviewForm]="reviewFormData"
+            (formSubmit)="onReviewSubmit($event)"
+            (close)="hideReviewForm()">
+          </app-review-form>
+        </div>
       </div>
 
       <app-service-payment
