@@ -19,7 +19,6 @@ public class ServiceTask : BaseEntity
     public DateTime? CancelledAt { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public decimal Price { get; set; }
-    public Review? Review { get; set; } = null!;
     // 🆕 Add these fields for money transfer tracking
     public string? TransferReference { get; set; } // Stripe Transfer ID (e.g., "tr_1234567890")
     public DateTime? TransferredAt { get; set; }    // When the money was transferred

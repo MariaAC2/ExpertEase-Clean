@@ -197,10 +197,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     await this.loadCurrentServiceTaskFast();
   }
 
-  public async findMyServiceTask(): Promise<void> {
-    await this.loadCurrentServiceTaskFast();
-  }
-
   // Add these methods to the MessagesComponent class
 
   /**
@@ -307,19 +303,59 @@ export class MessagesComponent implements OnInit, OnDestroy {
     }
   }
 
-  openReviewForm(): void {
+  async openReviewForm(): Promise<void> {
+    console.log('📝 Opening review form...');
+    console.log('🔍 Current service task state:', this.currentServiceTask);
+
+    // ✅ STEP 1: Try to load service task if not already loaded
     if (!this.currentServiceTask) {
+      console.log('📋 No service task loaded, attempting to load it...');
+
+      try {
+        await this.loadCurrentServiceTaskFast();
+
+        // Wait a moment for the task to be set
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (!this.currentServiceTask) {
+          console.error('❌ Still no service task after loading attempt');
+          this.notificationService.showNotification({
+            type: 'error',
+            message: 'Nu s-a găsit serviciul pentru care să lași recenzia. Asigură-te că serviciul este finalizat.'
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('❌ Error loading service task for review:', error);
+        this.notificationService.showNotification({
+          type: 'error',
+          message: 'Eroare la încărcarea informațiilor despre serviciu.'
+        });
+        return;
+      }
+    }
+
+    console.log('✅ Service task found:', {
+      id: this.currentServiceTask.id,
+      status: this.currentServiceTask.status,
+      userId: this.currentServiceTask.userId,
+      specialistId: this.currentServiceTask.specialistId
+    });
+
+    // ✅ STEP 2: Validate service task status
+    if (this.currentServiceTask.status !== 'Completed') {
       this.notificationService.showNotification({
-        type: 'error',
-        message: 'Nu s-a găsit informația despre serviciu pentru recenzie.'
+        type: 'warning',
+        message: 'Recenziile pot fi făcute doar pentru serviciile finalizate.'
       });
       return;
     }
 
-    // Determine who to review based on current user role
+    // ✅ STEP 3: Determine who to review
     const receiverUserId = this.determineReviewReceiver();
 
     if (!receiverUserId) {
+      console.error('❌ Could not determine review receiver');
       this.notificationService.showNotification({
         type: 'error',
         message: 'Nu s-a putut determina cui să îi dai recenzia.'
@@ -327,19 +363,22 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Set up the review form data
+    console.log('👤 Review will be sent to:', receiverUserId);
+
+    // ✅ STEP 4: Set up the review form data
     this.reviewFormData = {
-      receiverUserId: receiverUserId,  // Who will receive the review
-      rating: 5,                      // Default 5 stars
-      content: ''                     // Empty review text
+      receiverUserId: receiverUserId,
+      rating: 5,
+      content: ''
     };
 
-    // 🆕 These lines make the review form visible:
-    this.isReviewFormVisible = true;    // Show the review form overlay
-    this.chatOverlayVisible = true;     // Block chat interaction
-    this.cdr.detectChanges();          // Update the UI
-  }
+    // ✅ STEP 5: Show the review form
+    this.isReviewFormVisible = true;
+    this.chatOverlayVisible = true;
+    this.cdr.detectChanges();
 
+    console.log('✅ Review form opened successfully');
+  }
   /**
    * Hide the review form
    */
@@ -359,21 +398,33 @@ export class MessagesComponent implements OnInit, OnDestroy {
    */
   private determineReviewReceiver(): string | null {
     if (!this.currentServiceTask || !this.userId) {
+      console.error('❌ Missing service task or user ID for review receiver determination');
       return null;
     }
 
     const task = this.currentServiceTask;
 
+    console.log('🔍 Determining review receiver:', {
+      currentUserId: this.userId,
+      taskUserId: task.userId,
+      taskSpecialistId: task.specialistId,
+      userIsClient: this.userId === task.userId,
+      userIsSpecialist: this.userId === task.specialistId
+    });
+
     // If current user is the client, review the specialist
     if (this.userId === task.userId) {
+      console.log('👤 Current user is CLIENT → will review SPECIALIST');
       return task.specialistId;
     }
 
     // If current user is the specialist, review the client
     if (this.userId === task.specialistId) {
+      console.log('👤 Current user is SPECIALIST → will review CLIENT');
       return task.userId;
     }
 
+    console.error('❌ Current user is neither client nor specialist in this service task');
     return null;
   }
 
@@ -884,7 +935,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
       } else {
         throw new Error('Failed to complete service task');
       }
-
     } catch (error) {
       console.error('❌ Error completing service task:', error);
 
@@ -917,7 +967,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   async onReviewSubmit(reviewData: any): Promise<void> {
+    console.log('📝 Submitting review with data:', reviewData);
+
     if (!this.currentServiceTask) {
+      console.error('❌ No service task available for review submission');
       this.notificationService.showNotification({
         type: 'error',
         message: 'Nu s-a găsit serviciul pentru care să lași recenzia.'
@@ -925,8 +978,22 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // ✅ Validate review data
+    if (!reviewData.receiverUserId || !reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+      this.notificationService.showNotification({
+        type: 'error',
+        message: 'Date de recenzie invalide. Te rugăm să completezi toate câmpurile.'
+      });
+      return;
+    }
+
     try {
-      console.log('📝 Submitting review:', reviewData);
+      console.log('📤 Sending review to backend...', {
+        serviceTaskId: this.currentServiceTask.id,
+        receiverUserId: reviewData.receiverUserId,
+        rating: reviewData.rating,
+        content: reviewData.content.substring(0, 50) + '...'
+      });
 
       // Submit review using the review service
       const response = await firstValueFrom(
@@ -938,6 +1005,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       );
 
       if (response) {
+        console.log('✅ Review submitted successfully');
+
         this.notificationService.showNotification({
           type: 'success',
           message: 'Recenzia a fost trimisă cu succes! Mulțumim pentru feedback.'
@@ -945,22 +1014,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
         this.hideReviewForm();
 
-        // The backend will automatically:
-        // 1. Send review notification to the other party
-        // 2. Check if both parties have reviewed
-        // 3. Update service task status to 'Reviewed' if both reviewed
-        // 4. Send appropriate SignalR notifications
-
-        // Refresh service task to get updated status
+        // ✅ Refresh service task to get updated status
         setTimeout(() => {
           this.loadCurrentServiceTaskFast();
         }, 1000);
 
-        // Clear the service task for review since review is completed
-        this.currentServiceTask = null;
-
       } else {
-        throw new Error('Failed to submit review');
+        throw new Error('Failed to submit review - no response');
       }
 
     } catch (error) {
