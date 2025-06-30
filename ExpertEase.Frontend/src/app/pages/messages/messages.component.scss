@@ -245,18 +245,22 @@
   padding: 1rem;
   box-sizing: border-box;
 
-  /* Direct positioning for service message and review form */
+  /* Ensure proper centering for both components */
   app-service-message,
   app-review-form {
     position: relative;
     z-index: 101;
 
-    /* Let each component use its own styling */
-    max-width: 90vw;
-    max-height: 90vh;
+    /* Center the components properly */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    /* Ensure they're centered */
-    margin: auto;
+    /* Allow components to use appropriate size */
+    max-width: 95vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
   }
 }
 
@@ -274,6 +278,35 @@
 /* 🚫 DISABLE the container styling you don't like */
 .service-message-container {
   display: none !important;
+}
+
+.service-message-overlay app-review-form {
+  /* Remove any conflicting positioning */
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+
+  /* Ensure the review form wrapper is properly displayed */
+  .request-form-wrapper {
+    /* Override any margin that might interfere with centering */
+    margin: 0 auto !important;
+
+    /* Ensure it's visible and properly sized */
+    display: block;
+    position: relative;
+  }
+}
+
+.service-message-overlay app-service-message {
+  /* Let service message use its own styling */
+  display: block;
+  width: auto;
+  height: auto;
+  position: relative;
 }
 
 /* Ensure both components work well in overlay */

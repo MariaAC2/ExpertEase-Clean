@@ -1,21 +1,51 @@
+// Replace the review-form.component.scss content with this:
+
 .request-form-wrapper {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  margin: 60px auto;
+  max-width: 500px; // Increased from 400px to make it wider
+  margin: 0 auto; // Changed from 60px auto to 0 auto to remove top margin
   background-color: #e8d9ff;
   border: 2px solid #000;
   padding: 32px;
   font-family: 'Roboto Mono', monospace;
+
+  // Ensure it takes up appropriate space in the overlay
+  min-height: auto;
+  box-sizing: border-box;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
 }
 
 .request-form-wrapper h2 {
   text-align: center;
-}
-
-.request-form-wrapper h2 {
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
+  margin-top: 0; // Ensure no extra top margin
+}
+
+.request-form {
+  width: 100%;
 }
 
 .request-form label {
@@ -41,33 +71,39 @@
 
 .request-form input,
 .request-form textarea {
-  padding: 0.5rem;
+  padding: 0.75rem; // Increased from 0.5rem for better touch targets
   border: 1px solid #999;
   border-radius: 4px;
   font-family: 'Roboto Mono', monospace;
   background-color: #fff;
+  font-size: 1rem; // Ensure readable text size
 }
 
 .request-form textarea {
   resize: vertical;
+  min-height: 100px; // Ensure adequate space for comments
 }
 
 .center-button {
   display: flex;
   justify-content: center;
+  margin-top: 1.5rem; // Add some extra space before the button
 }
 
 .request-form button {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 2rem; // Increased padding for better button size
   border: 2px solid #000;
   border-radius: 6px;
   background-color: #c9b7ff;
   font-weight: bold;
   cursor: pointer;
-  display: flex;
-  justify-content: center;
   font-family: 'Roboto Mono', monospace;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #b8a6ff;
+  }
 }
 
 .request-form button:disabled {
@@ -81,20 +117,47 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 1rem;
+
+  span {
+    font-weight: 600;
+  }
 }
 
 .star-rating {
   display: flex;
-  gap: 6px;
+  gap: 8px; // Increased gap for better touch targets
 }
 
 .star {
-  width: 24px;
-  height: 24px;
+  width: 28px; // Increased from 24px for better visibility
+  height: 28px;
   cursor: pointer;
   transition: transform 0.15s ease-in-out;
 }
 
 .star:hover {
   transform: scale(1.2);
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .request-form-wrapper {
+    max-width: 90vw;
+    padding: 24px;
+    margin: 0;
+  }
+
+  .request-form-wrapper h2 {
+    font-size: 1.1rem;
+  }
+
+  .request-form input,
+  .request-form textarea {
+    padding: 0.6rem;
+  }
+
+  .star {
+    width: 24px;
+    height: 24px;
+  }
 }
