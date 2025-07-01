@@ -65,7 +65,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection(nameof(StripeConfiguration)));
-builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection(nameof(ProtectionFeeSettings)));
+builder.Services.Configure<ProtectionFeeSettings>(builder.Configuration.GetSection(nameof(ProtectionFeeSettings)));
+builder.Services.Configure<GoogleOAuthConfiguration>(builder.Configuration.GetSection("GoogleOAuth"));
 builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
 builder.Services.AddScoped<IFirestoreRepository, FirestoreRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>()

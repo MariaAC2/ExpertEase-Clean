@@ -1,0 +1,13 @@
+<div class="callback-container">
+  <div class="loading-content" *ngIf="!errorMessage">
+    <div class="loading-spinner"></div>
+    <h2>Se procesează autentificarea Google...</h2>
+    <p>Vă rugăm să așteptați...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-content">
+    <h2>Eroare</h2>
+    <p>{{ errorMessage }}</p>
+    <button (click)="goBack()" class="back-button">Înapoi la autentificare</button>
+  </div>
+</div>

@@ -31,7 +31,6 @@
 .separator {
   height: 3px;
   background-color: #b7a4dd;
-  //margin: 1rem 0;
   width: 100%;
 }
 
@@ -53,14 +52,14 @@
 }
 
 .home-header h1 {
-  margin: 0.5rem 0;       /* reduce vertical margins */
-  text-align: center;     /* keep centered if not already */
+  margin: 0.5rem 0;
+  text-align: center;
 }
 
 .brand-highlight {
   font-weight: bold;
   letter-spacing: 0.5px;
-  color: #3c1a7d; /* Optional: give it a standout color */
+  color: #3c1a7d;
 }
 
 .close-button {
@@ -78,5 +77,162 @@
   &:hover {
     transform: scale(1.2);
     color: #d11a2a;
+  }
+}
+
+// New styles for filters and search functionality
+.filters-toggle {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.toggle-filters-btn {
+  background-color: #9a83db;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+
+  &:hover {
+    background-color: #8670d1;
+  }
+}
+
+.toggle-icon {
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+}
+
+.filters-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px 0;
+  transition: all 0.3s ease;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.quick-action-btn {
+  background-color: #cfbdfe;
+  color: #333;
+  border: 2px solid #9a83db;
+  padding: 10px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #9a83db;
+    color: white;
+    transform: translateY(-2px);
+  }
+}
+
+.results-summary {
+  margin: 15px 0;
+  padding: 10px 15px;
+  background-color: #e6dfff;
+  border-radius: 6px;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-weight: bold;
+    color: #3c1a7d;
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+
+  p {
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 1.1rem;
+  }
+}
+
+.clear-filters-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #c82333;
+  }
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin: 20px 0;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-weight: bold;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .home-wrapper {
+    padding: 16px;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .quick-action-btn {
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .top-action-button {
+    position: relative;
+    top: auto;
+    right: auto;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .filters-container {
+    padding: 0 10px;
   }
 }

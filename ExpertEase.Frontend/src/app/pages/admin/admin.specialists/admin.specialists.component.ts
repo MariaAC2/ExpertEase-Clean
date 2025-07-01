@@ -150,7 +150,7 @@ export class AdminSpecialistsComponent {
   }
 
   getPage(): void {
-    this.adminService.getSpecialists(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+    this.adminService.getSpecialistsLegacy(this.searchTerm, this.currentPage, this.pageSize).subscribe({
       next: (res) => {
         this.users = res.response?.data ?? [];
         this.totalItems = res.response?.totalCount ?? 0;

@@ -14,7 +14,6 @@ public interface IUserService
         CancellationToken cancellationToken = default);
     Task<ServiceResponse<UserDetailsDTO>> GetUserDetails(Guid id, CancellationToken cancellationToken = default);
     Task<ServiceResponse<UserProfileDTO>> GetUserProfile(Guid id, CancellationToken cancellationToken = default);
-
     Task<ServiceResponse<PagedResponse<UserDTO>>> GetUsers(Guid adminId, PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default);
     Task<ServiceResponse<int>> GetUserCount(CancellationToken cancellationToken = default);
     Task<ServiceResponse<LoginResponseDTO>> Login(LoginDTO login, CancellationToken cancellationToken = default);
@@ -22,11 +21,11 @@ public interface IUserService
     Task<ServiceResponse<LoginResponseDTO>> SocialLogin(SocialLoginDTO loginDto,
         CancellationToken cancellationToken = default);
     Task<ServiceResponse> AddUser(UserAddDTO user, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
-
     Task<ServiceResponse<UserUpdateResponseDTO>> UpdateUser(UserUpdateDTO user, UserDTO? requestingUser,
         CancellationToken cancellationToken = default);
     Task<ServiceResponse> AdminUpdateUser(AdminUserUpdateDTO user, UserDTO? requestingUser,
         CancellationToken cancellationToken = default);
-
     Task<ServiceResponse> DeleteUser(Guid id, UserDTO? requestingUser = null, CancellationToken cancellationToken = default);
+    Task<ServiceResponse<LoginResponseDTO>> ExchangeOAuthCode(OAuthCodeExchangeDTO exchangeDto,
+        CancellationToken cancellationToken = default);
 }

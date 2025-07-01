@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {RequestAddDTO, SpecialistDTO} from '../../models/api.models';
+import {RequestAddDTO, SpecialistDTO, SpecialistPaginationQueryParams} from '../../models/api.models';
 import {CommonModule} from '@angular/common';
 import {dtoToDictionary} from '../../models/form.models';
 import {SpecialistService} from '../../services/specialist.service';
@@ -10,11 +10,22 @@ import {RequestService} from '../../services/request.service';
 import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-card.component';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {AuthService} from '../../services/auth.service';
+import {SearchFiltersComponent} from '../../shared/search-filters/search-filters.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [SpecialistCardComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchInputComponent, PaginationComponent, RouterLink, RouterLinkActive],
+  imports: [
+    SpecialistCardComponent,
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    SearchInputComponent,
+    PaginationComponent,
+    RouterLink,
+    RouterLinkActive,
+    SearchFiltersComponent
+  ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss', '../../shared/search-input/search-input.component.scss']
 })
@@ -27,6 +38,13 @@ export class HomeComponent implements OnInit{
   isUserDetailsVisible = false;
   users: SpecialistDTO[] = [];
   error: string | null = null;
+  isFiltersVisible: boolean = true;
+
+  // Current search filters
+  currentFilters: SpecialistPaginationQueryParams = {
+    page: 1,
+    pageSize: 10
+  };
 
   isRequestFormVisible = false;
 
@@ -104,14 +122,22 @@ export class HomeComponent implements OnInit{
   }
 
   getPage(): void {
+    // Update current filters with pagination info
+    this.currentFilters.page = this.currentPage;
+    this.currentFilters.pageSize = this.pageSize;
+
+    console.log('Searching with filters:', this.currentFilters);
+
     // this.users = this.dummySpecialists; // For testing purposes, using dummy data
-    this.homeService.getSpecialists(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+    this.homeService.getSpecialists(this.currentFilters).subscribe({
       next: (res) => {
         this.users = res.response?.data ?? [];
         this.totalItems = res.response?.totalCount ?? 0;
+        this.error = null;
       },
       error: (err) => {
         this.error = err.error?.errorMessage?.message || 'A apărut o eroare.';
+        console.error('Error loading specialists:', err);
       }
     });
   }
@@ -134,6 +160,22 @@ export class HomeComponent implements OnInit{
 
   onSearch(term: string): void {
     this.searchTerm = term;
+    this.currentFilters.search = term || undefined;
+    this.currentPage = 1;
+    this.getPage();
+  }
+
+  onFiltersChange(filters: Partial<SpecialistPaginationQueryParams>): void {
+    console.log('Filters changed:', filters);
+
+    // Merge new filters with existing ones
+    this.currentFilters = {
+      ...this.currentFilters,
+      ...filters,
+      page: 1, // Reset to first page when filters change
+      pageSize: this.pageSize
+    };
+
     this.currentPage = 1;
     this.getPage();
   }
@@ -146,6 +188,42 @@ export class HomeComponent implements OnInit{
   onPageSizeChange(newSize: number): void {
     this.pageSize = newSize;
     this.currentPage = 1; // Reset to first page
+    this.getPage();
+  }
+
+  toggleFilters(): void {
+    this.isFiltersVisible = !this.isFiltersVisible;
+  }
+
+  clearAllFilters(): void {
+    this.currentFilters = {
+      page: 1,
+      pageSize: this.pageSize
+    };
+    this.searchTerm = '';
+    this.currentPage = 1;
+    this.getPage();
+  }
+
+  // Quick filter methods
+  getTopRatedSpecialists(): void {
+    this.currentFilters = {
+      ...this.currentFilters,
+      sortByRating: 'desc',
+      minRating: 4.5,
+      page: 1
+    };
+    this.currentPage = 1;
+    this.getPage();
+  }
+
+  getExperiencedSpecialists(): void {
+    this.currentFilters = {
+      ...this.currentFilters,
+      experienceRange: '7-10',
+      page: 1
+    };
+    this.currentPage = 1;
     this.getPage();
   }
 

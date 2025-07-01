@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using System.Text.Json;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
@@ -10,10 +11,13 @@ using ExpertEase.Application.Specifications;
 using ExpertEase.Domain.Entities;
 using ExpertEase.Domain.Enums;
 using ExpertEase.Domain.Specifications;
+using ExpertEase.Infrastructure.Configurations;
 using ExpertEase.Infrastructure.Database;
 using ExpertEase.Infrastructure.Repositories;
 using Google.Apis.Auth;
+using Microsoft.Extensions.Options;
 using Stripe;
+
 
 namespace ExpertEase.Infrastructure.Services;
 
@@ -22,8 +26,10 @@ public class UserService(
     ILoginService loginService,
     IMailService mailService,
     HttpClient httpClient,
-    IStripeAccountService stripeAccountService) : IUserService
+    IStripeAccountService stripeAccountService,
+    IOptions<GoogleOAuthConfiguration> googleOAuthConfig) : IUserService
 {
+    private readonly GoogleOAuthConfiguration _googleOAuthConfig = googleOAuthConfig.Value;
     public async Task<ServiceResponse<UserDTO>> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await repository.GetAsync(new UserProjectionSpec(id), cancellationToken);
@@ -216,6 +222,135 @@ public class UserService(
         {
             User = user,
             Token = loginService.GetToken(user, DateTime.UtcNow, new TimeSpan(7, 0, 0, 0))
+        });
+    }
+    
+    public async Task<ServiceResponse<LoginResponseDTO>> ExchangeOAuthCode(OAuthCodeExchangeDTO exchangeDto,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(exchangeDto.Code))
+            return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                new ErrorMessage(HttpStatusCode.BadRequest, "Missing authorization code", ErrorCodes.Invalid));
+
+        if (exchangeDto.Provider.ToLower() != "google")
+            return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                new ErrorMessage(HttpStatusCode.BadRequest, "Unsupported provider", ErrorCodes.Invalid));
+
+        try
+        {
+            // Exchange code for access token
+            var tokenResponse = await ExchangeCodeForToken(exchangeDto.Code, exchangeDto.RedirectUri);
+            
+            if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.AccessToken))
+                return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                    new ErrorMessage(HttpStatusCode.BadRequest, "Failed to exchange code for token", ErrorCodes.Invalid));
+
+            // Get user info from Google
+            var userInfo = await GetGoogleUserInfo(tokenResponse.AccessToken);
+            
+            if (userInfo == null || string.IsNullOrEmpty(userInfo.Email))
+                return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                    new ErrorMessage(HttpStatusCode.BadRequest, "Failed to get user info from Google", ErrorCodes.Invalid));
+
+            // Find or create user
+            var result = await repository.GetAsync(new UserSpec(userInfo.Email), cancellationToken);
+
+            if (result == null)
+            {
+                var newUser = new User
+                {
+                    Email = userInfo.Email,
+                    FullName = userInfo.Name ?? "Google User",
+                    Role = userInfo.Email.EndsWith("@admin.com", StringComparison.OrdinalIgnoreCase)
+                        ? UserRoleEnum.Admin
+                        : UserRoleEnum.Client,
+                    AuthProvider = AuthProvider.Google,
+                    ProfilePictureUrl = userInfo.Picture
+                };
+
+                await repository.AddAsync(newUser, cancellationToken);
+                
+                // Create Stripe customer
+                var stripeCustomerId = await stripeAccountService.CreateCustomer(newUser.Email, newUser.FullName, newUser.Id);
+                if (stripeCustomerId.Result != null)
+                {
+                    newUser.StripeCustomerId = stripeCustomerId.Result;
+                    await repository.UpdateAsync(newUser, cancellationToken);
+                }
+                
+                result = newUser;
+            }
+            
+            var user = new UserDTO
+            {
+                Id = result.Id,
+                Email = result.Email,
+                FullName = result.FullName,
+                Role = result.Role,
+                AuthProvider = result.AuthProvider,
+            };
+            
+            return ServiceResponse.CreateSuccessResponse(new LoginResponseDTO
+            {
+                User = user,
+                Token = loginService.GetToken(user, DateTime.UtcNow, new TimeSpan(7, 0, 0, 0))
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"OAuth code exchange error: {ex.Message}");
+            return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                new ErrorMessage(HttpStatusCode.InternalServerError, "OAuth exchange failed"));
+        }
+    }
+
+    private async Task<GoogleTokenResponse?> ExchangeCodeForToken(string code, string redirectUrl)
+    {
+        var tokenRequest = new
+        {
+            client_id = _googleOAuthConfig.ClientId, // Add this to your configuration
+            client_secret = _googleOAuthConfig.ClientSecret, // Add this to your configuration
+            code = code,
+            grant_type = "authorization_code",
+            redirect_uri = redirectUrl
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(tokenRequest), Encoding.UTF8, "application/json");
+        
+        var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Google token exchange error: {errorContent}");
+            return null;
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent, new JsonSerializerOptions 
+        { 
+            PropertyNameCaseInsensitive = true 
+        });
+    }
+
+    private async Task<GoogleUserInfo?> GetGoogleUserInfo(string accessToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        
+        var response = await httpClient.SendAsync(request);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Google user info error: {errorContent}");
+            return null;
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<GoogleUserInfo>(responseContent, new JsonSerializerOptions 
+        { 
+            PropertyNameCaseInsensitive = true 
         });
     }
 

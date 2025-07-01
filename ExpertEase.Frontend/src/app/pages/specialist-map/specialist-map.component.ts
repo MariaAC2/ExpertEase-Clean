@@ -275,7 +275,7 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
     this.specialistMarkers = [];
     this.selectedMarker = null;
 
-    this.specialistService.getSpecialists('', 1, 100)
+    this.specialistService.getSpecialistsLegacy('', 1, 100)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

@@ -12,6 +12,17 @@ export interface PagedResponse<T> {
   data?: T[];
 }
 
+export interface SpecialistPaginationQueryParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  categoryId?: string;
+  categoryName?: string;
+  minRating?: number;
+  maxRating?: number;
+  sortByRating?: 'asc' | 'desc';
+  experienceRange?: '0-2' | '2-5' | '5-7' | '7-10' | '10+';
+}
 export interface StatusUpdateDTO {
   id: string;
   status: StatusEnum;

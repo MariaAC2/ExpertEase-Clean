@@ -23,6 +23,7 @@ import {TermsComponent} from './pages/terms/terms.component';
 import {PrivacyComponent} from './pages/privacy/privacy.component';
 import {SpecialistMapComponent} from './pages/specialist-map/specialist-map.component';
 import {StripeAccountComponent} from './pages/profile/stripe-account/stripe-account.component';
+import {GoogleCallbackComponent} from './pages/auth/google-callback/google-callback.component';
 
 export const routes: Routes = [
   {
@@ -44,6 +45,10 @@ export const routes: Routes = [
   {
     path: 'privacy',
     component: PrivacyComponent
+  },
+  {
+    path: 'auth/google/callback',
+    component: GoogleCallbackComponent
   },
   {
     path: 'profile',

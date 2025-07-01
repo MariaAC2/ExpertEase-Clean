@@ -1,0 +1,119 @@
+.search-filters {
+  background-color: #f8f9fa;
+  border: 1px solid #e6dfff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filters-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.clear-filters-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.clear-filters-btn:hover {
+  background-color: #c82333;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #555;
+}
+
+.filter-input, .filter-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.filter-input:focus, .filter-select:focus {
+  outline: none;
+  border-color: #9a83db;
+  box-shadow: 0 0 0 2px rgba(154, 131, 219, 0.2);
+}
+
+.rating-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-input {
+  flex: 1;
+  max-width: 80px;
+}
+
+.quick-filters {
+  grid-column: 1 / -1;
+}
+
+.quick-filter-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-filter-btn {
+  background-color: #9a83db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.quick-filter-btn:hover {
+  background-color: #8670d1;
+}
+
+@media (max-width: 768px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .quick-filter-buttons {
+    justify-content: center;
+  }
+}

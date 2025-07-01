@@ -1,0 +1,116 @@
+<div class="search-filters">
+  <div class="filters-header">
+    <h3>Filtrează rezultatele</h3>
+    <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
+      Șterge filtrele
+    </button>
+  </div>
+
+  <div class="filters-grid">
+    <!-- Search Input -->
+    <div class="filter-group">
+      <label for="search">Caută specialist:</label>
+      <input
+        id="search"
+        type="text"
+        [(ngModel)]="filters.search"
+        (ngModelChange)="onFiltersChange()"
+        placeholder="Nume, email, telefon..."
+        class="filter-input">
+    </div>
+
+    <!-- Category Filter -->
+    <div class="filter-group">
+      <label for="categoryName">Categorie:</label>
+      <input
+        id="categoryName"
+        type="text"
+        [(ngModel)]="filters.categoryName"
+        (ngModelChange)="onFiltersChange()"
+        placeholder="Ex: instalator, electrician..."
+        class="filter-input">
+    </div>
+
+    <!-- Rating Range -->
+    <div class="filter-group">
+      <label>Rating:</label>
+      <div class="rating-inputs">
+        <input
+          type="number"
+          [(ngModel)]="filters.minRating"
+          (ngModelChange)="onFiltersChange()"
+          placeholder="Min"
+          min="0"
+          max="5"
+          step="0.1"
+          class="filter-input rating-input">
+        <span>-</span>
+        <input
+          type="number"
+          [(ngModel)]="filters.maxRating"
+          (ngModelChange)="onFiltersChange()"
+          placeholder="Max"
+          min="0"
+          max="5"
+          step="0.1"
+          class="filter-input rating-input">
+      </div>
+    </div>
+
+    <!-- Experience Range -->
+    <div class="filter-group">
+      <label for="experienceRange">Experiență:</label>
+      <select
+        id="experienceRange"
+        [(ngModel)]="filters.experienceRange"
+        (ngModelChange)="onFiltersChange()"
+        class="filter-select">
+        <option value="">Toate</option>
+        <option value="0-2">0-2 ani</option>
+        <option value="2-5">2-5 ani</option>
+        <option value="5-7">5-7 ani</option>
+        <option value="7-10">7-10 ani</option>
+        <option value="10+">10+ ani</option>
+      </select>
+    </div>
+
+    <!-- Sort by Rating -->
+    <div class="filter-group">
+      <label for="sortByRating">Sortare după rating:</label>
+      <select
+        id="sortByRating"
+        [(ngModel)]="filters.sortByRating"
+        (ngModelChange)="onFiltersChange()"
+        class="filter-select">
+        <option value="">Implicit</option>
+        <option value="desc">Rating descrescător</option>
+        <option value="asc">Rating crescător</option>
+      </select>
+    </div>
+
+    <!-- Quick Filter Buttons -->
+    <div class="filter-group quick-filters">
+      <label>Filtre rapide:</label>
+      <div class="quick-filter-buttons">
+        <button
+          type="button"
+          class="quick-filter-btn"
+          (click)="applyQuickFilter('topRated')">
+          Top Rating
+        </button>
+        <button
+          type="button"
+          class="quick-filter-btn"
+          (click)="applyQuickFilter('experienced')">
+          Experiență 7+ ani
+        </button>
+        <button
+          type="button"
+          class="quick-filter-btn"
+          (click)="applyQuickFilter('highRated')">
+          Rating 4.5+
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

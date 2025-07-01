@@ -13,13 +13,60 @@
     <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
   </div>
 
+  <!-- Filters Toggle Button -->
+  <div class="filters-toggle">
+    <button class="toggle-filters-btn" (click)="toggleFilters()">
+      {{ isFiltersVisible ? 'Ascunde filtrele' : 'Arată filtrele' }}
+      <span class="toggle-icon">{{ isFiltersVisible ? '▲' : '▼' }}</span>
+    </button>
+  </div>
+
+  <!-- Search Filters -->
+  <div class="filters-container" [class.hidden]="!isFiltersVisible">
+    <app-search-filters
+      [initialFilters]="currentFilters"
+      (filtersChange)="onFiltersChange($event)">
+    </app-search-filters>
+  </div>
+
+  <!-- Quick Filter Buttons -->
+  <div class="quick-actions">
+    <button class="quick-action-btn" (click)="getTopRatedSpecialists()">
+      🌟 Top Rating
+    </button>
+    <button class="quick-action-btn" (click)="getExperiencedSpecialists()">
+      🎯 Experiență 7+ ani
+    </button>
+    <button class="quick-action-btn" (click)="clearAllFilters()">
+      🔄 Șterge toate filtrele
+    </button>
+  </div>
+
   <p>Peste <strong>100 de specialiști</strong> înregistrați pe platforma noastră!</p>
+
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="totalItems > 0">
+    <p><strong>{{ totalItems }}</strong> specialiști găsiți</p>
+  </div>
+
+  <!-- No Results Message -->
+  <div class="no-results" *ngIf="totalItems === 0 && !error">
+    <p>Nu am găsit specialiști care să corespundă criteriilor tale de căutare.</p>
+    <button class="clear-filters-btn" (click)="clearAllFilters()">
+      Încearcă să ștergi filtrele
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
 </div>
 
 <div class="user-list">
   <ng-container *ngFor="let user of users; let i = index">
     <app-specialist-card
-      [specialist]=user
+      [specialist]="user"
       (specialistId)="user.id = $event"
       (requestFormSubmit)="addRequest($event)">
     </app-specialist-card>

@@ -1,5 +1,7 @@
+using System.Net;
 using ExpertEase.Application.DataTransferObjects.LoginDTOs;
 using ExpertEase.Application.DataTransferObjects.UserDTOs;
+using ExpertEase.Application.Errors;
 using ExpertEase.Application.Responses;
 using ExpertEase.Application.Services;
 using ExpertEase.Domain.Enums;
@@ -41,5 +43,30 @@ public class AuthController(IUserService _userService) : ResponseController
         };
         
         return CreateRequestResponseFromServiceResponse(await _userService.AddUser(user));
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<RequestResponse<LoginResponseDTO>>> ExchangeOAuthCode([FromBody] OAuthCodeExchangeDTO exchangeDto, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await _userService.ExchangeOAuthCode(exchangeDto, cancellationToken);
+            
+            if (result.IsSuccess)
+            {
+                return CreateRequestResponseFromServiceResponse(result);
+            }
+            
+            return CreateRequestResponseFromServiceResponse(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"OAuth exchange controller error: {ex.Message}");
+            
+            var errorResponse = ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                new ErrorMessage(HttpStatusCode.InternalServerError, "OAuth exchange failed", ErrorCodes.Invalid));
+            
+            return CreateRequestResponseFromServiceResponse(errorResponse);
+        }
     }
 }

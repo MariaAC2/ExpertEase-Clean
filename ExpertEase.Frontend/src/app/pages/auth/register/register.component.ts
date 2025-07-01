@@ -1,15 +1,15 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import {Router, RouterLink, RouterLinkActive} from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import {LoginDTO, UserRegisterDTO, SocialLoginDTO} from '../../../models/api.models';
+import { LoginDTO, UserRegisterDTO, SocialLoginDTO } from '../../../models/api.models';
 import { FormField, dtoToFormFields } from '../../../models/form.models';
 import { DynamicFormComponent } from '../../../shared/dynamic-form/dynamic-form.component';
+import {environment} from '../../../../environments/environment';
 
 declare global {
   interface Window {
-    google: any;
     FB: any;
     fbAsyncInit: () => void;
   }
@@ -30,18 +30,19 @@ declare global {
 })
 export class RegisterComponent implements OnInit {
   formFields: FormField[] = [];
-  formData: { [key: string]: any } = {};
   errorMessage: string | null = null;
   acceptedPolicies: boolean = false;
   showPolicyError: boolean = false;
   isGoogleLoading = false;
   isFacebookLoading = false;
-  sdkLoadAttempts = 0;
-  maxSdkLoadAttempts = 3;
+
+  private readonly GOOGLE_CLIENT_ID = environment.googleClientId || '760852864614-0l1qdais39snht0oo3511r0tpbjdj09f.apps.googleusercontent.com';
+  private readonly FACEBOOK_APP_ID = environment.facebookAppId || '734399149543740';
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private ngZone: NgZone
   ) {
     const dto: UserRegisterDTO = {
@@ -52,26 +53,34 @@ export class RegisterComponent implements OnInit {
     };
 
     this.formFields = dtoToFormFields(dto, {
-      email: {type: 'email'},
-      password: {type: 'password'}
+      email: { type: 'email' },
+      password: { type: 'password' }
     });
 
     console.log('Registration form fields:', this.formFields);
   }
 
   ngOnInit() {
-    this.debugEnvironment();
-    this.loadGoogleSDK();
+    this.checkForOAuthError();
     this.loadFacebookSDK();
+    console.log('Register component initialized');
+    console.log('Google Client ID:', this.GOOGLE_CLIENT_ID);
+    console.log('Current origin:', window.location.origin);
   }
 
-  private debugEnvironment() {
-    console.log('=== Registration Debug Info ===');
-    console.log('Current URL:', window.location.href);
-    console.log('Protocol:', window.location.protocol);
-    console.log('Host:', window.location.host);
-    console.log('User Agent:', navigator.userAgent);
-    console.log('===============================');
+  private checkForOAuthError() {
+    // Check for OAuth errors from redirect
+    this.route.queryParams.subscribe(params => {
+      if (params['error']) {
+        this.errorMessage = params['error'];
+        // Clean URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true
+        });
+      }
+    });
   }
 
   registerUser(data: { [key: string]: any }) {
@@ -107,131 +116,11 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  private async loadGoogleSDK() {
-    if (typeof window === 'undefined') return;
-
-    try {
-      // Check if already loaded
-      if (window.google?.accounts?.id) {
-        console.log('Google SDK already available');
-        await this.initializeGoogleSignIn();
-        return;
-      }
-
-      console.log('Loading Google SDK...');
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-
-      script.onload = async () => {
-        console.log('Google SDK loaded successfully');
-        // Wait a bit for SDK to fully initialize
-        setTimeout(async () => {
-          await this.initializeGoogleSignIn();
-        }, 100);
-      };
-
-      script.onerror = (error) => {
-        console.error('Failed to load Google SDK:', error);
-        this.errorMessage = 'Nu s-a putut încărca SDK-ul Google. Verificați conexiunea la internet.';
-      };
-
-      document.head.appendChild(script);
-    } catch (error) {
-      console.error('Error loading Google SDK:', error);
-    }
-  }
-
-  private async loadFacebookSDK() {
-    if (typeof window === 'undefined') return;
-
-    try {
-      if (window.FB) {
-        console.log('Facebook SDK already available');
-        return;
-      }
-
-      console.log('Loading Facebook SDK...');
-
-      window.fbAsyncInit = () => {
-        window.FB.init({
-          appId: '734399149543740',
-          cookie: true,
-          xfbml: true,
-          version: 'v18.0'
-        });
-        console.log('Facebook SDK initialized successfully');
-      };
-
-      const script = document.createElement('script');
-      script.async = true;
-      script.defer = true;
-      script.crossOrigin = 'anonymous';
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-
-      script.onerror = (error) => {
-        console.error('Failed to load Facebook SDK:', error);
-      };
-
-      document.head.appendChild(script);
-    } catch (error) {
-      console.error('Error loading Facebook SDK:', error);
-    }
-  }
-
-  private async initializeGoogleSignIn(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const maxAttempts = 3;
-      let attempt = 0;
-
-      const tryInitialize = () => {
-        attempt++;
-        console.log(`Google SDK initialization attempt ${attempt}/${maxAttempts}`);
-
-        if (!window.google?.accounts?.id) {
-          if (attempt < maxAttempts) {
-            setTimeout(tryInitialize, 1000);
-            return;
-          }
-          reject(new Error('Google SDK not available after all attempts'));
-          return;
-        }
-
-        try {
-          window.google.accounts.id.initialize({
-            client_id: '760852864614-0l1qdais39snht0oo3511r0tpbjdj09f.apps.googleusercontent.com',
-            callback: (response: any) => {
-              this.ngZone.run(() => {
-                this.handleGoogleResponse(response);
-              });
-            },
-            auto_select: false,
-            cancel_on_tap_outside: true,
-            use_fedcm_for_prompt: false,
-            context: 'signup'
-          });
-
-          console.log('Google Sign-In initialized successfully for registration');
-          resolve();
-        } catch (error) {
-          console.error('Error initializing Google Sign-In:', error);
-          if (attempt < maxAttempts) {
-            setTimeout(tryInitialize, 1000);
-          } else {
-            reject(error);
-          }
-        }
-      };
-
-      tryInitialize();
-    });
-  }
-
+  // Manual Google OAuth Flow for Registration
   signUpWithGoogle() {
-    console.log('Google sign-up clicked');
+    console.log('Starting Google OAuth registration redirect flow');
 
-    // Check policies
+    // Check policies first
     if (!this.acceptedPolicies) {
       this.showPolicyError = true;
       this.errorMessage = 'Trebuie să acceptați termenii și condițiile pentru a continua.';
@@ -240,78 +129,213 @@ export class RegisterComponent implements OnInit {
 
     this.showPolicyError = false;
 
-    // Check SDK availability
-    if (!window.google?.accounts?.id) {
-      this.errorMessage = 'Google SDK nu este disponibil. Încercați să reîncărcați pagina.';
-      return;
-    }
-
-    if (this.isGoogleLoading) {
-      console.log('Google sign-up already in progress');
-      return;
-    }
+    if (this.isGoogleLoading) return;
 
     this.isGoogleLoading = true;
     this.errorMessage = null;
 
-    console.log('Starting Google sign-up process...');
-
     try {
-      // Create a promise to handle the popup
-      const signUpPromise = new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Google sign-up timeout'));
-        }, 30000); // 30 second timeout
+      // Google OAuth parameters
+      const redirectUri = window.location.origin + '/auth/google/callback';
+      const scope = 'email profile';
+      const responseType = 'code';
+      const state = this.generateRandomState();
 
-        window.google.accounts.id.prompt((notification: any) => {
-          clearTimeout(timeout);
+      console.log('=== OAUTH REGISTRATION REDIRECT DEBUG ===');
+      console.log('Client ID:', this.GOOGLE_CLIENT_ID);
+      console.log('Redirect URI:', redirectUri);
+      console.log('State:', state);
+      console.log('Policies accepted:', this.acceptedPolicies);
+      console.log('========================================');
 
-          if (notification.isNotDisplayed()) {
-            const reason = notification.getNotDisplayedReason();
-            console.log('Google prompt not displayed:', reason);
-            reject(new Error(`Google prompt not displayed: ${reason}`));
-          } else if (notification.isSkippedMoment()) {
-            const reason = notification.getSkippedReason();
-            console.log('Google prompt skipped:', reason);
-            reject(new Error(`Google prompt skipped: ${reason}`));
-          } else {
-            resolve();
-          }
-        });
+      // Store state and current page for validation and return
+      sessionStorage.setItem('google_oauth_state', state);
+      sessionStorage.setItem('google_oauth_redirect', '/home');
+      sessionStorage.setItem('google_oauth_type', 'register');
+      sessionStorage.setItem('google_oauth_source', 'register'); // Remember where we came from
+
+      // Create Google OAuth URL
+      const params = new URLSearchParams({
+        client_id: this.GOOGLE_CLIENT_ID,
+        redirect_uri: redirectUri,
+        scope: scope,
+        response_type: responseType,
+        state: state,
+        access_type: 'offline',
+        prompt: 'select_account',
+        include_granted_scopes: 'true'
       });
 
-      signUpPromise.catch((error) => {
-        this.ngZone.run(() => {
-          this.isGoogleLoading = false;
-          console.error('Google sign-up promise rejected:', error);
+      const googleAuthUrl = `https://accounts.google.com/oauth/authorize?${params.toString()}`;
 
-          let errorMsg = 'Eroare la înregistrarea cu Google.';
+      console.log('Redirecting to Google OAuth URL:', googleAuthUrl);
 
-          if (error.message.includes('timeout')) {
-            errorMsg = 'Timp expirat pentru Google Sign-In. Încercați din nou.';
-          } else if (error.message.includes('not displayed')) {
-            errorMsg = 'Pop-up-ul Google nu poate fi afișat. Verificați setările browser-ului.';
-          } else if (error.message.includes('skipped')) {
-            errorMsg = 'Procesul de înregistrare Google a fost anulat.';
-          }
-
-          this.errorMessage = errorMsg;
-        });
-      });
+      // Direct redirect (no popup)
+      window.location.href = googleAuthUrl;
 
     } catch (error) {
-      this.ngZone.run(() => {
-        this.isGoogleLoading = false;
-        console.error('Google sign-up error:', error);
-        this.errorMessage = 'Eroare la inițializarea înregistrării Google: ' + (error as Error).message;
-      });
+      this.isGoogleLoading = false;
+      console.error('Error starting Google OAuth registration:', error);
+      this.errorMessage = 'Eroare la inițializarea înregistrării Google.';
     }
   }
 
-  signUpWithFacebook() {
-    console.log('Facebook sign-up clicked');
+  private openGooglePopup(url: string) {
+    console.log('Opening Google registration popup...');
 
-    // Check policies
+    const popup = window.open(
+      url,
+      'google-signup',
+      'width=500,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,directories=no,status=no'
+    );
+
+    if (!popup) {
+      console.log('Popup blocked, trying redirect method');
+      this.fallbackToRedirect(url);
+      return;
+    }
+
+    // Monitor popup
+    const checkClosed = setInterval(() => {
+      try {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          this.handlePopupClosed();
+        }
+      } catch (error) {
+        // Cross-origin error when popup is still open
+      }
+    }, 1000);
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      if (!popup.closed) {
+        popup.close();
+        clearInterval(checkClosed);
+        this.ngZone.run(() => {
+          this.isGoogleLoading = false;
+          this.errorMessage = 'Timp expirat pentru înregistrarea Google.';
+        });
+      }
+    }, 300000);
+  }
+
+  private handlePopupClosed() {
+    this.ngZone.run(() => {
+      console.log('Google registration popup closed, checking for auth code...');
+
+      // Check if we got a code in localStorage (set by callback page)
+      const authCode = localStorage.getItem('google_auth_code');
+      const authState = localStorage.getItem('google_auth_state');
+      const authError = localStorage.getItem('google_auth_error');
+      const storedState = sessionStorage.getItem('google_oauth_state');
+
+      if (authError) {
+        // Clear error
+        localStorage.removeItem('google_auth_error');
+        this.isGoogleLoading = false;
+        this.errorMessage = authError;
+        return;
+      }
+
+      if (authCode && authState === storedState) {
+        console.log('Auth code received, exchanging for token...');
+
+        // Clear stored values
+        localStorage.removeItem('google_auth_code');
+        localStorage.removeItem('google_auth_state');
+        sessionStorage.removeItem('google_oauth_state');
+
+        // Exchange code for user info
+        this.exchangeGoogleCode(authCode);
+      } else {
+        this.isGoogleLoading = false;
+        if (!authCode) {
+          this.errorMessage = 'Înregistrarea Google a fost anulată.';
+        } else {
+          this.errorMessage = 'Eroare de securitate în înregistrarea Google.';
+        }
+      }
+    });
+  }
+
+  private fallbackToRedirect(url: string) {
+    console.log('Using redirect method for Google OAuth registration');
+    // Direct redirect as fallback
+    window.location.href = url;
+  }
+
+  private exchangeGoogleCode(code: string) {
+    console.log('Exchanging Google code for user registration');
+
+    const exchangeData = {
+      code: code,
+      provider: 'google',
+      redirectUri: window.location.origin + '/auth/google/callback'
+    };
+
+    this.authService.exchangeOAuthCode(exchangeData).subscribe({
+      next: (result) => {
+        console.log('Google OAuth registration exchange successful:', result);
+        this.isGoogleLoading = false;
+        this.router.navigate(['/home']);
+      },
+      error: (err) => {
+        console.error('Google OAuth registration exchange failed:', err);
+        this.isGoogleLoading = false;
+
+        let errorMsg = 'Eroare la procesarea înregistrării Google.';
+
+        if (err.status === 400 && err.error?.errorMessage?.message) {
+          const backendMsg = err.error.errorMessage.message;
+          if (backendMsg.includes('already exists')) {
+            errorMsg = 'Un cont cu acest email există deja. Încercați să vă autentificați în loc să vă înregistrați.';
+          } else {
+            errorMsg = backendMsg;
+          }
+        }
+
+        this.errorMessage = errorMsg;
+      }
+    });
+  }
+
+  // Facebook Sign-Up (keeping original approach)
+  private loadFacebookSDK() {
+    if (typeof window === 'undefined') return;
+
+    if (window.FB) {
+      console.log('Facebook SDK already available');
+      return;
+    }
+
+    console.log('Loading Facebook SDK...');
+
+    window.fbAsyncInit = () => {
+      window.FB.init({
+        appId: this.FACEBOOK_APP_ID,
+        cookie: true,
+        xfbml: true,
+        version: 'v18.0'
+      });
+      console.log('Facebook SDK initialized successfully');
+    };
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = 'anonymous';
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+
+    script.onerror = (error) => {
+      console.error('Failed to load Facebook SDK:', error);
+    };
+
+    document.head.appendChild(script);
+  }
+
+  signUpWithFacebook() {
+    // Check policies first
     if (!this.acceptedPolicies) {
       this.showPolicyError = true;
       this.errorMessage = 'Trebuie să acceptați termenii și condițiile pentru a continua.';
@@ -321,7 +345,7 @@ export class RegisterComponent implements OnInit {
     this.showPolicyError = false;
 
     if (!window.FB) {
-      this.errorMessage = 'Facebook SDK nu este disponibil. Încercați să reîncărcați pagina.';
+      this.errorMessage = 'Facebook SDK nu este disponibil. Reîncărcați pagina.';
       return;
     }
 
@@ -359,66 +383,12 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  private handleGoogleResponse(response: any) {
-    this.isGoogleLoading = false;
-
-    console.log('Google response received:', response);
-
-    if (!response.credential) {
-      this.errorMessage = 'Nu s-a primit token-ul de la Google. Încercați din nou.';
-      return;
-    }
-
-    const socialLoginData: SocialLoginDTO = {
-      token: response.credential,
-      provider: 'google'
-    };
-
-    console.log('Sending Google social registration data:', socialLoginData);
-
-    this.authService.socialLogin(socialLoginData).subscribe({
-      next: (result) => {
-        console.log('Google social registration successful:', result);
-        this.router.navigate(['/home']);
-      },
-      error: (err) => {
-        console.error('Google social registration failed:', err);
-        console.error('Full error object:', JSON.stringify(err, null, 2));
-
-        let errorMsg = 'Eroare la înregistrarea cu Google.';
-
-        // Enhanced error handling
-        if (err.status === 400) {
-          if (err.error?.errorMessage?.message) {
-            const backendMsg = err.error.errorMessage.message;
-            if (backendMsg.includes('Invalid') && backendMsg.includes('token')) {
-              errorMsg = 'Token Google invalid. Încercați să vă deconectați din Google și să încercați din nou.';
-            } else if (backendMsg.includes('already exists')) {
-              errorMsg = 'Un cont cu acest email există deja. Încercați să vă autentificați în loc să vă înregistrați.';
-            } else if (backendMsg.includes('email')) {
-              errorMsg = 'Eroare la procesarea email-ului. Asigurați-vă că ați acordat permisiunea pentru email în Google.';
-            } else {
-              errorMsg = backendMsg;
-            }
-          }
-        } else if (err.status === 500) {
-          errorMsg = 'Eroare de server. Încercați din nou mai târziu.';
-        } else if (err.status === 0) {
-          errorMsg = 'Eroare de conexiune. Verificați conexiunea la internet.';
-        }
-
-        this.errorMessage = errorMsg;
-      }
-    });
-  }
-
   private handleFacebookResponse(accessToken: string) {
-    this.isFacebookLoading = false;
-
-    console.log('Facebook token received:', accessToken ? 'Token present' : 'No token');
+    console.log('Facebook token received for registration');
 
     if (!accessToken) {
-      this.errorMessage = 'Nu s-a primit token-ul de la Facebook. Încercați din nou.';
+      this.isFacebookLoading = false;
+      this.errorMessage = 'Nu s-a primit token-ul de la Facebook.';
       return;
     }
 
@@ -427,37 +397,25 @@ export class RegisterComponent implements OnInit {
       provider: 'facebook'
     };
 
-    console.log('Sending Facebook social registration data:', socialLoginData);
-
     this.authService.socialLogin(socialLoginData).subscribe({
       next: (result) => {
         console.log('Facebook social registration successful:', result);
+        this.isFacebookLoading = false;
         this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error('Facebook social registration failed:', err);
-        console.error('Full error object:', JSON.stringify(err, null, 2));
+        this.isFacebookLoading = false;
 
         let errorMsg = 'Eroare la înregistrarea cu Facebook.';
 
-        // Enhanced error handling for Facebook
-        if (err.status === 400) {
-          if (err.error?.errorMessage?.message) {
-            const backendMsg = err.error.errorMessage.message;
-            if (backendMsg.includes('Invalid') && backendMsg.includes('token')) {
-              errorMsg = 'Token Facebook invalid. Încercați să vă deconectați din Facebook și să încercați din nou.';
-            } else if (backendMsg.includes('already exists')) {
-              errorMsg = 'Un cont cu acest email există deja. Încercați să vă autentificați în loc să vă înregistrați.';
-            } else if (backendMsg.includes('email')) {
-              errorMsg = 'Email-ul nu este disponibil din Facebook. Asigurați-vă că ați acordat permisiunea pentru email.';
-            } else {
-              errorMsg = backendMsg;
-            }
+        if (err.status === 400 && err.error?.errorMessage?.message) {
+          const backendMsg = err.error.errorMessage.message;
+          if (backendMsg.includes('already exists')) {
+            errorMsg = 'Un cont cu acest email există deja. Încercați să vă autentificați în loc să vă înregistrați.';
+          } else {
+            errorMsg = backendMsg;
           }
-        } else if (err.status === 500) {
-          errorMsg = 'Eroare de server. Încercați din nou mai târziu.';
-        } else if (err.status === 0) {
-          errorMsg = 'Eroare de conexiune. Verificați conexiunea la internet.';
         }
 
         this.errorMessage = errorMsg;
@@ -465,51 +423,34 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  // Additional helper methods for debugging
-  private debugGoogleError(error: any) {
-    console.log('=== Google Error Debug ===');
-    console.log('Error type:', typeof error);
-    console.log('Error message:', error.message || 'No message');
-    console.log('Error stack:', error.stack || 'No stack');
-    console.log('Full error:', error);
-
-    // Check Google SDK state
-    console.log('Google SDK available:', !!window.google?.accounts?.id);
-    if (window.google?.accounts?.id) {
-      console.log('Google SDK methods:', Object.keys(window.google.accounts.id));
-    }
-    console.log('========================');
+  // Utility methods
+  private generateRandomState(): string {
+    return Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
   }
 
-  // Manual retry method for Google sign-up
   retryGoogleSignUp() {
-    console.log('Retrying Google sign-up...');
     this.isGoogleLoading = false;
     this.errorMessage = null;
-
-    // Wait a moment then try again
     setTimeout(() => {
       this.signUpWithGoogle();
-    }, 1000);
+    }, 100);
   }
 
-  // Manual retry method for Facebook sign-up
   retryFacebookSignUp() {
-    console.log('Retrying Facebook sign-up...');
     this.isFacebookLoading = false;
     this.errorMessage = null;
 
-    // First try to logout from Facebook to reset state
     if (window.FB) {
       window.FB.logout(() => {
         setTimeout(() => {
           this.signUpWithFacebook();
-        }, 1000);
+        }, 100);
       });
     } else {
       setTimeout(() => {
         this.signUpWithFacebook();
-      }, 1000);
+      }, 100);
     }
   }
 

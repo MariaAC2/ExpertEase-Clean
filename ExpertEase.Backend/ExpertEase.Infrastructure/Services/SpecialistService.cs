@@ -69,9 +69,74 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
     }
 
     public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> GetSpecialists(
-        PaginationSearchQueryParams pagination, CancellationToken cancellationToken = default)
+        SpecialistPaginationQueryParams pagination, CancellationToken cancellationToken = default)
     {
-        var result = await repository.PageAsync(pagination, new SpecialistProjectionSpec(pagination.Search),
+        var result = await repository.PageAsync(pagination, new SpecialistProjectionSpec(pagination),
+            cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+
+    public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> SearchSpecialistsByCategory(Guid categoryId, 
+        PaginationQueryParams pagination, CancellationToken cancellationToken = default)
+    {
+        var searchParams = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            CategoryId = categoryId
+        };
+        
+        var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
+            cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+
+    public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> SearchSpecialistsByRatingRange(int minRating, 
+        int maxRating, PaginationQueryParams pagination, CancellationToken cancellationToken = default)
+    {
+        var searchParams = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            MinRating = minRating,
+            MaxRating = maxRating
+        };
+        
+        var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
+            cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+
+    public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> SearchSpecialistsByExperienceRange(string experienceRange, 
+        PaginationQueryParams pagination, CancellationToken cancellationToken = default)
+    {
+        var searchParams = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            ExperienceRange = experienceRange
+        };
+        
+        var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
+            cancellationToken);
+
+        return ServiceResponse.CreateSuccessResponse(result);
+    }
+
+    public async Task<ServiceResponse<PagedResponse<SpecialistDTO>>> GetTopRatedSpecialists(
+        PaginationQueryParams pagination, CancellationToken cancellationToken = default)
+    {
+        var searchParams = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            SortByRating = "desc"
+        };
+        
+        var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
 
         return ServiceResponse.CreateSuccessResponse(result);
