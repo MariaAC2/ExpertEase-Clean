@@ -1,7 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {RequestAddDTO, SpecialistDTO, PaginationSearchQueryParams, SpecialistFilterParams} from '../../models/api.models';
 import {CommonModule} from '@angular/common';
-import {dtoToDictionary} from '../../models/form.models';
 import {SpecialistService} from '../../services/specialist.service';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {SearchInputComponent} from '../../shared/search-input/search-input.component';

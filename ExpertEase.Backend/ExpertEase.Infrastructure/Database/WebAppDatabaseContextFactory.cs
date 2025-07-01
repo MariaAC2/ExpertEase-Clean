@@ -10,7 +10,7 @@ public class WebAppDatabaseContextFactory : IDesignTimeDbContextFactory<WebAppDa
 
         // Replace this with your actual connection string
         var connectionString =
-            "Host=34.78.213.177;Port=5432;Database=experteasedb;Username=postgres;Password=mypassword;";
+            "Host=db.xkwlftmopgzgynxblfgh.supabase.co;Port=5432;Database=postgres;Username=postgres;Password=qzaAUP7Uz&zyJhL;";
         optionsBuilder.UseNpgsql(connectionString);
 
         return new WebAppDatabaseContext(optionsBuilder.Options, migrate: false); // avoid auto-migrating during CLI commands

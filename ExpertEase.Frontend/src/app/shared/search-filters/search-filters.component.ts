@@ -7,13 +7,13 @@ import { CategoryService } from '../../services/category.service';
 type FilterType = 'categories' | 'rating' | 'experience' | 'sort' | null;
 
 @Component({
-  selector: 'app-compact-filters',
+  selector: 'app-search-filters',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './search-filters.component.html',
   styleUrls: ['./search-filters.component.scss']
 })
-export class CompactFiltersComponent implements OnInit {
+export class SearchFiltersComponent implements OnInit {
   @Input() initialFilters: SpecialistFilterParams = {};
   @Output() filtersChange = new EventEmitter<SpecialistFilterParams>();
 

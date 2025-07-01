@@ -9,7 +9,7 @@ namespace ExpertEase.Infrastructure.Services;
 public class FirebaseStorageService: IFirebaseStorageService
 {
     private readonly StorageClient _storageClient;
-    private readonly string _bucketName = "expertease-1b005.firebasestorage.app";
+    private readonly string _bucketName = "uniproject-38b1d.firebasestorage.app";
     
     public FirebaseStorageService(IConfiguration configuration)
     {
