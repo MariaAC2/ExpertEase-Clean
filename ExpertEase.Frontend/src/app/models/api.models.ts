@@ -12,16 +12,22 @@ export interface PagedResponse<T> {
   data?: T[];
 }
 
-export interface SpecialistPaginationQueryParams {
+export interface PaginationSearchQueryParams {
   page: number;
   pageSize: number;
-  search?: string;
-  categoryId?: string;
-  categoryName?: string;
+  search?: string; // For name, email, phone, address search
+}
+
+export interface SpecialistFilterParams {
+  categoryIds?: string[];
   minRating?: number;
-  maxRating?: number;
+  experienceRange?: string;
   sortByRating?: 'asc' | 'desc';
-  experienceRange?: '0-2' | '2-5' | '5-7' | '7-10' | '10+';
+}
+
+
+export interface SpecialistPaginationQueryParams extends PaginationSearchQueryParams {
+  filters?: SpecialistFilterParams;
 }
 export interface StatusUpdateDTO {
   id: string;

@@ -10,6 +10,8 @@ import {
   SpecialistUpdateDTO,
   UserUpdateDTO,
   UserDetailsDTO,
+  PaginationSearchQueryParams,
+  SpecialistFilterParams,
   SpecialistPaginationQueryParams,
   CategoryDTO
 } from '../models/api.models';
@@ -29,43 +31,42 @@ export class SpecialistService {
     private geolocationService: GeolocationService
   ) {}
 
-  getSpecialists(params: SpecialistPaginationQueryParams) {
+  // Main method with separate search and filter parameters
+  getSpecialists(searchParams: PaginationSearchQueryParams, filterParams?: SpecialistFilterParams) {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`
     });
 
     let httpParams = new HttpParams()
-      .set('page', params.page.toString())
-      .set('pageSize', params.pageSize.toString());
+      .set('page', searchParams.page.toString())
+      .set('pageSize', searchParams.pageSize.toString());
 
-    // Add optional parameters only if they have values
-    if (params.search) {
-      httpParams = httpParams.set('search', params.search);
+    // Add search parameter
+    if (searchParams.search) {
+      httpParams = httpParams.set('search', searchParams.search);
     }
 
-    if (params.categoryId) {
-      httpParams = httpParams.set('categoryId', params.categoryId);
-    }
+    // Add filter parameters if provided - flatten them to match backend expectation
+    if (filterParams) {
+      if (filterParams.categoryIds && filterParams.categoryIds.length > 0) {
+        // Send multiple category IDs as separate parameters
+        filterParams.categoryIds.forEach((categoryId) => {
+          httpParams = httpParams.append('filter.categoryIds', categoryId);
+        });
+      }
 
-    if (params.categoryName) {
-      httpParams = httpParams.set('categoryName', params.categoryName);
-    }
+      if (filterParams.minRating !== undefined && filterParams.minRating !== null) {
+        httpParams = httpParams.set('filter.minRating', filterParams.minRating.toString());
+      }
 
-    if (params.minRating !== undefined && params.minRating !== null) {
-      httpParams = httpParams.set('minRating', params.minRating.toString());
-    }
+      if (filterParams.experienceRange) {
+        httpParams = httpParams.set('filter.experienceRange', filterParams.experienceRange);
+      }
 
-    if (params.maxRating !== undefined && params.maxRating !== null) {
-      httpParams = httpParams.set('maxRating', params.maxRating.toString());
-    }
-
-    if (params.sortByRating) {
-      httpParams = httpParams.set('sortByRating', params.sortByRating);
-    }
-
-    if (params.experienceRange) {
-      httpParams = httpParams.set('experienceRange', params.experienceRange);
+      if (filterParams.sortByRating) {
+        httpParams = httpParams.set('filter.sortByRating', filterParams.sortByRating);
+      }
     }
 
     return this.http.get<RequestResponse<PagedResponse<SpecialistDTO>>>(
@@ -74,7 +75,7 @@ export class SpecialistService {
     );
   }
 
-  // Legacy method for backward compatibility
+  // Legacy method for backward compatibility - overloaded signatures
   getSpecialistsLegacy(search: string | undefined, page: number, pageSize: number) {
     return this.getSpecialists({
       page,
@@ -83,71 +84,104 @@ export class SpecialistService {
     });
   }
 
-  searchSpecialistsByCategory(categoryId: string, page: number = 1, pageSize: number = 10) {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
+  // Method with combined parameters (for backward compatibility with existing code)
+  getSpecialistsCombined(params: SpecialistPaginationQueryParams) {
+    return this.getSpecialists({
+      page: params.page,
+      pageSize: params.pageSize,
+      search: params.search
+    }, params.filters);
+  }
 
-    const params = new HttpParams()
-      .set('categoryId', categoryId)
-      .set('page', page.toString())
-      .set('pageSize', pageSize.toString());
-
-    return this.http.get<RequestResponse<PagedResponse<SpecialistDTO>>>(
-      `${this.baseUrl}/SearchByCategory`,
-      { headers, params }
+  searchSpecialistsByCategory(categoryIds: string[], page: number = 1, pageSize: number = 10) {
+    return this.getSpecialists(
+      { page, pageSize },
+      { categoryIds }
     );
   }
 
-  searchSpecialistsByRatingRange(minRating: number, maxRating: number, page: number = 1, pageSize: number = 10) {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    const params = new HttpParams()
-      .set('minRating', minRating.toString())
-      .set('maxRating', maxRating.toString())
-      .set('page', page.toString())
-      .set('pageSize', pageSize.toString());
-
-    return this.http.get<RequestResponse<PagedResponse<SpecialistDTO>>>(
-      `${this.baseUrl}/SearchByRatingRange`,
-      { headers, params }
+  searchSpecialistsByRating(minRating: number, page: number = 1, pageSize: number = 10) {
+    return this.getSpecialists(
+      { page, pageSize },
+      { minRating }
     );
   }
 
   searchSpecialistsByExperienceRange(experienceRange: string, page: number = 1, pageSize: number = 10) {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    const params = new HttpParams()
-      .set('experienceRange', experienceRange)
-      .set('page', page.toString())
-      .set('pageSize', pageSize.toString());
-
-    return this.http.get<RequestResponse<PagedResponse<SpecialistDTO>>>(
-      `${this.baseUrl}/SearchByExperienceRange`,
-      { headers, params }
+    return this.getSpecialists(
+      { page, pageSize },
+      { experienceRange }
     );
   }
 
   getTopRatedSpecialists(page: number = 1, pageSize: number = 10) {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
+    return this.getSpecialists(
+      { page, pageSize },
+      { sortByRating: 'desc', minRating: 4.5 }
+    );
+  }
 
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('pageSize', pageSize.toString());
+  // Advanced filtering method
+  searchSpecialistsAdvanced(
+    searchParams: PaginationSearchQueryParams,
+    categoryIds?: string[],
+    minRating?: number,
+    experienceRange?: string,
+    sortByRating?: 'asc' | 'desc'
+  ) {
+    const filterParams: SpecialistFilterParams = {};
 
-    return this.http.get<RequestResponse<PagedResponse<SpecialistDTO>>>(
-      `${this.baseUrl}/GetTopRated`,
-      { headers, params }
+    if (categoryIds && categoryIds.length > 0) {
+      filterParams.categoryIds = categoryIds;
+    }
+
+    if (minRating) {
+      filterParams.minRating = minRating;
+    }
+
+    if (experienceRange) {
+      filterParams.experienceRange = experienceRange;
+    }
+
+    if (sortByRating) {
+      filterParams.sortByRating = sortByRating;
+    }
+
+    return this.getSpecialists(searchParams, filterParams);
+  }
+
+  // Quick filter methods
+  getHighRatedSpecialists(page: number = 1, pageSize: number = 10) {
+    return this.getSpecialists(
+      { page, pageSize },
+      { minRating: 4, sortByRating: 'desc' }
+    );
+  }
+
+  getExperiencedSpecialists(page: number = 1, pageSize: number = 10) {
+    return this.getSpecialists(
+      { page, pageSize },
+      { experienceRange: '7-10', sortByRating: 'desc' }
+    );
+  }
+
+  getSpecialistsByCategories(categoryIds: string[], page: number = 1, pageSize: number = 10) {
+    return this.getSpecialists(
+      { page, pageSize },
+      { categoryIds, sortByRating: 'desc' }
+    );
+  }
+
+  // Search with text and filters combined
+  searchAndFilter(
+    searchText: string,
+    filters: SpecialistFilterParams,
+    page: number = 1,
+    pageSize: number = 10
+  ) {
+    return this.getSpecialists(
+      { page, pageSize, search: searchText },
+      filters
     );
   }
 

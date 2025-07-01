@@ -16,25 +16,27 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
         Query.Include(e => e.SpecialistProfile)
             .ThenInclude(e => e.Categories);
         Query.Select(e => new SpecialistDTO
-            {
-                Id = e.Id,
-                FullName = e.FullName,
-                Email = e.Email,
-                ProfilePictureUrl = e.ProfilePictureUrl,
-                PhoneNumber = e.ContactInfo != null ? e.ContactInfo.PhoneNumber : "",
-                Address = e.ContactInfo != null ? e.ContactInfo.Address : "",
-                YearsExperience = e.SpecialistProfile.YearsExperience,
-                Description = e.SpecialistProfile.Description,
-                CreatedAt = e.CreatedAt,
-                UpdatedAt = e.UpdatedAt,
-                Rating = e.Rating,
-                Categories = e.SpecialistProfile.Categories.Select(c => new CategoryDTO
+        {
+            Id = e.Id,
+            FullName = e.FullName,
+            Email = e.Email,
+            ProfilePictureUrl = e.ProfilePictureUrl,
+            PhoneNumber = e.ContactInfo != null ? e.ContactInfo.PhoneNumber : "",
+            Address = e.ContactInfo != null ? e.ContactInfo.Address : "",
+            YearsExperience = e.SpecialistProfile != null ? e.SpecialistProfile.YearsExperience : 0,
+            Description = e.SpecialistProfile != null ? e.SpecialistProfile.Description : "",
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt,
+            Rating = e.Rating,
+            Categories = e.SpecialistProfile != null
+                ? e.SpecialistProfile.Categories.Select(c => new CategoryDTO
                 {
                     Id = c.Id,
                     Name = c.Name,
-                    Description = c.Description,
+                    Description = c.Description
                 }).ToList()
-            });
+                : new List<CategoryDTO>()
+        });
         
         if (orderByCreatedAt)
         {
@@ -51,30 +53,27 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
     {
         Query.Where(e => e.Role == UserRoleEnum.Specialist);
         
-        // Apply search filter
-        ApplySearchFilter(searchParams.Search);
-        
         // Apply category filters
-        ApplyCategoryFilters(searchParams.CategoryId, searchParams.CategoryName);
+        ApplyCategoryFilters(searchParams.Filter.CategoryId, searchParams.Filter.CategoryName);
         
         // Apply rating filters
-        ApplyRatingFilters(searchParams.MinRating, searchParams.MaxRating);
+        ApplyRatingFilters(searchParams.Filter.MinRating, searchParams.Filter.MaxRating);
         
         // Apply experience range filter
-        ApplyExperienceRangeFilter(searchParams.ExperienceRange);
+        ApplyExperienceRangeFilter(searchParams.Filter.ExperienceRange);
         
         // Apply rating sorting
-        ApplyRatingSorting(searchParams.SortByRating);
+        ApplyRatingSorting(searchParams.Filter.SortByRating);
     }
     
-    private void ApplySearchFilter(string? search)
+    public SpecialistProjectionSpec(PaginationSearchQueryParams searchParams) : this(true)
     {
-        search = !string.IsNullOrWhiteSpace(search) ? search.Trim() : null;
+        searchParams.Search = !string.IsNullOrWhiteSpace(searchParams.Search) ? searchParams.Search.Trim() : null;
 
-        if (search == null)
+        if (searchParams.Search == null)
             return;
 
-        var searchExpr = $"%{search.Replace(" ", "%")}%";
+        var searchExpr = $"%{searchParams.Search.Replace(" ", "%")}%";
 
         Query.Where(e =>
             EF.Functions.ILike(e.FullName, searchExpr) ||

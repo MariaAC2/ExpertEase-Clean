@@ -6,13 +6,19 @@ namespace ExpertEase.Application.Requests;
 /// Use this class to get the pagination and search query parameters from the HTTP request.
 /// You can extend the class to add more parameters to the pagination query.
 /// </summary>
-public class SpecialistPaginationQueryParams : PaginationQueryParams
+public class SpecialistPaginationQueryParams : PaginationSearchQueryParams
 {
-    /// <summary>
-    /// Search term to filter results by name, email, phone number, or address.
-    /// </summary>
-    public string? Search { get; set; }
-    
+    [Required]
+    public SpecialistFilterParams? Filter { get; set; }
+
+    public SpecialistPaginationQueryParams()
+    {
+        Filter = new SpecialistFilterParams();
+    }
+}
+
+public class SpecialistFilterParams
+{
     /// <summary>
     /// Filter specialists by category ID.
     /// </summary>

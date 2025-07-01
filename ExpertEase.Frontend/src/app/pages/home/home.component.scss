@@ -80,46 +80,101 @@
   }
 }
 
-// New styles for filters and search functionality
-.filters-toggle {
-  margin: 20px 0;
-  text-align: center;
-}
-
-.toggle-filters-btn {
-  background-color: #9a83db;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 auto;
-
-  &:hover {
-    background-color: #8670d1;
-  }
-}
-
-.toggle-icon {
-  font-size: 0.8rem;
-  transition: transform 0.2s;
-}
-
-.filters-container {
+// New compact search and filter section
+.search-filter-section {
   width: 100%;
-  max-width: 1200px;
+  max-width: 800px;
   margin: 20px 0;
-  transition: all 0.3s ease;
+}
 
-  &.hidden {
-    display: none;
+.search-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  min-width: 300px;
+  max-width: 500px;
+
+  // Apply search input styling
+  ::ng-deep app-search-input {
+    width: 100%;
+
+    .search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-box {
+      width: 100%;
+      border: 2px solid #b7a4dd;
+      border-radius: 3px;
+      font-size: 1rem;
+      font-family: 'Roboto Mono', monospace;
+      background-color: #f6efff;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #9a83db;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(154, 131, 219, 0.2);
+      }
+
+      &::placeholder {
+        color: #999;
+        font-style: italic;
+      }
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: #9a83db;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .search-button {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #9a83db;
+      border: none;
+      border-radius: 3px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: white;
+
+      &:hover {
+        background-color: #8670d1;
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      &:active {
+        transform: translateY(-50%) scale(0.95);
+      }
+    }
   }
+}
+
+.filter-wrapper {
+  flex-shrink: 0;
 }
 
 .quick-actions {
@@ -134,18 +189,29 @@
   background-color: #cfbdfe;
   color: #333;
   border: 2px solid #9a83db;
-  padding: 10px 16px;
-  border-radius: 20px;
+  padding: 8px 16px;
+  border-radius: 3px;
   cursor: pointer;
   font-family: 'Roboto Mono', monospace;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
 
   &:hover {
     background-color: #9a83db;
     color: white;
     transform: translateY(-2px);
+  }
+
+  &.clear-btn {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+
+    &:hover {
+      background-color: #dc3545;
+      color: white;
+    }
   }
 }
 
@@ -214,6 +280,41 @@
     padding: 16px;
   }
 
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input-wrapper {
+    min-width: auto;
+    max-width: none;
+
+    // Mobile-specific search styling
+    ::ng-deep app-search-input {
+      .search-input {
+        padding: 10px 16px 10px 45px;
+        font-size: 0.9rem;
+      }
+
+      .search-icon {
+        left: 15px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .search-button {
+        width: 28px;
+        height: 28px;
+        right: 6px;
+      }
+    }
+  }
+
+  .filter-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+
   .quick-actions {
     flex-direction: column;
     align-items: center;
@@ -231,8 +332,45 @@
     text-align: center;
     margin-bottom: 20px;
   }
+}
 
-  .filters-container {
-    padding: 0 10px;
+@media (max-width: 480px) {
+  .search-filter-section {
+    margin: 16px 0;
+  }
+
+  .search-row {
+    gap: 12px;
+  }
+
+  .search-input-wrapper {
+    ::ng-deep app-search-input {
+      .search-input {
+        padding: 8px 14px 8px 40px;
+        font-size: 0.85rem;
+      }
+
+      .search-icon {
+        left: 12px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .search-button {
+        width: 24px;
+        height: 24px;
+        right: 4px;
+      }
+    }
+  }
+
+  .quick-actions {
+    margin: 16px 0;
+    gap: 8px;
+  }
+
+  .quick-action-btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
   }
 }

@@ -83,10 +83,10 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         var searchParams = new SpecialistPaginationQueryParams
         {
             Page = pagination.Page,
-            PageSize = pagination.PageSize,
-            CategoryId = categoryId
+            PageSize = pagination.PageSize
         };
-        
+        if (searchParams.Filter != null) searchParams.Filter.CategoryId = categoryId;
+
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
 
@@ -100,9 +100,12 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         {
             Page = pagination.Page,
             PageSize = pagination.PageSize,
-            MinRating = minRating,
-            MaxRating = maxRating
         };
+        if (searchParams.Filter != null)
+        {
+            searchParams.Filter.MinRating = minRating;
+            searchParams.Filter.MaxRating = maxRating;
+        }
         
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
@@ -117,8 +120,9 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         {
             Page = pagination.Page,
             PageSize = pagination.PageSize,
-            ExperienceRange = experienceRange
         };
+        if (searchParams.Filter != null)
+            searchParams.Filter.ExperienceRange = experienceRange;
         
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
@@ -133,8 +137,9 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         {
             Page = pagination.Page,
             PageSize = pagination.PageSize,
-            SortByRating = "desc"
         };
+        if (searchParams.Filter != null)
+            searchParams.Filter.SortByRating = "desc"; // Sort by rating in descending order
         
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);

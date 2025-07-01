@@ -1,114 +1,152 @@
-<div class="search-filters">
-  <div class="filters-header">
-    <h3>Filtrează rezultatele</h3>
-    <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
-      Șterge filtrele
-    </button>
-  </div>
+<div class="compact-filters">
+  <!-- Filter Toggle Button -->
+  <button class="filter-toggle" (click)="toggleFilterPanel()" [class.active]="isOpen">
+    <span class="filter-icon">🔽</span>
+    <span>Filtrează</span>
+    <span class="filter-count" *ngIf="activeFiltersCount > 0">({{ activeFiltersCount }})</span>
+  </button>
 
-  <div class="filters-grid">
-    <!-- Search Input -->
-    <div class="filter-group">
-      <label for="search">Caută specialist:</label>
-      <input
-        id="search"
-        type="text"
-        [(ngModel)]="filters.search"
-        (ngModelChange)="onFiltersChange()"
-        placeholder="Nume, email, telefon..."
-        class="filter-input">
+  <!-- Filter Panel -->
+  <div class="filter-panel" [class.open]="isOpen" *ngIf="isOpen">
+    <!-- Main Filter Options -->
+    <div class="filter-options" *ngIf="!selectedFilterType">
+      <button class="filter-option" (click)="selectFilterType('categories')">
+        <span class="option-icon">📂</span>
+        <span>Categorii</span>
+        <span class="option-value" *ngIf="selectedCategoriesCount > 0">{{ selectedCategoriesCount }} selectate</span>
+      </button>
+
+      <button class="filter-option" (click)="selectFilterType('rating')">
+        <span class="option-icon">⭐</span>
+        <span>Rating</span>
+        <span class="option-value" *ngIf="currentFilters.minRating">{{ getRatingLabel(currentFilters.minRating) }}</span>
+      </button>
+
+      <button class="filter-option" (click)="selectFilterType('experience')">
+        <span class="option-icon">🎯</span>
+        <span>Experiență</span>
+        <span class="option-value" *ngIf="currentFilters.experienceRange">{{ getExperienceLabel(currentFilters.experienceRange) }}</span>
+      </button>
+
+      <button class="filter-option" (click)="selectFilterType('sort')">
+        <span class="option-icon">↕️</span>
+        <span>Sortare</span>
+        <span class="option-value" *ngIf="currentFilters.sortByRating">{{ getSortLabel(currentFilters.sortByRating) }}</span>
+      </button>
+
+      <!-- Quick Clear Button -->
+      <button class="clear-all-btn" (click)="clearAllFilters()" *ngIf="activeFiltersCount > 0">
+        <span class="option-icon">🗑️</span>
+        <span>Șterge toate</span>
+      </button>
     </div>
 
-    <!-- Category Filter -->
-    <div class="filter-group">
-      <label for="categoryName">Categorie:</label>
-      <input
-        id="categoryName"
-        type="text"
-        [(ngModel)]="filters.categoryName"
-        (ngModelChange)="onFiltersChange()"
-        placeholder="Ex: instalator, electrician..."
-        class="filter-input">
-    </div>
-
-    <!-- Rating Range -->
-    <div class="filter-group">
-      <label>Rating:</label>
-      <div class="rating-inputs">
-        <input
-          type="number"
-          [(ngModel)]="filters.minRating"
-          (ngModelChange)="onFiltersChange()"
-          placeholder="Min"
-          min="0"
-          max="5"
-          step="0.1"
-          class="filter-input rating-input">
-        <span>-</span>
-        <input
-          type="number"
-          [(ngModel)]="filters.maxRating"
-          (ngModelChange)="onFiltersChange()"
-          placeholder="Max"
-          min="0"
-          max="5"
-          step="0.1"
-          class="filter-input rating-input">
+    <!-- Categories Filter -->
+    <div class="filter-detail" *ngIf="selectedFilterType === 'categories'">
+      <div class="filter-header">
+        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <h3>Categorii</h3>
+      </div>
+      <div class="filter-content">
+        <div class="search-categories">
+          <input
+            type="text"
+            [(ngModel)]="categorySearchTerm"
+            (ngModelChange)="searchCategories()"
+            placeholder="Caută categorii..."
+            class="filter-input">
+        </div>
+        <div class="categories-list" *ngIf="!loadingCategories">
+          <div
+            *ngFor="let category of filteredCategories"
+            class="category-item"
+            (click)="toggleCategory(category.id)">
+            <input
+              type="checkbox"
+              [checked]="isCategorySelected(category.id)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleCategory(category.id)">
+            <span class="category-name">{{ category.name }}</span>
+            <span class="category-description" *ngIf="category.description">{{ category.description }}</span>
+          </div>
+        </div>
+        <div class="loading-categories" *ngIf="loadingCategories">
+          Se încarcă categoriile...
+        </div>
+        <button class="clear-filter-btn" (click)="clearCategoriesFilter()" *ngIf="selectedCategoriesCount > 0">
+          Șterge categoriile ({{ selectedCategoriesCount }})
+        </button>
       </div>
     </div>
 
-    <!-- Experience Range -->
-    <div class="filter-group">
-      <label for="experienceRange">Experiență:</label>
-      <select
-        id="experienceRange"
-        [(ngModel)]="filters.experienceRange"
-        (ngModelChange)="onFiltersChange()"
-        class="filter-select">
-        <option value="">Toate</option>
-        <option value="0-2">0-2 ani</option>
-        <option value="2-5">2-5 ani</option>
-        <option value="5-7">5-7 ani</option>
-        <option value="7-10">7-10 ani</option>
-        <option value="10+">10+ ani</option>
-      </select>
+    <!-- Rating Filter -->
+    <div class="filter-detail" *ngIf="selectedFilterType === 'rating'">
+      <div class="filter-header">
+        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <h3>Rating minim</h3>
+      </div>
+      <div class="filter-content">
+        <div class="rating-options">
+          <button
+            *ngFor="let option of ratingOptions"
+            class="rating-option"
+            [class.selected]="currentFilters.minRating === option.value"
+            (click)="selectRating(option.value)">
+            <div class="stars">{{ option.stars }}</div>
+            <span class="rating-label">{{ option.label }}</span>
+          </button>
+        </div>
+        <button class="clear-filter-btn" (click)="clearRatingFilter()" *ngIf="currentFilters.minRating">
+          Șterge filtrul
+        </button>
+      </div>
     </div>
 
-    <!-- Sort by Rating -->
-    <div class="filter-group">
-      <label for="sortByRating">Sortare după rating:</label>
-      <select
-        id="sortByRating"
-        [(ngModel)]="filters.sortByRating"
-        (ngModelChange)="onFiltersChange()"
-        class="filter-select">
-        <option value="">Implicit</option>
-        <option value="desc">Rating descrescător</option>
-        <option value="asc">Rating crescător</option>
-      </select>
+    <!-- Experience Filter -->
+    <div class="filter-detail" *ngIf="selectedFilterType === 'experience'">
+      <div class="filter-header">
+        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <h3>Experiență</h3>
+      </div>
+      <div class="filter-content">
+        <div class="experience-options">
+          <button
+            *ngFor="let option of experienceOptions"
+            class="experience-option"
+            [class.selected]="currentFilters.experienceRange === option.value"
+            (click)="selectExperience(option.value)">
+            {{ option.label }}
+          </button>
+        </div>
+        <button class="clear-filter-btn" (click)="clearExperienceFilter()" *ngIf="currentFilters.experienceRange">
+          Șterge filtrul
+        </button>
+      </div>
     </div>
 
-    <!-- Quick Filter Buttons -->
-    <div class="filter-group quick-filters">
-      <label>Filtre rapide:</label>
-      <div class="quick-filter-buttons">
-        <button
-          type="button"
-          class="quick-filter-btn"
-          (click)="applyQuickFilter('topRated')">
-          Top Rating
-        </button>
-        <button
-          type="button"
-          class="quick-filter-btn"
-          (click)="applyQuickFilter('experienced')">
-          Experiență 7+ ani
-        </button>
-        <button
-          type="button"
-          class="quick-filter-btn"
-          (click)="applyQuickFilter('highRated')">
-          Rating 4.5+
+    <!-- Sort Filter -->
+    <div class="filter-detail" *ngIf="selectedFilterType === 'sort'">
+      <div class="filter-header">
+        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <h3>Sortare după rating</h3>
+      </div>
+      <div class="filter-content">
+        <div class="sort-options">
+          <button
+            class="sort-option"
+            [class.selected]="currentFilters.sortByRating === 'desc'"
+            (click)="selectSort('desc')">
+            Rating descrescător
+          </button>
+          <button
+            class="sort-option"
+            [class.selected]="currentFilters.sortByRating === 'asc'"
+            (click)="selectSort('asc')">
+            Rating crescător
+          </button>
+        </div>
+        <button class="clear-filter-btn" (click)="clearSortFilter()" *ngIf="currentFilters.sortByRating">
+          Șterge filtrul
         </button>
       </div>
     </div>

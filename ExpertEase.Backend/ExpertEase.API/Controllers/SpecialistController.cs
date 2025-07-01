@@ -24,36 +24,103 @@ public class SpecialistController(IUserService userService, ISpecialistService s
             CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialist(id, result.Result)) :
             CreateErrorMessageResult<SpecialistDTO>(result.Error);
     }
-    
+        
+    // Replace the existing GetPage method with this:
     [HttpGet]
-    public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> GetPage([FromQuery] SpecialistPaginationQueryParams pagination)
+    public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> GetPage(
+        [FromQuery] PaginationSearchQueryParams pagination,
+        [FromQuery] SpecialistFilterParams? filter = null)
     {
-        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(pagination));
+        // Validate filter parameters if provided
+        if (filter != null)
+        {
+            // Validate rating range if provided
+            if (filter.MinRating is < 0 or > 5 ||
+                filter.MaxRating is < 0 or > 5 ||
+                (filter is { MinRating: not null, MaxRating: not null } && filter.MinRating > filter.MaxRating))
+            {
+                return CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(
+                    new ErrorMessage(HttpStatusCode.BadRequest, 
+                    "Invalid rating range. Ratings must be between 0 and 5, and minRating must be less than or equal to maxRating."));
+            }
+
+            // Validate experience range if provided
+            if (!string.IsNullOrWhiteSpace(filter.ExperienceRange))
+            {
+                var validRanges = new[] { "0-2", "2-5", "5-7", "7-10", "10+" };
+                if (!validRanges.Contains(filter.ExperienceRange.ToLowerInvariant()))
+                {
+                    return CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(
+                        new ErrorMessage(HttpStatusCode.BadRequest,
+                        "Invalid experience range. Valid ranges are: 0-2, 2-5, 5-7, 7-10, 10+"));
+                }
+            }
+
+            // Validate sort parameter if provided
+            if (!string.IsNullOrWhiteSpace(filter.SortByRating))
+            {
+                var validSorts = new[] { "asc", "desc" };
+                if (!validSorts.Contains(filter.SortByRating.ToLowerInvariant()))
+                {
+                    return CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(
+                        new ErrorMessage(HttpStatusCode.BadRequest,
+                        "Invalid sort parameter. Valid values are: asc, desc"));
+                }
+            }
+        }
+
+        var specialistPagination = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            Search = pagination.Search,
+            Filter = filter ?? new SpecialistFilterParams()
+        };
+
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(specialistPagination));
     }
-    
+
+    // Update the legacy methods to use the nested Filter structure:
+
+    // Replace SearchByCategory method:
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> SearchByCategory([FromQuery] Guid categoryId, [FromQuery] PaginationQueryParams pagination)
     {
-        return CreateRequestResponseFromServiceResponse(await specialistService.SearchSpecialistsByCategory(categoryId, pagination));
+        var specialistPagination = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            Filter = new SpecialistFilterParams { CategoryId = categoryId }
+        };
+
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(specialistPagination));
     }
-    
+
+    // Replace SearchByRatingRange method:
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> SearchByRatingRange([FromQuery] int minRating, [FromQuery] int maxRating, [FromQuery] PaginationQueryParams pagination)
     {
         if (minRating < 0 || minRating > 5 || maxRating < 0 || maxRating > 5 || minRating > maxRating)
         {
-            // return BadRequest(new RequestResponse<PagedResponse<SpecialistDTO>>
-            // {
-            //     IsSuccess = false,
-            //     Message = "Invalid rating range. Ratings must be between 0 and 5, and minRating must be less than or equal to maxRating."
-            // });
             return CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(new ErrorMessage(HttpStatusCode.BadRequest,
                 "Invalid rating range."));
         }
+
+        var specialistPagination = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            Filter = new SpecialistFilterParams 
+            { 
+                MinRating = minRating,
+                MaxRating = maxRating
+            }
+        };
         
-        return CreateRequestResponseFromServiceResponse(await specialistService.SearchSpecialistsByRatingRange(minRating, maxRating, pagination));
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(specialistPagination));
     }
-    
+
+    // Replace SearchByExperienceRange method:
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> SearchByExperienceRange([FromQuery] string experienceRange, [FromQuery] PaginationQueryParams pagination)
     {
@@ -61,21 +128,38 @@ public class SpecialistController(IUserService userService, ISpecialistService s
         
         if (string.IsNullOrWhiteSpace(experienceRange) || !validRanges.Contains(experienceRange.ToLowerInvariant()))
         {
-            // return BadRequest(new RequestResponse<PagedResponse<SpecialistDTO>>
-            // {
-            //     ErrorMessage = "Invalid experience range. Valid ranges are: 0-2, 2-5, 5-7, 7-10, 10+"
-            // });
             return CreateErrorMessageResult<PagedResponse<SpecialistDTO>>(new ErrorMessage(HttpStatusCode.BadRequest,
                 "Invalid experience range. Valid ranges are: 0-2, 2-5, 5-7, 7-10, 10+"));
         }
+
+        var specialistPagination = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            Filter = new SpecialistFilterParams 
+            { 
+                ExperienceRange = experienceRange
+            }
+        };
         
-        return CreateRequestResponseFromServiceResponse(await specialistService.SearchSpecialistsByExperienceRange(experienceRange, pagination));
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(specialistPagination));
     }
-    
+
+    // Replace GetTopRated method:
     [HttpGet]
     public async Task<ActionResult<RequestResponse<PagedResponse<SpecialistDTO>>>> GetTopRated([FromQuery] PaginationQueryParams pagination)
     {
-        return CreateRequestResponseFromServiceResponse(await specialistService.GetTopRatedSpecialists(pagination));
+        var specialistPagination = new SpecialistPaginationQueryParams
+        {
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            Filter = new SpecialistFilterParams 
+            { 
+                SortByRating = "desc"
+            }
+        };
+
+        return CreateRequestResponseFromServiceResponse(await specialistService.GetSpecialists(specialistPagination));
     }
     
     [Authorize(Roles = "Admin")]

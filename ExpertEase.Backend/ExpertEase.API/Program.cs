@@ -26,14 +26,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton(provider =>
 {
     var configuration = provider.GetRequiredService<IConfiguration>();
-    var firebasePath = configuration["Firebase:CredentialsPath"];
+    var firebaseJson = configuration["Firebase:PrivateKeyJson"];
 
-    if (string.IsNullOrEmpty(firebasePath) || !System.IO.File.Exists(firebasePath))
+    if (string.IsNullOrEmpty(firebaseJson))
     {
-        throw new InvalidOperationException("Firebase credentials path is not set or the file doesn't exist.");
+        throw new InvalidOperationException("Firebase private key JSON is missing.");
     }
 
-    var credential = GoogleCredential.FromFile(firebasePath);
+    var credential = GoogleCredential.FromJson(firebaseJson);
     var firestoreBuilder = new FirestoreClientBuilder
     {
         Credential = credential

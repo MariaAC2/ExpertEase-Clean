@@ -9,36 +9,38 @@
     <h1>Nu-i problemă, găsește specialistul potrivit pe <strong class="brand-highlight">ExpertEase</strong>!</h1>
   </div>
 
-  <div class="search-box-wrapper">
-    <app-search-input (searchChanged)="onSearch($event)"></app-search-input>
-  </div>
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <div class="search-row">
+      <div class="search-input-wrapper">
+        <app-search-input
+          (searchChanged)="onSearch($event)"
+          [placeholder]="'Caută specialist...'">
+        </app-search-input>
+      </div>
 
-  <!-- Filters Toggle Button -->
-  <div class="filters-toggle">
-    <button class="toggle-filters-btn" (click)="toggleFilters()">
-      {{ isFiltersVisible ? 'Ascunde filtrele' : 'Arată filtrele' }}
-      <span class="toggle-icon">{{ isFiltersVisible ? '▲' : '▼' }}</span>
-    </button>
-  </div>
-
-  <!-- Search Filters -->
-  <div class="filters-container" [class.hidden]="!isFiltersVisible">
-    <app-search-filters
-      [initialFilters]="currentFilters"
-      (filtersChange)="onFiltersChange($event)">
-    </app-search-filters>
+      <div class="filter-wrapper">
+        <app-search-filters
+          [initialFilters]="filterParams"
+          (filtersChange)="onFiltersChange($event)">
+        </app-search-filters>
+      </div>
+    </div>
   </div>
 
   <!-- Quick Filter Buttons -->
   <div class="quick-actions">
     <button class="quick-action-btn" (click)="getTopRatedSpecialists()">
-      🌟 Top Rating
+      Top Rating
     </button>
     <button class="quick-action-btn" (click)="getExperiencedSpecialists()">
-      🎯 Experiență 7+ ani
+      Experiență 7+ ani
     </button>
-    <button class="quick-action-btn" (click)="clearAllFilters()">
-      🔄 Șterge toate filtrele
+    <button class="quick-action-btn" (click)="getHighRatedSpecialists()">
+      Rating 4.5+
+    </button>
+    <button class="quick-action-btn clear-btn" (click)="clearAllFilters()">
+      Șterge toate filtrele
     </button>
   </div>
 

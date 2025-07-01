@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {RequestAddDTO, SpecialistDTO, SpecialistPaginationQueryParams} from '../../models/api.models';
+import {RequestAddDTO, SpecialistDTO, PaginationSearchQueryParams, SpecialistFilterParams} from '../../models/api.models';
 import {CommonModule} from '@angular/common';
 import {dtoToDictionary} from '../../models/form.models';
 import {SpecialistService} from '../../services/specialist.service';
@@ -38,13 +38,14 @@ export class HomeComponent implements OnInit{
   isUserDetailsVisible = false;
   users: SpecialistDTO[] = [];
   error: string | null = null;
-  isFiltersVisible: boolean = true;
 
-  // Current search filters
-  currentFilters: SpecialistPaginationQueryParams = {
+  // Separate search and filter parameters
+  searchParams: PaginationSearchQueryParams = {
     page: 1,
     pageSize: 10
   };
+
+  filterParams: SpecialistFilterParams = {};
 
   isRequestFormVisible = false;
 
@@ -122,14 +123,14 @@ export class HomeComponent implements OnInit{
   }
 
   getPage(): void {
-    // Update current filters with pagination info
-    this.currentFilters.page = this.currentPage;
-    this.currentFilters.pageSize = this.pageSize;
+    // Update search params with pagination info
+    this.searchParams.page = this.currentPage;
+    this.searchParams.pageSize = this.pageSize;
 
-    console.log('Searching with filters:', this.currentFilters);
+    console.log('Searching with params:', this.searchParams, 'Filters:', this.filterParams);
 
     // this.users = this.dummySpecialists; // For testing purposes, using dummy data
-    this.homeService.getSpecialists(this.currentFilters).subscribe({
+    this.homeService.getSpecialists(this.searchParams, this.filterParams).subscribe({
       next: (res) => {
         this.users = res.response?.data ?? [];
         this.totalItems = res.response?.totalCount ?? 0;
@@ -160,23 +161,17 @@ export class HomeComponent implements OnInit{
 
   onSearch(term: string): void {
     this.searchTerm = term;
-    this.currentFilters.search = term || undefined;
+    this.searchParams.search = term || undefined;
     this.currentPage = 1;
     this.getPage();
   }
 
-  onFiltersChange(filters: Partial<SpecialistPaginationQueryParams>): void {
+  onFiltersChange(filters: SpecialistFilterParams): void {
     console.log('Filters changed:', filters);
 
-    // Merge new filters with existing ones
-    this.currentFilters = {
-      ...this.currentFilters,
-      ...filters,
-      page: 1, // Reset to first page when filters change
-      pageSize: this.pageSize
-    };
-
-    this.currentPage = 1;
+    // Update filter parameters
+    this.filterParams = { ...filters };
+    this.currentPage = 1; // Reset to first page when filters change
     this.getPage();
   }
 
@@ -191,15 +186,9 @@ export class HomeComponent implements OnInit{
     this.getPage();
   }
 
-  toggleFilters(): void {
-    this.isFiltersVisible = !this.isFiltersVisible;
-  }
-
   clearAllFilters(): void {
-    this.currentFilters = {
-      page: 1,
-      pageSize: this.pageSize
-    };
+    this.filterParams = {};
+    this.searchParams.search = undefined;
     this.searchTerm = '';
     this.currentPage = 1;
     this.getPage();
@@ -207,21 +196,29 @@ export class HomeComponent implements OnInit{
 
   // Quick filter methods
   getTopRatedSpecialists(): void {
-    this.currentFilters = {
-      ...this.currentFilters,
+    this.filterParams = {
+      ...this.filterParams,
       sortByRating: 'desc',
-      minRating: 4.5,
-      page: 1
+      minRating: 4.5
     };
     this.currentPage = 1;
     this.getPage();
   }
 
   getExperiencedSpecialists(): void {
-    this.currentFilters = {
-      ...this.currentFilters,
-      experienceRange: '7-10',
-      page: 1
+    this.filterParams = {
+      ...this.filterParams,
+      experienceRange: '7-10'
+    };
+    this.currentPage = 1;
+    this.getPage();
+  }
+
+  getHighRatedSpecialists(): void {
+    this.filterParams = {
+      ...this.filterParams,
+      minRating: 4.5,
+      sortByRating: 'desc'
     };
     this.currentPage = 1;
     this.getPage();
