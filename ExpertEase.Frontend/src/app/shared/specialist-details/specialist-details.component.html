@@ -1,56 +1,156 @@
-<div class="specialist-card">
-  <button class="close-btn" aria-label="Înapoi" (click)="onCloseDetails()">←</button>
+<!-- Overlay wrapper - only shown when accessed from specialist card -->
+<div class="overlay-wrapper" *ngIf="showOverlay" (click)="onCloseDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="specialist-card">
+      <button class="close-btn" aria-label="Închide" (click)="onCloseDetails()">×</button>
 
-  <div class="info">
-    <div class="top-row">
-      <div class="avatar-wrapper">
-        <div class="avatar">
-          <img [src]="userDetails?.profilePictureUrl || 'assets/avatar.svg'" alt="User avatar"/>
-        </div>
-        <div class="rating-badge">
-          <img src="assets/star-rating.svg" alt="User star" />
-          <span class="rating-value">{{ userDetails?.rating }}</span>
-        </div>
-      </div>
-      <h2>{{ userDetails?.fullName }}</h2>
-    </div>
-
-    <!-- Specialist-only section (shown only if email is present) -->
-    <ng-container *ngIf="userDetails?.email">
-      <p>
-        <strong>Email:</strong> {{ userDetails?.email }}
-        <strong style="margin-left: 20px;">Telefon:</strong> {{ userDetails?.phoneNumber }}
-      </p>
-      <p><strong>Adresă:</strong> {{ userDetails?.address }}</p>
-      <p><strong>Categorii:</strong>
-        <span class="tag" *ngFor="let cat of userDetails?.categories">{{ cat }}</span>
-      </p>
-      <p><strong>Ani experiență:</strong> {{ userDetails?.yearsExperience }}</p>
-      <p><strong>Descriere:</strong> {{ userDetails?.description }}</p>
-      <div class="portfolio-section" *ngIf="userDetails?.portfolio?.length">
-        <h3>Portofoliu:</h3>
-        <div class="portfolio-grid">
-          <img *ngFor="let image of userDetails?.portfolio"
-               [src]="image"
-               alt="Imagine portofoliu"
-               class="portfolio-image" />
-        </div>
-      </div>
-    </ng-container>
-
-    <!-- Reviews section -->
-    <div class="reviews-section">
-      <h3>Recenzii recente:</h3>
-      <div *ngIf="userDetails?.reviews?.length === 0">Nicio recenzie disponibilă.</div>
-      <div *ngFor="let review of userDetails?.reviews" class="review">
-        <div class="review-header">
-          <img [src]="review.senderUserProfilePictureUrl || 'assets/avatar.svg'" alt="Reviewer avatar" class="review-avatar">
-          <strong>{{ review.senderUserFullName }}</strong>
-          <span class="review-rating">⭐ {{ review.rating }}</span>
-        </div>
-        <p class="review-content">{{ review.content }}</p>
-        <small>{{ review.createdAt | date: 'short' }}</small>
-      </div>
+      <!-- Content goes here -->
+      <ng-container *ngTemplateOutlet="specialistContent"></ng-container>
     </div>
   </div>
 </div>
+
+<!-- Standalone view - shown when accessed directly -->
+<div class="standalone-view" *ngIf="!showOverlay">
+  <div class="specialist-card">
+    <button class="back-btn" aria-label="Înapoi" (click)="onCloseDetails()">
+      <span class="back-arrow">←</span>
+      <span>Înapoi la specialiști</span>
+    </button>
+
+    <!-- Content goes here -->
+    <ng-container *ngTemplateOutlet="specialistContent"></ng-container>
+  </div>
+</div>
+
+<!-- Template for specialist content -->
+<ng-template #specialistContent>
+  <div class="specialist-header">
+    <div class="avatar-section">
+      <div class="avatar-wrapper">
+        <div class="avatar">
+          <img [src]="userDetails?.profilePictureUrl || 'assets/avatar.svg'" alt="Poza de profil"/>
+        </div>
+        <div class="rating-badge">
+          <div class="stars">
+            <span
+              *ngFor="let filled of getStarArray(userDetails?.rating || 0)"
+              class="star"
+              [class.filled]="filled">★</span>
+          </div>
+          <span class="rating-value">{{ userDetails?.rating || 0 }}/5</span>
+        </div>
+      </div>
+      <div class="basic-info">
+        <h1 class="name">{{ userDetails?.fullName }}</h1>
+        <div class="experience-badge" *ngIf="userDetails?.yearsExperience">
+          <span class="icon">⚙</span>
+          <span>{{ userDetails?.yearsExperience }} ani experiență</span>
+        </div>
+        <div class="categories" *ngIf="(userDetails?.categories?.length ?? 0) > 0">
+          <span class="category-chip" *ngFor="let category of userDetails?.categories">
+            {{ category }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="specialist-body">
+    <!-- Contact Information -->
+    <div class="info-section" *ngIf="userDetails?.email">
+      <h3 class="section-title">
+        <span class="icon">•</span>
+        Informații de contact
+      </h3>
+      <div class="contact-grid">
+        <div class="contact-item">
+          <span class="contact-label">Email:</span>
+          <a [href]="'mailto:' + (userDetails?.email || '')" class="contact-value email">
+            {{ userDetails?.email }}
+          </a>
+        </div>
+        <div class="contact-item">
+          <span class="contact-label">Telefon:</span>
+          <a [href]="'tel:' + (userDetails?.phoneNumber || '')" class="contact-value phone">
+            {{ formatPhoneNumber(userDetails?.phoneNumber || '') }}
+          </a>
+        </div>
+        <div class="contact-item full-width">
+          <span class="contact-label">Adresă:</span>
+          <span class="contact-value address">{{ userDetails?.address }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="info-section" *ngIf="userDetails?.description">
+      <h3 class="section-title">
+        <span class="icon">•</span>
+        Despre specialist
+      </h3>
+      <div class="description-content">
+        <p>{{ userDetails?.description }}</p>
+      </div>
+    </div>
+
+    <!-- Portfolio -->
+    <div class="info-section" *ngIf="userDetails?.portfolio?.length">
+      <h3 class="section-title">
+        <span class="icon">🖼️</span>
+        Portofoliu
+      </h3>
+      <div class="portfolio-grid">
+        <div class="portfolio-item" *ngFor="let image of userDetails?.portfolio">
+          <img [src]="image" alt="Imagine portofoliu" class="portfolio-image" />
+          <div class="portfolio-overlay">
+            <span class="view-text">Vezi imagine</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="info-section reviews-section">
+      <h3 class="section-title">
+        <span class="icon">★</span>
+        Recenzii
+        <span class="review-count">({{ userDetails?.reviews?.length || 0 }})</span>
+      </h3>
+
+      <div class="reviews-container">
+        <div *ngIf="!userDetails?.reviews?.length" class="no-reviews">
+          <div class="no-reviews-icon">•</div>
+          <p>Acest specialist nu are încă recenzii.</p>
+          <small>Fii primul care lasă o recenzie!</small>
+        </div>
+
+        <div class="review-card" *ngFor="let review of userDetails?.reviews">
+          <div class="review-header">
+            <div class="reviewer-info">
+              <img
+                [src]="review.senderUserProfilePictureUrl || 'assets/avatar.svg'"
+                alt="Poza reviewer"
+                class="reviewer-avatar">
+              <div class="reviewer-details">
+                <span class="reviewer-name">{{ review.senderUserFullName }}</span>
+                <span class="review-date">{{ getTimeSince(review.createdAt) }}</span>
+              </div>
+            </div>
+            <div class="review-rating">
+              <div class="stars">
+                <span
+                  *ngFor="let filled of getStarArray(review.rating)"
+                  class="star small"
+                  [class.filled]="filled">★</span>
+              </div>
+            </div>
+          </div>
+          <div class="review-content">
+            <p>{{ review.content }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

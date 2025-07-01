@@ -45,6 +45,13 @@ export class SpecialistCardComponent {
 
   constructor(private readonly router: Router) { }
 
+  // Navigate to specialist details with overlay parameter
+  navigateToDetails() {
+    this.router.navigate(['/specialist', this.specialist.id], {
+      queryParams: { overlay: 'true' }
+    });
+  }
+
   goToSendRequest() {
     // Set the receiverUserId when opening the request form
     this.requestForm.receiverUserId = this.specialist.id;
@@ -84,7 +91,7 @@ export class SpecialistCardComponent {
    * Combine date and time fields into a Date object
    */
   private combineDateTime(formData: { [key: string]: any }): Date {
-    const day = formData['date'] || 1;
+    const day = formData['day'] || 1;
     const month = (formData['month'] || 1) - 1; // JavaScript months are 0-indexed
     const year = formData['year'] || new Date().getFullYear();
     const hour = formData['startHour'] || 0;

@@ -1,6 +1,6 @@
 <div class="card">
   <div class="avatar-wrapper">
-    <div class="avatar">
+    <div class="avatar" (click)="navigateToDetails()">
       <img [src]="specialist.profilePictureUrl || 'assets/avatar.svg'" alt="User avatar"/>
     </div>
     <div class="rating-badge">
@@ -9,7 +9,7 @@
     </div>
   </div>
   <div class="info">
-    <h2 class="full-name" [routerLink]="['/specialist', specialist.id]">
+    <h2 class="full-name" (click)="navigateToDetails()">
       {{ specialist.fullName }}
     </h2>
     <div class="details-block">
@@ -35,17 +35,11 @@
   <button class="request-btn" (click)="goToSendRequest()">Fă o solicitare</button>
 </div>
 
-<!--<div class="overlay" *ngIf="isUserDetailsVisible">-->
-<!--  <div class="modal" (click)="closeDetails()">-->
-<!--    <app-specialist-details [specialist]="specialist"></app-specialist-details>-->
-<!--  </div>-->
-<!--</div>-->
-
 <!-- Request modal -->
 <div class="overlay" *ngIf="isRequestFormVisible">
   <app-request-form
     [requestForm]="requestForm"
-    (formSubmit)="submitRequest(requestForm)"
+    (formSubmit)="submitRequest($event)"
     (close)="closeRequestForm()">
   </app-request-form>
 </div>

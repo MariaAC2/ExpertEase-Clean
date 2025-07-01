@@ -40,11 +40,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: #000;
     background-color: rgba(0, 0, 0, 0.1);
     border-radius: 50%;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
@@ -53,6 +59,51 @@
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
   margin-top: 0;
+}
+
+// Loading overlay
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(232, 217, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 8px;
+
+  p {
+    margin-top: 1rem;
+    font-weight: bold;
+    color: #333;
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #c9b7ff;
+  border-top: 4px solid #9a79ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.request-form {
+  transition: opacity 0.3s ease;
+
+  &.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
 }
 
 .request-form label {
@@ -91,6 +142,12 @@
     border-color: #9a79ff;
     box-shadow: 0 2px 8px rgba(154, 121, 255, 0.2);
   }
+
+  &:has(input:disabled), &:has(textarea:disabled) {
+    background-color: #f0f0f0;
+    border-color: #ddd;
+    opacity: 0.8;
+  }
 }
 
 .input-box input,
@@ -107,6 +164,11 @@
   &::placeholder {
     color: #888;
     font-style: italic;
+  }
+
+  &:disabled {
+    color: #888;
+    cursor: not-allowed;
   }
 }
 
@@ -192,6 +254,7 @@
   font-family: 'Roboto Mono', monospace;
   font-size: 14px;
   transition: all 0.3s ease;
+  min-width: 180px;
 
   &:hover:not(:disabled) {
     background-color: #b8a3ff;
@@ -221,6 +284,29 @@
   margin-top: 4px;
   padding-left: 2px;
   font-weight: 400;
+  background-color: rgba(216, 0, 12, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 3px solid #d8000c;
+}
+
+// Info text styling
+.info-text {
+  margin-top: 4px;
+
+  small {
+    color: #666;
+    font-size: 0.8rem;
+    font-style: italic;
+  }
+}
+
+// Character count
+.character-count {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
+  text-align: right;
 }
 
 // Responsive design
@@ -238,5 +324,15 @@
 
   .form-row label {
     margin-bottom: 0.5rem;
+  }
+
+  .datetime-row {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .date-fields, .time-fields {
+    justify-content: center;
   }
 }

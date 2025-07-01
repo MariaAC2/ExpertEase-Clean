@@ -1,81 +1,407 @@
-.admin-wrapper {
-  text-align: center;
-}
-
-.admin-table-container {
-  display: inline-block; /* makes container wrap the table */
-  padding: 24px;
-  background-color: #d9c8ff;
-  border: 2px solid #4b358e;
-  border-radius: 8px;
+.table-wrapper {
+  width: 100%;
   font-family: 'Roboto Mono', monospace;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin: 40px auto;
 }
 
-.admin-table-container h2 {
-  text-align: center;
-  margin-bottom: 16px;
+// Desktop Table View - Always visible, but responsive
+.desktop-table {
+  display: block;
+  background-color: #f8f4ff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #4b358e;
+
+  @media (max-width: 768px) {
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
-  width: max-content;          /* Table takes up only as much width as needed */
-  max-width: 100%;             /* Prevents overflow from container */
-  margin-left: auto;           /* Center horizontally */
-  margin-right: auto;
+  width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   background-color: #f8f4ff;
-  border-radius: 6px;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    min-width: 600px; // Force horizontal scroll on mobile
+  }
 }
 
 .admin-table th,
 .admin-table td {
-  padding: 12px 16px;
+  padding: 12px 8px;
   border-bottom: 1px solid #ddd;
   text-align: left;
   font-size: 14px;
-  white-space: nowrap; /* prevent wrapping */
+  vertical-align: middle;
+  word-wrap: break-word;
+
+  @media (max-width: 1024px) {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 8px 4px;
+    font-size: 12px;
+    max-width: 120px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 6px 3px;
+    font-size: 11px;
+    max-width: 100px;
+  }
 }
 
 .admin-table th {
   background-color: #cfbdfe;
   color: #333;
   font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 }
 
-.action-link {
-  margin-right: 12px;
+// Progressive column hiding
+@media (max-width: 480px) {
+  .admin-table th:nth-child(n+4):not(.action-column),
+  .admin-table td:nth-child(n+4):not(.action-column) {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-table th:nth-child(n+5):not(.action-column),
+  .admin-table td:nth-child(n+5):not(.action-column) {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-table th:nth-child(n+6):not(.action-column),
+  .admin-table td:nth-child(n+6):not(.action-column) {
+    display: none;
+  }
+}
+
+// Hide columns based on priority
+.hidden-mobile {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+// Action buttons styling
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+
+  @media (max-width: 768px) {
+    gap: 2px;
+    flex-direction: column;
+  }
+}
+
+.action-btn {
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
   cursor: pointer;
-  text-decoration: none;
   font-weight: bold;
-}
-
-.action-link.view {
-  color: blue;
-}
-
-.action-link.edit {
-  color: green;
-}
-
-.action-link.delete {
-  color: red;
-}
-
-.add-btn {
-  background-color: #916fc7;
-  color: white;
-  border: 3px solid #4b358e;
-  margin-top: 14px;
-  margin-bottom: 20px;
-  padding: 8px 16px;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  font-size: 11px;
   font-family: 'Roboto Mono', monospace;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  white-space: nowrap;
+  min-width: auto;
+
+  @media (max-width: 768px) {
+    padding: 3px 6px;
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 2px 4px;
+    font-size: 9px;
+  }
+
+  &.view {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border-color: #1565c0;
+
+    &:hover {
+      background-color: #1565c0;
+      color: white;
+    }
+  }
+
+  &.edit {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border-color: #2e7d32;
+
+    &:hover {
+      background-color: #2e7d32;
+      color: white;
+    }
+  }
+
+  &.delete {
+    background-color: #ffebee;
+    color: #c62828;
+    border-color: #c62828;
+
+    &:hover {
+      background-color: #c62828;
+      color: white;
+    }
+  }
 }
 
-.add-btn:hover {
-  background-color: #3a2973;
+// Action label responsiveness
+.action-label-short {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: inline;
+  }
+}
+
+.action-label-full {
+  display: inline;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+// Mobile Card View
+.mobile-cards {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    padding: 16px;
+  }
+}
+
+.card {
+  background-color: #f8f4ff;
+  border: 2px solid #cfbdfe;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  background-color: #cfbdfe;
+  border-bottom: 1px solid #ddd;
+  border-radius: 6px 6px 0 0;
+  gap: 12px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  word-break: break-word;
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.primary {
+    display: none; // Hide primary field since it's shown in header
+  }
+}
+
+.field-label {
+  font-weight: bold;
+  color: #666;
+  font-size: 13px;
+  flex-shrink: 0;
+  min-width: 80px;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+    min-width: 70px;
+  }
+}
+
+.field-value {
+  color: #333;
+  font-size: 13px;
+  text-align: right;
+  word-break: break-word;
+  flex: 1;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
+}
+
+// Empty State
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: #f8f4ff;
+  border: 2px dashed #cfbdfe;
+  border-radius: 8px;
+  color: #666;
+
+  @media (max-width: 768px) {
+    margin: 16px;
+    padding: 32px 16px;
+  }
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+
+  @media (max-width: 768px) {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #333;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+  }
+}
+
+// Responsive utilities
+@media (max-width: 1200px) {
+  .admin-table th,
+  .admin-table td {
+    &:nth-child(n+6) {
+      display: none; // Hide less important columns on smaller screens
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-table th,
+  .admin-table td {
+    &:nth-child(n+5) {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-table th,
+  .admin-table td {
+    &:nth-child(n+4) {
+      display: none;
+    }
+  }
+}
+
+// Tablet specific adjustments
+@media (min-width: 769px) and (max-width: 1024px) {
+  .desktop-table {
+    margin: 0 16px;
+  }
+
+  .admin-table {
+    min-width: 500px;
+  }
+}
+
+// Print styles
+@media print {
+  .table-wrapper {
+    overflow: visible !important;
+  }
+
+  .desktop-table {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .mobile-cards {
+    display: none !important;
+  }
+
+  .admin-table {
+    min-width: auto !important;
+    width: 100% !important;
+  }
+
+  .action-btn {
+    display: none !important;
+  }
 }

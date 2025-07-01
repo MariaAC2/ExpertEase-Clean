@@ -167,6 +167,9 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-PMT5EPNB.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-VL5F6YPK.js" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-WHTBFHLV.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\down-button.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\up-button.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-JP3GSDJS.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

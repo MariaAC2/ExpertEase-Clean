@@ -1,9 +1,15 @@
 <div class="overlay">
   <div class="request-form-wrapper">
-    <button class="close-button" (click)="closeForm()">×</button>
+    <button class="close-button" (click)="closeForm()" [disabled]="isLoading">×</button>
     <h2>Trimite o solicitare</h2>
 
-    <form class="request-form" #formRef="ngForm" (ngSubmit)="submitRequest(formRef)">
+    <!-- Loading overlay -->
+    <div class="loading-overlay" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Se trimite solicitarea...</p>
+    </div>
+
+    <form class="request-form" #formRef="ngForm" (ngSubmit)="submitRequest(formRef)" [class.loading]="isLoading">
       <label>
         Data și ora dorite:
         <div class="datetime-row">
@@ -17,6 +23,7 @@
                        min="1"
                        max="31"
                        required
+                       [disabled]="isLoading"
                        #dayCtrl="ngModel" />
               </div>
             </div>
@@ -30,6 +37,7 @@
                        min="1"
                        max="12"
                        required
+                       [disabled]="isLoading"
                        #monthCtrl="ngModel" />
               </div>
             </div>
@@ -40,9 +48,10 @@
                        name="year"
                        [(ngModel)]="requestForm.year"
                        placeholder="AAAA"
-                       min="2024"
-                       max="2030"
+                       [min]="getCurrentYear()"
+                       [max]="getCurrentYear() + 1"
                        required
+                       [disabled]="isLoading"
                        #yearCtrl="ngModel" />
               </div>
             </div>
@@ -54,9 +63,10 @@
                        name="startHour"
                        [(ngModel)]="requestForm.startHour"
                        placeholder="HH"
-                       min="0"
-                       max="23"
+                       min="8"
+                       max="20"
                        required
+                       [disabled]="isLoading"
                        #hourCtrl="ngModel" />
               </div>
             </div>
@@ -70,13 +80,31 @@
                        min="0"
                        max="59"
                        required
+                       [disabled]="isLoading"
                        #minuteCtrl="ngModel" />
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Standard validation errors -->
         <div class="error" *ngIf="(dayCtrl.invalid || monthCtrl.invalid || yearCtrl.invalid || hourCtrl.invalid || minuteCtrl.invalid) && ((dayCtrl.dirty || dayCtrl.touched || monthCtrl.dirty || monthCtrl.touched || yearCtrl.dirty || yearCtrl.touched || hourCtrl.dirty || hourCtrl.touched || minuteCtrl.dirty || minuteCtrl.touched) || formSubmitted)">
           Data și ora sunt obligatorii.
+        </div>
+
+        <!-- Custom validation errors -->
+        <div class="error" *ngIf="validationErrors['datetime']">
+          {{ validationErrors['datetime'] }}
+        </div>
+        <div class="error" *ngIf="validationErrors['time']">
+          {{ validationErrors['time'] }}
+        </div>
+        <div class="error" *ngIf="validationErrors['day']">
+          {{ validationErrors['day'] }}
+        </div>
+
+        <div class="info-text">
+          <small>Programul de lucru: 08:00 - 20:00</small>
         </div>
       </label>
 
@@ -86,12 +114,17 @@
           <input type="tel"
                  name="phoneNumber"
                  [(ngModel)]="requestForm.phoneNumber"
+                 (blur)="formatPhoneNumber()"
                  placeholder="ex: 0723 123 456"
                  required
+                 [disabled]="isLoading"
                  #phoneCtrl="ngModel" />
         </div>
         <div class="error" *ngIf="phoneCtrl.invalid && (phoneCtrl.dirty || phoneCtrl.touched || formSubmitted)">
           Numărul de telefon este obligatoriu.
+        </div>
+        <div class="error" *ngIf="validationErrors['phoneNumber']">
+          {{ validationErrors['phoneNumber'] }}
         </div>
       </label>
 
@@ -103,10 +136,14 @@
                  [(ngModel)]="requestForm.address"
                  placeholder="ex: Str. Teiului nr. 14, București"
                  required
+                 [disabled]="isLoading"
                  #addressCtrl="ngModel" />
         </div>
         <div class="error" *ngIf="addressCtrl.invalid && (addressCtrl.dirty || addressCtrl.touched || formSubmitted)">
           Adresa este obligatorie.
+        </div>
+        <div class="error" *ngIf="validationErrors['address']">
+          {{ validationErrors['address'] }}
         </div>
       </label>
 
@@ -116,18 +153,26 @@
           <textarea name="description"
                     rows="4"
                     [(ngModel)]="requestForm.description"
-                    placeholder="Descrieți în detaliu serviciul de care aveți nevoie..."
+                    placeholder="Descrieți în detaliu serviciul de care aveți nevoie... (minim 20 caractere)"
                     required
+                    [disabled]="isLoading"
                     #descriptionCtrl="ngModel"></textarea>
+        </div>
+        <div class="character-count" *ngIf="requestForm.description">
+          {{ requestForm.description.length }} caractere
         </div>
         <div class="error" *ngIf="descriptionCtrl.invalid && (descriptionCtrl.dirty || descriptionCtrl.touched || formSubmitted)">
           Descrierea solicitării este obligatorie.
         </div>
+        <div class="error" *ngIf="validationErrors['description']">
+          {{ validationErrors['description'] }}
+        </div>
       </label>
 
       <div class="center-button">
-        <button type="submit" [disabled]="formRef.invalid && formSubmitted">
-          Trimite solicitarea
+        <button type="submit" [disabled]="(formRef.invalid && formSubmitted) || isLoading">
+          <span *ngIf="!isLoading">Trimite solicitarea</span>
+          <span *ngIf="isLoading">Se trimite...</span>
         </button>
       </div>
     </form>

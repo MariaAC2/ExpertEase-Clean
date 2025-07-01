@@ -1,98 +1,93 @@
-<!--&lt;!&ndash;<table class="admin-table">&ndash;&gt;-->
-<!--&lt;!&ndash;  <thead>&ndash;&gt;-->
-<!--&lt;!&ndash;  <tr>&ndash;&gt;-->
-<!--&lt;!&ndash;    <th *ngFor="let col of columns">{{ col.header }}</th>&ndash;&gt;-->
-<!--&lt;!&ndash;  </tr>&ndash;&gt;-->
-<!--&lt;!&ndash;  </thead>&ndash;&gt;-->
-<!--&lt;!&ndash;  <tbody>&ndash;&gt;-->
-<!--&lt;!&ndash;  <tr *ngFor="let row of data">&ndash;&gt;-->
-<!--&lt;!&ndash;    <td *ngFor="let col of columns">&ndash;&gt;-->
-<!--&lt;!&ndash;      <ng-container *ngIf="col.type !== 'action'; else actionCell">&ndash;&gt;-->
-<!--&lt;!&ndash;        {{ row[col.key] }}&ndash;&gt;-->
-<!--&lt;!&ndash;      </ng-container>&ndash;&gt;-->
+<div class="table-wrapper">
+  <!-- Desktop Table View -->
+  <div class="desktop-table">
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead>
+        <tr>
+          <th *ngFor="let col of columns" [class.hidden-mobile]="shouldHideColumn(col)">
+            {{ col.header }}
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let row of data">
+          <td *ngFor="let col of columns" [class.hidden-mobile]="shouldHideColumn(col)">
+            <ng-container *ngIf="!isActionColumn(col); else actionCell">
+              <!-- Special case for computed fields like full name -->
+              <ng-container *ngIf="col.compute; else directValue">
+                <span [title]="col.compute(row)">{{ truncateText(col.compute(row), getMaxLength()) }}</span>
+              </ng-container>
+              <ng-template #directValue>
+                <span [title]="row[col.key]">{{ truncateText(row[col.key], getMaxLength()) }}</span>
+              </ng-template>
+            </ng-container>
 
-<!--&lt;!&ndash;      <ng-template #actionCell>&ndash;&gt;-->
-<!--&lt;!&ndash;        <ng-container *ngFor="let action of col.actions">&ndash;&gt;-->
-<!--&lt;!&ndash;          <a class="action-link" [ngClass]="action.class" (click)="action.callback(row)">&ndash;&gt;-->
-<!--&lt;!&ndash;            {{ action.label }}&ndash;&gt;-->
-<!--&lt;!&ndash;          </a>&ndash;&gt;-->
-<!--&lt;!&ndash;        </ng-container>&ndash;&gt;-->
-<!--&lt;!&ndash;      </ng-template>&ndash;&gt;-->
-<!--&lt;!&ndash;    </td>&ndash;&gt;-->
-<!--&lt;!&ndash;  </tr>&ndash;&gt;-->
-<!--&lt;!&ndash;  </tbody>&ndash;&gt;-->
-<!--&lt;!&ndash;</table>&ndash;&gt;-->
+            <ng-template #actionCell>
+              <div class="action-buttons">
+                <button *ngFor="let action of col.actions"
+                        class="action-btn"
+                        [ngClass]="action.class"
+                        (click)="action.callback(row)">
+                  <span class="action-label-full">{{ action.label }}</span>
+                  <span class="action-label-short">{{ getShortActionLabel(action.label) }}</span>
+                </button>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<!--<div class="admin-wrapper">-->
-<!--  <div class="admin-table-container">-->
-<!--    <h2>{{ title }}</h2>-->
-<!--    <button class="add-btn" *ngIf="addButtonLabel && addClicked" (click)="addClicked()">-->
-<!--      {{ addButtonLabel }}-->
-<!--    </button>-->
+  <!-- Mobile Card View -->
+  <div class="mobile-cards">
+    <div class="card" *ngFor="let row of data">
+      <div class="card-header">
+        <!-- Show primary identifier (usually first non-action column) -->
+        <h3 class="card-title">
+          <ng-container *ngIf="getPrimaryColumn()?.compute; else primaryDirectValue">
+            {{ getPrimaryColumn()?.compute?.(row) }}
+          </ng-container>
+          <ng-template #primaryDirectValue>
+            {{ row[getPrimaryColumn()?.key || ''] }}
+          </ng-template>
+        </h3>
 
-<!--    <table class="admin-table">-->
-<!--      <thead>-->
-<!--      <tr>-->
-<!--        <th *ngFor="let col of columns">{{ col.header }}</th>-->
-<!--      </tr>-->
-<!--      </thead>-->
-<!--      <tbody>-->
-<!--      <tr *ngFor="let row of data">-->
-<!--        <td *ngFor="let col of columns">-->
-<!--          <ng-container *ngIf="col.type !== 'action'; else actionCell">-->
-<!--            &lt;!&ndash; Special case for computed fields like full name &ndash;&gt;-->
-<!--            <ng-container *ngIf="col.compute; else directValue">-->
-<!--              {{ col.compute(row) }}-->
-<!--            </ng-container>-->
-<!--            <ng-template #directValue>-->
-<!--              {{ row[col.key] }}-->
-<!--            </ng-template>-->
-<!--          </ng-container>-->
+        <!-- Action buttons in header for mobile -->
+        <div class="card-actions" *ngIf="getActionColumn()">
+          <button *ngFor="let action of getActionColumn()!.actions"
+                  class="action-btn mobile"
+                  [ngClass]="action.class"
+                  (click)="action.callback(row)">
+            {{ action.label }}
+          </button>
+        </div>
+      </div>
 
-<!--          <ng-template #actionCell>-->
-<!--            <a *ngFor="let action of col.actions"-->
-<!--               class="action-link"-->
-<!--               [ngClass]="action.class"-->
-<!--               (click)="action.callback(row)">-->
-<!--              {{ action.label }}-->
-<!--            </a>-->
-<!--          </ng-template>-->
-<!--        </td>-->
-<!--      </tr>-->
-<!--      </tbody>-->
-<!--    </table>-->
-<!--  </div>-->
-<!--</div>-->
+      <div class="card-body">
+        <div class="field"
+             *ngFor="let col of getNonActionColumns(); let i = index"
+             [class.primary]="i === 0">
+          <span class="field-label">{{ col.header }}:</span>
+          <span class="field-value">
+            <ng-container *ngIf="col.compute; else cardDirectValue">
+              {{ col.compute(row) }}
+            </ng-container>
+            <ng-template #cardDirectValue>
+              {{ row[col.key] }}
+            </ng-template>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<table class="admin-table">
-  <thead>
-  <tr>
-    <th *ngFor="let col of columns">{{ col.header }}</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr *ngFor="let row of data">
-    <td *ngFor="let col of columns">
-      <ng-container *ngIf="col.type !== 'action'; else actionCell">
-        <!-- Special case for computed fields like full name -->
-        <ng-container *ngIf="col.compute; else directValue">
-          {{ col.compute(row) }}
-        </ng-container>
-        <ng-template #directValue>
-          {{ row[col.key] }}
-        </ng-template>
-      </ng-container>
-
-      <ng-template #actionCell>
-        <a *ngFor="let action of col.actions"
-           class="action-link"
-           [ngClass]="action.class"
-           (click)="action.callback(row)">
-          {{ action.label }}
-        </a>
-      </ng-template>
-    </td>
-  </tr>
-  </tbody>
-</table>
-
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="data.length === 0">
+    <div class="empty-icon">📋</div>
+    <h3>Nu există date</h3>
+    <p>Nu au fost găsite înregistrări pentru afișare.</p>
+  </div>
+</div>
