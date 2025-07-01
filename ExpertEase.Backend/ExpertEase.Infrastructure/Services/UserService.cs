@@ -140,6 +140,10 @@ public class UserService(
         }
         catch (Exception ex)
         {
+            // Log the actual exception for debugging
+            Console.WriteLine($"Social login validation error for {provider}: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            
             return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
                 new ErrorMessage(HttpStatusCode.BadRequest, $"Invalid {provider} token: {ex.Message}", ErrorCodes.Invalid));
         }
@@ -147,6 +151,11 @@ public class UserService(
         if (userInfo == null)
             return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
                 new ErrorMessage(HttpStatusCode.BadRequest, "Unsupported provider or invalid token", ErrorCodes.Invalid));
+
+        // Check if email is provided
+        if (string.IsNullOrWhiteSpace(userInfo.Email))
+            return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                new ErrorMessage(HttpStatusCode.BadRequest, "Email not provided by social provider", ErrorCodes.Invalid));
 
         var result = await repository.GetAsync(new UserSpec(userInfo.Email), cancellationToken);
 
@@ -162,7 +171,7 @@ public class UserService(
             var newUser = new User
             {
                 Email = userInfo.Email,
-                FullName = userInfo.Name,
+                FullName = userInfo.Name ?? "Social User",
                 Role = userInfo.Email.EndsWith("@admin.com", StringComparison.OrdinalIgnoreCase)
                     ? UserRoleEnum.Admin
                     : UserRoleEnum.Client,
@@ -170,8 +179,28 @@ public class UserService(
                 ProfilePictureUrl = userInfo.Picture
             };
 
-            await repository.AddAsync(newUser, cancellationToken);
-            result = newUser;
+            try
+            {
+                await repository.AddAsync(newUser, cancellationToken);
+                
+                // Create Stripe customer for new social user
+                var stripeCustomerId = await stripeAccountService.CreateCustomer(newUser.Email, newUser.FullName, newUser.Id);
+                Console.WriteLine("Stripe customer id: " + stripeCustomerId.Result);
+
+                if (stripeCustomerId.Result != null)
+                {
+                    newUser.StripeCustomerId = stripeCustomerId.Result;
+                    await repository.UpdateAsync(newUser, cancellationToken);
+                }
+                
+                result = newUser;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating social user: {ex.Message}");
+                return ServiceResponse.CreateErrorResponse<LoginResponseDTO>(
+                    new ErrorMessage(HttpStatusCode.InternalServerError, "Failed to create user account"));
+            }
         }
         
         var user = new UserDTO
@@ -192,38 +221,99 @@ public class UserService(
 
     private async Task<SocialUserInfo?> ValidateGoogleToken(string token)
     {
-        var payload = await GoogleJsonWebSignature.ValidateAsync(token);
-        return new SocialUserInfo
+        try
         {
-            Email = payload.Email,
-            Name = payload.Name,
-            Picture = payload.Picture
-        };
+            var payload = await GoogleJsonWebSignature.ValidateAsync(token);
+            
+            Console.WriteLine($"Google token validated successfully for email: {payload.Email}");
+            
+            return new SocialUserInfo
+            {
+                Email = payload.Email,
+                Name = payload.Name,
+                Picture = payload.Picture
+            };
+        }
+        catch (InvalidJwtException ex)
+        {
+            Console.WriteLine($"Invalid Google JWT: {ex.Message}");
+            throw new Exception($"Invalid Google token: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Google token validation error: {ex.Message}");
+            throw new Exception($"Google token validation failed: {ex.Message}");
+        }
     }
 
     private async Task<SocialUserInfo?> ValidateFacebookToken(string token)
     {
-        // First, verify the token and get user info from Facebook Graph API
-        var response = await httpClient.GetAsync($"https://graph.facebook.com/me?fields=id,name,email,picture&access_token={token}");
-        
-        if (!response.IsSuccessStatusCode)
-            throw new Exception("Failed to validate Facebook token");
-
-        var content = await response.Content.ReadAsStringAsync();
-        var facebookUser = JsonSerializer.Deserialize<FacebookUserResponse>(content, new JsonSerializerOptions 
-        { 
-            PropertyNameCaseInsensitive = true 
-        });
-
-        if (facebookUser == null || string.IsNullOrEmpty(facebookUser.Email))
-            throw new Exception("Invalid Facebook user data");
-
-        return new SocialUserInfo
+        try
         {
-            Email = facebookUser.Email,
-            Name = facebookUser.Name,
-            Picture = facebookUser.Picture?.Data?.Url
-        };
+            // First, validate the token against Facebook's debug endpoint
+            var debugResponse = await httpClient.GetAsync($"https://graph.facebook.com/debug_token?input_token={token}&access_token={token}");
+            
+            if (!debugResponse.IsSuccessStatusCode)
+            {
+                var debugContent = await debugResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Facebook token debug failed: {debugContent}");
+                throw new Exception("Facebook token validation failed");
+            }
+
+            // Get user info from Facebook Graph API
+            var response = await httpClient.GetAsync($"https://graph.facebook.com/me?fields=id,name,email,picture&access_token={token}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Facebook Graph API error: {errorContent}");
+                throw new Exception($"Failed to get Facebook user info: {response.StatusCode}");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Facebook user data received: {content}");
+            
+            var facebookUser = JsonSerializer.Deserialize<FacebookUserResponse>(content, new JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true 
+            });
+
+            if (facebookUser == null)
+            {
+                Console.WriteLine("Failed to deserialize Facebook user data");
+                throw new Exception("Invalid Facebook user data format");
+            }
+
+            if (string.IsNullOrEmpty(facebookUser.Email))
+            {
+                Console.WriteLine("Facebook user email is missing");
+                throw new Exception("Email not provided by Facebook. Please ensure email permission is granted.");
+            }
+
+            Console.WriteLine($"Facebook token validated successfully for email: {facebookUser.Email}");
+
+            return new SocialUserInfo
+            {
+                Email = facebookUser.Email,
+                Name = facebookUser.Name,
+                Picture = facebookUser.Picture?.Data?.Url
+            };
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"Facebook JSON parsing error: {ex.Message}");
+            throw new Exception($"Invalid Facebook response format: {ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Facebook HTTP request error: {ex.Message}");
+            throw new Exception($"Facebook API request failed: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Facebook token validation error: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<ServiceResponse> AddUser(UserAddDTO user, UserDTO? requestingUser,
