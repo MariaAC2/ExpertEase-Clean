@@ -164,6 +164,27 @@ public class SpecialistProfileService(
         entity.SpecialistProfile.YearsExperience = specialistProfile.YearsExperience ?? entity.SpecialistProfile.YearsExperience;
         entity.SpecialistProfile.Description = specialistProfile.Description ?? entity.SpecialistProfile.Description;
 
+        // ADD CATEGORY HANDLING
+        if (specialistProfile.CategoryIds != null)
+        {
+            var validCategories = new List<Category>();
+
+            foreach (var categoryId in specialistProfile.CategoryIds)
+            {
+                var category = await repository.GetAsync(new CategorySpec(categoryId), cancellationToken);
+
+                if (category == null)
+                {
+                    return ServiceResponse.CreateErrorResponse(new(HttpStatusCode.BadRequest,
+                        $"Category with ID {categoryId} does not exist", ErrorCodes.EntityNotFound));
+                }
+
+                validCategories.Add(category);
+            }
+
+            entity.SpecialistProfile.Categories = validCategories;
+        }
+
         // Handle photo management
         var currentPortfolio = entity.SpecialistProfile.Portfolio ?? new List<string>();
         var updatedPortfolio = new List<string>();

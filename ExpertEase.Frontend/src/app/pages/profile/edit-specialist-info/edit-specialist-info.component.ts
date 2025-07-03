@@ -193,6 +193,13 @@ export class EditSpecialistInfoComponent implements OnInit, OnChanges {
         formData.append('Description', this.specialistInfo.description);
       }
 
+      // ADD CATEGORIES - This was missing!
+      if (this.specialistInfo.categories && this.specialistInfo.categories.length > 0) {
+        this.specialistInfo.categories.forEach((categoryId, index) => {
+          formData.append(`CategoryIds[${index}]`, categoryId);
+        });
+      }
+
       // Add existing photos to keep (those not marked for removal)
       const photosToKeep = this.existingPortfolioImages
         .filter(img => !this.photosToRemove.includes(img.id!))

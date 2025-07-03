@@ -12,6 +12,9 @@ public class SpecialistProfileUpdateDTO
     public int? YearsExperience { get; set; }
     public string? Description { get; set; } = null!;
     
+    // ADD CATEGORIES SUPPORT
+    public List<Guid>? CategoryIds { get; set; }
+    
     public List<string>? ExistingPortfolioPhotoUrls { get; set; }
     
     public List<string>? PhotoIdsToRemove { get; set; }
@@ -26,6 +29,9 @@ public class SpecialistProfileUpdateFormDTO
     public string? Address { get; set; }
     public int? YearsExperience { get; set; }
     public string? Description { get; set; }
+    
+    // ADD CATEGORIES SUPPORT
+    public Guid[]? CategoryIds { get; set; }
     
     // New photos to upload
     public IFormFile[]? NewPortfolioPhotos { get; set; }

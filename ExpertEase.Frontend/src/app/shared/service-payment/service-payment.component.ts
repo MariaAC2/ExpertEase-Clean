@@ -142,6 +142,18 @@ export class ServicePaymentComponent implements OnInit, OnDestroy {
     }
   }
 
+  getCardBrandIcon(cardBrand: string): string {
+    const brand = cardBrand.toLowerCase();
+    switch (brand) {
+      case 'visa':
+        return 'assets/logos/visa-logo.svg';
+      case 'mastercard':
+        return 'assets/logos/mastercard-logo.svg';
+      default:
+        return 'assets/icons/card-outline.svg';
+    }
+  }
+
   private loadPaymentFlowData() {
     const paymentFlowState = this.paymentFlowService.getCurrentState();
     this.serviceDetails = paymentFlowState.serviceDetails;

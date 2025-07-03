@@ -28,12 +28,9 @@
 }
 
 .filter-icon {
-  font-size: 0.8rem;
+  width: 16px;
+  height: 16px;
   transition: transform 0.2s;
-}
-
-.filter-toggle.active .filter-icon {
-  transform: rotate(180deg);
 }
 
 .filter-count {
@@ -105,9 +102,9 @@
 }
 
 .option-icon {
-  font-size: 1rem;
   width: 20px;
-  text-align: center;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .option-value {
@@ -265,8 +262,14 @@
   }
 
   .stars {
-    font-size: 1.1rem;
+    display: flex;
+    gap: 2px;
     min-width: 80px;
+  }
+
+  .star-icon {
+    width: 14px;
+    height: 14px;
   }
 
   .rating-label {

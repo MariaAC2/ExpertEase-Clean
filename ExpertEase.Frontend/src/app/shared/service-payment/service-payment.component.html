@@ -71,7 +71,10 @@
 
       <!-- Escrow Information Section -->
       <section class="payment-section escrow-info">
-        <h3>🔒 Plată cu protecție escrow</h3>
+        <h3>
+          <img src="assets/icons/lock.svg" alt="Security" class="lock-icon">
+          Plată cu protecție escrow
+        </h3>
         <div class="escrow-explanation">
           <div class="escrow-step">
             <span class="step-number">1</span>
@@ -118,7 +121,9 @@
                  (click)="selectSavedCard(card)">
               <div class="card-info">
                 <div class="card-brand-icon">
-                  <span class="brand-text">{{ card.cardBrand }}</span>
+                  <img [src]="getCardBrandIcon(card.cardBrand)"
+                       [alt]="card.cardBrand"
+                       class="brand-logo">
                 </div>
                 <div class="card-details">
                   <span class="card-number">•••• •••• •••• {{ card.cardLast4 }}</span>
@@ -132,7 +137,7 @@
                 <button class="delete-card-btn"
                         (click)="deleteSavedCard(card); $event.stopPropagation()"
                         title="Șterge cardul">
-                  🗑️
+                  Sterge
                 </button>
               </div>
             </div>
@@ -152,7 +157,7 @@
           <!-- Selected Saved Card Display -->
           <div class="selected-card-display" *ngIf="selectedSavedCard">
             <div class="card-payment-option selected">
-              <img src="assets/icons/card.svg" alt="Card bancar" class="payment-icon">
+              <img src="assets/icons/card-outline.svg" alt="Card bancar" class="payment-icon">
               <div class="payment-text">
                 <strong>{{ selectedSavedCard.cardBrand }} •••• {{ selectedSavedCard.cardLast4 }}</strong>
                 <p>{{ selectedSavedCard.cardholderName }}</p>
@@ -169,13 +174,13 @@
                *ngIf="!selectedSavedCard"
                [class.selected]="paymentMethodSelected"
                (click)="openCardDetailsModal()">
-            <img src="assets/icons/card.svg" alt="Card bancar" class="payment-icon">
+            <img src="assets/icons/card-outline.svg" alt="Card bancar" class="payment-icon">
             <div class="payment-text">
               <strong>Card bancar</strong>
               <p>Utilizează un card de credit sau de debit</p>
               <div class="card-brands">
-                <img src="assets/icons/visa.png" alt="Visa" class="brand-icon">
-                <img src="assets/icons/mastercard.png" alt="Mastercard" class="brand-icon">
+                <img src="assets/logos/visa-logo.svg" alt="Visa" class="brand-icon">
+                <img src="assets/logos/mastercard-logo.svg" alt="Mastercard" class="brand-icon">
               </div>
             </div>
             <span class="selection-indicator" *ngIf="paymentMethodSelected">✓</span>
@@ -245,7 +250,6 @@
 
           <!-- Escrow guarantee message -->
           <div class="escrow-guarantee" *ngIf="feeCalculationLoaded">
-            <div class="guarantee-icon">🛡️</div>
             <div class="guarantee-text">
               <strong>Garanție 100%:</strong> Banii tăi sunt protejați până la finalizarea serviciului.
               În caz de probleme, poți solicita rambursarea integrală.
@@ -264,7 +268,8 @@
               (click)="processPayment()"
               [disabled]="!cardDetailsEntered || isProcessing || !feeCalculationLoaded">
         <span *ngIf="!isProcessing && feeCalculationLoaded">
-          🔒 Plătește în siguranță
+          <img src="assets/icons/lock.svg" alt="Secure" class="payment-lock-icon">
+          Plătește în siguranță
         </span>
         <span *ngIf="!isProcessing && !feeCalculationLoaded">
           Se calculează...
@@ -348,7 +353,9 @@
       </div>
 
       <div class="security-info">
-        <div class="security-icon">🔒</div>
+        <div class="security-icon">
+          <img src="assets/icons/lock.svg" alt="Security" class="security-lock-icon">
+        </div>
         <p>Datele tale sunt protejate și criptate în siguranță</p>
       </div>
     </div>

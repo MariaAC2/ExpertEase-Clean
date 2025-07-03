@@ -69,6 +69,7 @@ public class SpecialistProfileController(IUserService userService, ISpecialistPr
             Address = updateForm.Address,
             YearsExperience = updateForm.YearsExperience,
             Description = updateForm.Description,
+            CategoryIds = updateForm.CategoryIds?.ToList(), // ADD THIS LINE
             ExistingPortfolioPhotoUrls = updateForm.ExistingPortfolioPhotoUrls?.ToList(),
             PhotoIdsToRemove = updateForm.PhotoIdsToRemove?.ToList()
         };

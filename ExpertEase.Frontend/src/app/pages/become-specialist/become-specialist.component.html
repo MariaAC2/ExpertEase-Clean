@@ -116,7 +116,6 @@
           </div>
 
           <div *ngIf="stripeActivationError" class="error-message">
-            <span class="error-icon">⚠️</span>
             {{ stripeActivationError }}
           </div>
 
@@ -126,7 +125,7 @@
               [disabled]="isActivatingStripe"
               class="send-button primary"
               title="Activează contul Stripe">
-              <span *ngIf="!isActivatingStripe">🚀 Activează contul pentru plăți</span>
+              <span *ngIf="!isActivatingStripe">Activează contul pentru plăți</span>
               <span *ngIf="isActivatingStripe">Se procesează...</span>
             </button>
 

@@ -1,7 +1,9 @@
 <div class="compact-filters">
   <!-- Filter Toggle Button -->
   <button class="filter-toggle" (click)="toggleFilterPanel()" [class.active]="isOpen">
-    <span class="filter-icon">🔽</span>
+    <img [src]="isOpen ? 'assets/icons/up-button.svg' : 'assets/icons/down-button.svg'"
+         alt="Toggle filters"
+         class="filter-icon">
     <span>Filtrează</span>
     <span class="filter-count" *ngIf="activeFiltersCount > 0">({{ activeFiltersCount }})</span>
   </button>
@@ -11,32 +13,27 @@
     <!-- Main Filter Options -->
     <div class="filter-options" *ngIf="!selectedFilterType">
       <button class="filter-option" (click)="selectFilterType('categories')">
-        <span class="option-icon">📂</span>
         <span>Categorii</span>
         <span class="option-value" *ngIf="selectedCategoriesCount > 0">{{ selectedCategoriesCount }} selectate</span>
       </button>
 
       <button class="filter-option" (click)="selectFilterType('rating')">
-        <span class="option-icon">⭐</span>
         <span>Rating</span>
         <span class="option-value" *ngIf="currentFilters.minRating">{{ getRatingLabel(currentFilters.minRating) }}</span>
       </button>
 
       <button class="filter-option" (click)="selectFilterType('experience')">
-        <span class="option-icon">🎯</span>
         <span>Experiență</span>
         <span class="option-value" *ngIf="currentFilters.experienceRange">{{ getExperienceLabel(currentFilters.experienceRange) }}</span>
       </button>
 
       <button class="filter-option" (click)="selectFilterType('sort')">
-        <span class="option-icon">↕️</span>
         <span>Sortare</span>
         <span class="option-value" *ngIf="currentFilters.sortByRating">{{ getSortLabel(currentFilters.sortByRating) }}</span>
       </button>
 
       <!-- Quick Clear Button -->
       <button class="clear-all-btn" (click)="clearAllFilters()" *ngIf="activeFiltersCount > 0">
-        <span class="option-icon">🗑️</span>
         <span>Șterge toate</span>
       </button>
     </div>
@@ -44,7 +41,7 @@
     <!-- Categories Filter -->
     <div class="filter-detail" *ngIf="selectedFilterType === 'categories'">
       <div class="filter-header">
-        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <button class="back-btn" (click)="goBack()">←</button>
         <h3>Categorii</h3>
       </div>
       <div class="filter-content">
@@ -92,7 +89,12 @@
             class="rating-option"
             [class.selected]="currentFilters.minRating === option.value"
             (click)="selectRating(option.value)">
-            <div class="stars">{{ option.stars }}</div>
+            <div class="stars">
+              <img *ngFor="let star of getStarArray(option.value)"
+                   src="assets/icons/star-filled.svg"
+                   alt="star"
+                   class="star-icon">
+            </div>
             <span class="rating-label">{{ option.label }}</span>
           </button>
         </div>
@@ -105,7 +107,7 @@
     <!-- Experience Filter -->
     <div class="filter-detail" *ngIf="selectedFilterType === 'experience'">
       <div class="filter-header">
-        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <button class="back-btn" (click)="goBack()">←</button>
         <h3>Experiență</h3>
       </div>
       <div class="filter-content">
@@ -127,7 +129,7 @@
     <!-- Sort Filter -->
     <div class="filter-detail" *ngIf="selectedFilterType === 'sort'">
       <div class="filter-header">
-        <button class="back-btn" (click)="goBack()">← Înapoi</button>
+        <button class="back-btn" (click)="goBack()">←</button>
         <h3>Sortare după rating</h3>
       </div>
       <div class="filter-content">

@@ -27,11 +27,11 @@ export class SearchFiltersComponent implements OnInit {
   categorySearchTerm = '';
   loadingCategories = false;
 
-  // Rating options with stars
+  // Rating options without emojis
   ratingOptions = [
-    { value: 5, stars: '⭐⭐⭐⭐⭐', label: '5 stele' },
-    { value: 4, stars: '⭐⭐⭐⭐', label: '4+ stele' },
-    { value: 3, stars: '⭐⭐⭐', label: '3+ stele' }
+    { value: 5, label: '5 stele' },
+    { value: 4, label: '4+ stele' },
+    { value: 3, label: '3+ stele' }
   ];
 
   experienceOptions = [
@@ -60,6 +60,10 @@ export class SearchFiltersComponent implements OnInit {
 
   get selectedCategoriesCount(): number {
     return this.currentFilters.categoryIds ? this.currentFilters.categoryIds.length : 0;
+  }
+
+  getStarArray(count: number): number[] {
+    return Array(count).fill(0);
   }
 
   loadCategories() {
