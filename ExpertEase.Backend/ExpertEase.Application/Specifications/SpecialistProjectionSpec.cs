@@ -49,67 +49,69 @@ public class SpecialistProjectionSpec: Specification<User, SpecialistDTO>
         Query.Where(e => e.Id == id && e.Role == UserRoleEnum.Specialist);
     }
     
+    // Updated constructor to handle the new filter structure
     public SpecialistProjectionSpec(SpecialistPaginationQueryParams searchParams) : this(true)
     {
         Query.Where(e => e.Role == UserRoleEnum.Specialist);
         
-        // Apply category filters
-        ApplyCategoryFilters(searchParams.Filter.CategoryId, searchParams.Filter.CategoryName);
+        // Apply search filter first if provided
+        ApplySearchFilter(searchParams.Search);
         
-        // Apply rating filters
-        ApplyRatingFilters(searchParams.Filter.MinRating, searchParams.Filter.MaxRating);
-        
-        // Apply experience range filter
-        ApplyExperienceRangeFilter(searchParams.Filter.ExperienceRange);
-        
-        // Apply rating sorting
-        ApplyRatingSorting(searchParams.Filter.SortByRating);
+        // Apply filters if provided
+        if (searchParams.Filters != null)
+        {
+            ApplyCategoryFilters(searchParams.Filters.CategoryIds);
+            ApplyRatingFilters(searchParams.Filters.MinRating);
+            ApplyExperienceRangeFilter(searchParams.Filters.ExperienceRange);
+            ApplyRatingSorting(searchParams.Filters.SortByRating);
+        }
     }
     
-    public SpecialistProjectionSpec(PaginationSearchQueryParams searchParams) : this(true)
+    private void ApplySearchFilter(string? search)
     {
-        searchParams.Search = !string.IsNullOrWhiteSpace(searchParams.Search) ? searchParams.Search.Trim() : null;
-
-        if (searchParams.Search == null)
+        if (string.IsNullOrWhiteSpace(search))
             return;
 
-        var searchExpr = $"%{searchParams.Search.Replace(" ", "%")}%";
+        var searchTerm = search.Trim();
+        var searchExpr = $"%{searchTerm.Replace(" ", "%")}%";
 
         Query.Where(e =>
             EF.Functions.ILike(e.FullName, searchExpr) ||
             EF.Functions.ILike(e.Email, searchExpr) ||
             (e.ContactInfo != null && EF.Functions.ILike(e.ContactInfo.PhoneNumber, searchExpr)) ||
             (e.ContactInfo != null && EF.Functions.ILike(e.ContactInfo.Address, searchExpr)) ||
-            (e.SpecialistProfile != null && EF.Functions.ILike(e.SpecialistProfile.Description, searchExpr))
+            (e.SpecialistProfile != null && EF.Functions.ILike(e.SpecialistProfile.Description, searchExpr)) ||
+            (e.SpecialistProfile != null && e.SpecialistProfile.Categories.Any(c => EF.Functions.ILike(c.Name, searchExpr)))
         );
     }
     
-    private void ApplyCategoryFilters(Guid? categoryId, string? categoryName)
+    private void ApplyCategoryFilters(List<string>? categoryIds)
     {
-        if (categoryId.HasValue)
+        if (categoryIds == null || !categoryIds.Any())
+            return;
+
+        // Convert string IDs to Guids
+        var validCategoryIds = new List<Guid>();
+        foreach (var categoryId in categoryIds)
         {
-            Query.Where(e => e.SpecialistProfile != null && 
-                           e.SpecialistProfile.Categories.Any(c => c.Id == categoryId.Value));
+            if (Guid.TryParse(categoryId, out var parsedId))
+            {
+                validCategoryIds.Add(parsedId);
+            }
         }
-        
-        if (!string.IsNullOrWhiteSpace(categoryName))
+
+        if (validCategoryIds.Any())
         {
-            var categoryNameExpr = $"%{categoryName.Trim()}%";
             Query.Where(e => e.SpecialistProfile != null && 
-                           e.SpecialistProfile.Categories.Any(c => EF.Functions.ILike(c.Name, categoryNameExpr)));
+                           e.SpecialistProfile.Categories.Any(c => validCategoryIds.Contains(c.Id)));
         }
     }
     
-    private void ApplyRatingFilters(int? minRating, int? maxRating)
+    private void ApplyRatingFilters(int? minRating)
     {
         if (minRating.HasValue)
         {
             Query.Where(e => e.Rating >= minRating.Value);
-        }
-        
-        if (maxRating.HasValue)
-        {
-            Query.Where(e => e.Rating <= maxRating.Value);
         }
     }
     

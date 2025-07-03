@@ -32,13 +32,8 @@
           <img [src]="userDetails?.profilePictureUrl || 'assets/avatar.svg'" alt="Poza de profil"/>
         </div>
         <div class="rating-badge">
-          <div class="stars">
-            <span
-              *ngFor="let filled of getStarArray(userDetails?.rating || 0)"
-              class="star"
-              [class.filled]="filled">★</span>
-          </div>
-          <span class="rating-value">{{ userDetails?.rating || 0 }}/5</span>
+          <img src="assets/star-rating.svg" alt="User star" />
+          <span class="rating-value">{{ userDetails?.rating || 0 }}</span>
         </div>
       </div>
       <div class="basic-info">
@@ -113,7 +108,7 @@
     <!-- Reviews Section -->
     <div class="info-section reviews-section">
       <h3 class="section-title">
-        <span class="icon">★</span>
+        <img src="assets/star-rating.svg" alt="Star" class="icon" style="width: 1.4rem; height: 1.4rem;">
         Recenzii
         <span class="review-count">({{ userDetails?.reviews?.length || 0 }})</span>
       </h3>
@@ -138,11 +133,9 @@
               </div>
             </div>
             <div class="review-rating">
-              <div class="stars">
-                <span
-                  *ngFor="let filled of getStarArray(review.rating)"
-                  class="star small"
-                  [class.filled]="filled">★</span>
+              <div class="rating-display">
+                <img src="assets/star-rating.svg" alt="Star" class="star-icon" />
+                <span class="rating-value">{{ review.rating }}</span>
               </div>
             </div>
           </div>

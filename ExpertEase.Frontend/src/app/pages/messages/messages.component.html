@@ -51,7 +51,7 @@
 
     <!-- Chat Area -->
     <div class="chat-area" *ngIf="selectedUserInfo$ | async as userInfo; else noSelection"
-         [class.overlay-active]="chatOverlayVisible || isReplyFormVisible">
+         [class.overlay-active]="chatOverlayVisible || isReplyFormVisible || isSpecialistDetailsVisible">
       <!-- Chat Header -->
       <div class="chat-header">
         <div>{{ userInfo.fullName }}</div>
@@ -65,7 +65,7 @@
       </div>
 
       <!-- Messages Area -->
-      <div class="chat-messages" [class.scroll-frozen]="chatOverlayVisible || isReplyFormVisible">
+      <div class="chat-messages" [class.scroll-frozen]="chatOverlayVisible || isReplyFormVisible || isSpecialistDetailsVisible">
 
         <!-- Initial loading state for messages -->
         <div *ngIf="(loading$ | async) === true && !(conversationItems$ | async)?.length" class="initial-messages-loading">
@@ -185,11 +185,10 @@
           placeholder="Scrie un mesaj aici"
           [(ngModel)]="messageContent"
           (keydown.enter)="sendMessage(messageContent)"
-          [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible || isUploadingPhoto || (signalRService.connectionState$ | async) === false">
-        <button
+          [disabled]="(loading$ | async) === true || isSendingMessage || isReplyFormVisible || isSpecialistDetailsVisible || isUploadingPhoto || (signalRService.connectionState$ | async) === false">        <button
           class="send-btn" title="Trimite mesaj"
           (click)="sendMessage(messageContent)"
-          [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage || isUploadingPhoto || (signalRService.connectionState$ | async) === false">
+          [disabled]="!messageContent.trim() || (loading$ | async) === true || isSendingMessage || isSpecialistDetailsVisible || isUploadingPhoto || (signalRService.connectionState$ | async) === false">
           <span *ngIf="!isSendingMessage">→</span>
           <div *ngIf="isSendingMessage" class="inline-spinner small"></div>
         </button>

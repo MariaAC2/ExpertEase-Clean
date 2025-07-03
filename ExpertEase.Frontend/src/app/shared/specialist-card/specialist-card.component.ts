@@ -6,7 +6,7 @@ import {RequestFormComponent} from '../request-form/request-form.component';
 
 @Component({
   selector: 'app-specialist-card',
-  imports: [CommonModule, RequestFormComponent, RouterLink],
+  imports: [CommonModule, RequestFormComponent],
   templateUrl: './specialist-card.component.html',
   styleUrls: ['./specialist-card.component.scss']
 })
@@ -42,14 +42,13 @@ export class SpecialistCardComponent {
 
   @Output() specialistId = new EventEmitter<string>();
   @Output() requestFormSubmit = new EventEmitter<RequestAddDTO>();
+  @Output() showDetails = new EventEmitter<string>(); // New output for showing details
 
   constructor(private readonly router: Router) { }
 
-  // Navigate to specialist details with overlay parameter
+  // Show specialist details in modal instead of navigating
   navigateToDetails() {
-    this.router.navigate(['/specialist', this.specialist.id], {
-      queryParams: { overlay: 'true' }
-    });
+    this.showDetails.emit(this.specialist.id);
   }
 
   goToSendRequest() {

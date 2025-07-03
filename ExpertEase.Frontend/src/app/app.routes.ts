@@ -61,12 +61,6 @@ export const routes: Routes = [
     // canActivate: [AuthGuard] // Only for authenticated users
   },
   {
-    path: 'home/:id',
-    loadComponent: () =>
-      import('./shared/specialist-details/specialist-details.component')
-        .then(m => m.SpecialistDetailsComponent)
-  },
-  {
     path: 'specialist/:id',
     component: SpecialistDetailsComponent
   },

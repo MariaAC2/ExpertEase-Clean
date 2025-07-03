@@ -403,6 +403,25 @@
 
 .card-modal-content {
   padding: 24px;
+  .form-group {
+    width: 100%;
+    min-width: 0;
+
+    input {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  }
+
+  .form-row {
+    width: 100%;
+
+    .form-group {
+      min-width: 0;
+      flex: 1;
+    }
+  }
 }
 
 .form-group {

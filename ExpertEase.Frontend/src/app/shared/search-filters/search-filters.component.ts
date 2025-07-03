@@ -64,7 +64,7 @@ export class SearchFiltersComponent implements OnInit {
 
   loadCategories() {
     this.loadingCategories = true;
-    this.categoryService.getCategoriesForSpecialist().subscribe({
+    this.categoryService.getAllCategories().subscribe({
       next: (response) => {
         this.allCategories = response.response || [];
         this.filteredCategories = [...this.allCategories];

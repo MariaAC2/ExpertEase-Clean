@@ -47,25 +47,25 @@ export class SpecialistService {
       httpParams = httpParams.set('search', searchParams.search);
     }
 
-    // Add filter parameters if provided - flatten them to match backend expectation
+    // Add filter parameters if provided - match the backend structure with filters prefix
     if (filterParams) {
-      if (filterParams.categoryIds && filterParams.categoryIds.length > 0) {
-        // Send multiple category IDs as separate parameters
-        filterParams.categoryIds.forEach((categoryId) => {
-          httpParams = httpParams.append('filter.categoryIds', categoryId);
-        });
-      }
-
       if (filterParams.minRating !== undefined && filterParams.minRating !== null) {
-        httpParams = httpParams.set('filter.minRating', filterParams.minRating.toString());
+        httpParams = httpParams.set('filters.minRating', filterParams.minRating.toString());
       }
 
       if (filterParams.experienceRange) {
-        httpParams = httpParams.set('filter.experienceRange', filterParams.experienceRange);
+        httpParams = httpParams.set('filters.experienceRange', filterParams.experienceRange);
       }
 
       if (filterParams.sortByRating) {
-        httpParams = httpParams.set('filter.sortByRating', filterParams.sortByRating);
+        httpParams = httpParams.set('filters.sortByRating', filterParams.sortByRating);
+      }
+
+      // Handle multiple category IDs
+      if (filterParams.categoryIds && filterParams.categoryIds.length > 0) {
+        filterParams.categoryIds.forEach((categoryId, index) => {
+          httpParams = httpParams.append(`filters.categoryIds[${index}]`, categoryId);
+        });
       }
     }
 
@@ -90,7 +90,7 @@ export class SpecialistService {
       page: params.page,
       pageSize: params.pageSize,
       search: params.search
-    }, params.filters);
+    }, params.filters); // Changed from params.filters to match the interface
   }
 
   searchSpecialistsByCategory(categoryIds: string[], page: number = 1, pageSize: number = 10) {

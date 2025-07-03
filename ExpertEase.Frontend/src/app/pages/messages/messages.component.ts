@@ -79,6 +79,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
   currentUserDetails: UserProfileDTO | null = null;
   isSendingMessage: boolean = false;
 
+  isSpecialistDetailsVisible: boolean = false;
+  selectedSpecialistId: string = '';
+
   // Reply form state
   isReplyFormVisible: boolean = false;
   isReviewFormVisible: boolean = false;
@@ -1421,5 +1424,31 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private getReplyItemById(replyId: string): any {
     const items = this.messagesState.getTypedConversationItems();
     return items.find(item => item.item.id === replyId && item.type === 'reply');
+  }
+
+  /**
+   * Show specialist details in overlay
+   */
+  showSpecialistDetails(specialistId: string): void {
+    console.log('📋 Opening specialist details for:', specialistId);
+
+    this.selectedSpecialistId = specialistId;
+    this.isSpecialistDetailsVisible = true;
+    this.chatOverlayVisible = true;
+
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Close specialist details overlay
+   */
+  closeSpecialistDetails(): void {
+    console.log('🔄 Closing specialist details overlay');
+
+    this.isSpecialistDetailsVisible = false;
+    this.chatOverlayVisible = false;
+    this.selectedSpecialistId = '';
+
+    this.cdr.detectChanges();
   }
 }

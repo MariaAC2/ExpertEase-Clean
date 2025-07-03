@@ -83,9 +83,12 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         var searchParams = new SpecialistPaginationQueryParams
         {
             Page = pagination.Page,
-            PageSize = pagination.PageSize
+            PageSize = pagination.PageSize,
+            Filters = new SpecialistFilterParams 
+            { 
+                CategoryIds = new List<string> { categoryId.ToString() } 
+            }
         };
-        if (searchParams.Filter != null) searchParams.Filter.CategoryId = categoryId;
 
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
@@ -100,12 +103,12 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         {
             Page = pagination.Page,
             PageSize = pagination.PageSize,
+            Filters = new SpecialistFilterParams
+            {
+                MinRating = minRating
+                // Note: MaxRating is removed from the new structure as per frontend interface
+            }
         };
-        if (searchParams.Filter != null)
-        {
-            searchParams.Filter.MinRating = minRating;
-            searchParams.Filter.MaxRating = maxRating;
-        }
         
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
@@ -120,9 +123,11 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         {
             Page = pagination.Page,
             PageSize = pagination.PageSize,
+            Filters = new SpecialistFilterParams
+            {
+                ExperienceRange = experienceRange
+            }
         };
-        if (searchParams.Filter != null)
-            searchParams.Filter.ExperienceRange = experienceRange;
         
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);
@@ -137,9 +142,11 @@ public class SpecialistService(IRepository<WebAppDatabaseContext> repository,
         {
             Page = pagination.Page,
             PageSize = pagination.PageSize,
+            Filters = new SpecialistFilterParams
+            {
+                SortByRating = "desc" // Sort by rating in descending order
+            }
         };
-        if (searchParams.Filter != null)
-            searchParams.Filter.SortByRating = "desc"; // Sort by rating in descending order
         
         var result = await repository.PageAsync(searchParams, new SpecialistProjectionSpec(searchParams),
             cancellationToken);

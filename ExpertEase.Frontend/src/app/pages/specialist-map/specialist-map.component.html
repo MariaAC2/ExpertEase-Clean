@@ -1,14 +1,14 @@
 <div class="map-container">
-  <!-- Simple Header -->
+  <!-- Header to match home page -->
   <div class="map-header">
     <div class="header-content">
       <button class="back-button" routerLink="/home">
-        ←
+        ← Înapoi
       </button>
     </div>
   </div>
 
-  <!-- Simple Stats Bar -->
+  <!-- Stats Bar to match home page theme -->
   <div class="stats-bar" *ngIf="!isLoadingLocation && !locationError">
     <div class="stat-item">
       <span class="stat-number">{{ specialistMarkers.length }}</span>
@@ -19,7 +19,7 @@
       <span class="stat-label">în raza de 10km</span>
     </div>
     <div class="stat-item" *ngIf="averageRating > 0">
-      <span class="stat-number">{{ averageRating }}⭐</span>
+      <span class="stat-number">{{ averageRating }}★</span>
       <span class="stat-label">rating mediu</span>
     </div>
     <!-- Basic tag for unauthenticated users -->
@@ -33,7 +33,7 @@
     <div class="loading-card">
       <div class="loading-animation">
         <div class="pulse-ring"></div>
-        <div class="location-icon">📍</div>
+        <div class="location-icon"></div>
       </div>
       <h3>Se obține locația ta</h3>
       <p>Te rugăm să acorzi permisiunea pentru locație</p>
@@ -43,21 +43,21 @@
   <!-- Error State -->
   <div *ngIf="locationError" class="error-overlay">
     <div class="error-card">
-      <div class="error-icon">⚠️</div>
+      <div class="error-icon"></div>
       <h3>Nu s-a putut obține locația</h3>
       <p>{{ locationError }}</p>
       <div class="error-actions">
         <button (click)="useDefaultLocation()" class="btn-primary">
-          📍 Folosește București
+          Folosește București
         </button>
         <button (click)="getCurrentLocation()" class="btn-secondary">
-          🔄 Încearcă din nou
+          Încearcă din nou
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Simple Map -->
+  <!-- Map -->
   <google-map
     *ngIf="!isLoadingLocation && mapOptions"
     [center]="mapCenter"
@@ -84,7 +84,7 @@
       (mapMarkerClick)="onMarkerClick(marker)">
     </map-marker>
 
-    <!-- Simple Info Window -->
+    <!-- Info Window -->
     <map-info-window
       #infoWindow
       *ngIf="selectedMarker"
@@ -98,7 +98,7 @@
           <div class="info-title">
             <h3>{{ selectedMarker.info?.name }}</h3>
             <div class="rating-container">
-              <div class="stars">{{ getStars(selectedMarker.info?.rating || 0) }}</div>
+              <div class="stars" [style.--rating-width]="(selectedMarker.info?.rating || 0) * 20 + '%'"></div>
               <span class="rating-text">({{ selectedMarker.info?.rating || 0 }})</span>
             </div>
           </div>
@@ -109,11 +109,11 @@
 
           <div class="info-details">
             <div class="detail-item">
-              <span class="detail-icon">📍</span>
+              <span class="detail-icon"></span>
               <span class="detail-text">{{ selectedMarker.info?.address }}</span>
             </div>
             <div class="detail-item" *ngIf="selectedMarker.info?.distance">
-              <span class="detail-icon">🚗</span>
+              <span class="detail-icon"></span>
               <span class="detail-text">{{ selectedMarker.info?.distance }}km depărtare</span>
             </div>
           </div>
@@ -123,17 +123,17 @@
           <button
             class="action-btn primary"
             [routerLink]="['/specialist', selectedMarker.specialist.id]">
-            👤 Vezi profilul
+            Vezi profilul
           </button>
           <button class="action-btn secondary" (click)="closeInfoWindow()">
-            ✕ Închide
+            Închide
           </button>
         </div>
       </div>
     </map-info-window>
   </google-map>
 
-  <!-- Simple Floating Controls -->
+  <!-- Floating Controls -->
   <div class="floating-controls" *ngIf="!isLoadingLocation">
     <button
       class="fab"
@@ -141,7 +141,7 @@
       [disabled]="!userLocation"
       [class.disabled]="!userLocation"
       title="Centrează pe locația ta">
-      <span class="fab-icon">📍</span>
+      <span class="fab-icon">•</span>
       <span class="fab-label">Locația mea</span>
     </button>
 
@@ -151,7 +151,7 @@
       [disabled]="isLoadingSpecialists"
       [class.loading]="isLoadingSpecialists"
       title="Reîncarcă specialiștii">
-      <span class="fab-icon" *ngIf="!isLoadingSpecialists">🔄</span>
+      <span class="fab-icon" *ngIf="!isLoadingSpecialists">↻</span>
       <div class="fab-spinner" *ngIf="isLoadingSpecialists"></div>
       <span class="fab-label">{{ isLoadingSpecialists ? 'Se încarcă...' : 'Reîncarcă' }}</span>
     </button>
@@ -160,12 +160,12 @@
       class="fab"
       (click)="toggleSatelliteView()"
       title="Comută vedere satelit">
-      <span class="fab-icon">🛰️</span>
+      <span class="fab-icon">⊞</span>
       <span class="fab-label">{{ mapTypeId === 'satellite' ? 'Hartă' : 'Satelit' }}</span>
     </button>
   </div>
 
-  <!-- Simple Side Panel -->
+  <!-- Side Panel -->
   <div class="side-panel" [class.open]="sidePanelOpen">
     <div class="panel-header">
       <h3>Specialiști aproape de tine</h3>
@@ -183,7 +183,7 @@
              [alt]="marker.specialist.fullName">
         <div class="specialist-info">
           <h4>{{ marker.specialist.fullName }}</h4>
-          <div class="specialist-rating">{{ getStars(marker.info?.rating || 0) }}</div>
+          <div class="specialist-rating">{{ getStarsText(marker.info?.rating || 0) }}</div>
           <p class="specialist-distance" *ngIf="marker.info?.distance">
             {{ marker.info?.distance }}km
           </p>

@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {RequestAddDTO, SpecialistDTO, PaginationSearchQueryParams, SpecialistFilterParams} from '../../models/api.models';
+import {RequestAddDTO, SpecialistDTO, PaginationSearchQueryParams, SpecialistFilterParams, UserDetailsDTO} from '../../models/api.models';
 import {CommonModule} from '@angular/common';
 import {SpecialistService} from '../../services/specialist.service';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -10,6 +10,7 @@ import {SpecialistCardComponent} from '../../shared/specialist-card/specialist-c
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {AuthService} from '../../services/auth.service';
 import {SearchFiltersComponent} from '../../shared/search-filters/search-filters.component';
+import {UserService} from '../../services/user.service';
 
 @Component({
   selector: 'app-home',
@@ -37,6 +38,10 @@ export class HomeComponent implements OnInit{
   isUserDetailsVisible = false;
   users: SpecialistDTO[] = [];
   error: string | null = null;
+
+  // Specialist details modal properties
+  isSpecialistDetailsVisible = false;
+  selectedSpecialistDetails: UserDetailsDTO | null = null;
 
   // Separate search and filter parameters
   searchParams: PaginationSearchQueryParams = {
@@ -89,11 +94,7 @@ export class HomeComponent implements OnInit{
       description: 'Specialist în psihologie cu experiență în redactarea și corectarea articolelor științifice.',
       createdAt: new Date('2020-11-20T08:30:00Z'),
       updatedAt: new Date(),
-      rating: 4,
-      // categories: [
-      //   { id: 'cat-003', name: 'Psihologie' },
-      //   { id: 'cat-004', name: 'Redactare academică' }
-      // ]
+      rating: 4
     },
     {
       id: 'spec-003',
@@ -105,17 +106,59 @@ export class HomeComponent implements OnInit{
       description: 'Tânăr specialist în tehnologia informației, ofer servicii de consultanță și mentenanță software.',
       createdAt: new Date('2023-01-15T14:45:00Z'),
       updatedAt: new Date(),
-      rating: 4.5,
-      // categories: [
-      //   { id: 'cat-005', name: 'IT & Software' },
-      //   { id: 'cat-006', name: 'Consultanță tehnică' }
-      // ]
+      rating: 4.5
     }
   ];
 
-  constructor(private readonly homeService: SpecialistService,
-              private readonly userRequestService: RequestService,
-              private readonly authService: AuthService) { }
+  dummyUserDetails: UserDetailsDTO = {
+    fullName: 'Maria Popescu',
+    profilePictureUrl: 'assets/avatar.svg',
+    rating: 4,
+    reviews: [
+      {
+        id: '1',
+        content: 'Serviciu excelent! Maria a venit punctual și a rezolvat problema cu instalația sanitară foarte profesionist. Recomand cu încredere!',
+        rating: 5,
+        senderUserFullName: 'Ion Vasile',
+        senderUserProfilePictureUrl: 'assets/avatar.svg',
+        createdAt: new Date('2024-06-01T10:00:00'),
+        updatedAt: new Date('2024-06-01T10:00:00'),
+      },
+      {
+        id: '2',
+        content: 'Foarte punctual și profesionist. A explicat tot ce a făcut și a lăsat totul foarte curat.',
+        rating: 4,
+        senderUserFullName: 'Andreea Dumitru',
+        senderUserProfilePictureUrl: '',
+        createdAt: new Date('2024-05-22T14:00:00'),
+        updatedAt: new Date('2024-05-22T14:00:00')
+      },
+      {
+        id: '3',
+        content: 'Foarte mulțumit de serviciile oferite. Prețuri corecte și muncă de calitate.',
+        rating: 5,
+        senderUserFullName: 'Mihai Georgescu',
+        senderUserProfilePictureUrl: 'assets/avatar.svg',
+        createdAt: new Date('2024-05-15T16:30:00'),
+        updatedAt: new Date('2024-05-15T16:30:00')
+      }
+    ],
+    // Specialist-only fields
+    email: 'maria.popescu@example.com',
+    phoneNumber: '0722123456',
+    address: 'Str. Libertății, nr. 15, Sector 2, București',
+    yearsExperience: 5,
+    description: 'Instalator autorizat cu experiență în proiecte rezidențiale și comerciale. Specializată în instalații sanitare moderne și reparații de urgență.',
+    portfolio: ['Portofoliu1.jpg', 'Portofoliu2.jpg'],
+    categories: ['Instalații sanitare', 'Reparații', 'Urgențe']
+  };
+
+  constructor(
+    private readonly homeService: SpecialistService,
+    private readonly userRequestService: RequestService,
+    private readonly authService: AuthService,
+    private readonly userService: UserService
+  ) { }
 
   ngOnInit() {
     this.getPage();
@@ -140,6 +183,32 @@ export class HomeComponent implements OnInit{
         console.error('Error loading specialists:', err);
       }
     });
+  }
+
+  // Show specialist details in modal
+  showSpecialistDetails(specialistId: string): void {
+    console.log('Loading specialist details for:', specialistId);
+
+    // Show loading state or use dummy data for testing
+    // this.selectedSpecialistDetails = this.dummyUserDetails;
+    // this.isSpecialistDetailsVisible = true;
+
+    this.userService.getUserDetails(specialistId).subscribe({
+      next: (res) => {
+        this.selectedSpecialistDetails = res.response ?? null;
+        this.isSpecialistDetailsVisible = true;
+      },
+      error: (err) => {
+        console.error('Error loading specialist details:', err);
+        alert('Nu s-au putut încărca detaliile specialistului.');
+      }
+    });
+  }
+
+  // Close specialist details modal
+  closeSpecialistDetails(): void {
+    this.isSpecialistDetailsVisible = false;
+    this.selectedSpecialistDetails = null;
   }
 
   addRequest(data: { [key: string]: any }) {
@@ -241,6 +310,28 @@ export class HomeComponent implements OnInit{
       description: ''
     }
     this.isRequestFormVisible = false;
+  }
+
+  // Helper methods for the specialist details modal
+  formatPhoneNumber(phone: string): string {
+    // Format Romanian phone number for display
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 10 && cleaned.startsWith('07')) {
+      return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+    }
+    return phone;
+  }
+
+  getTimeSince(date: Date): string {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) return 'Astăzi';
+    if (diffInDays === 1) return 'Ieri';
+    if (diffInDays < 7) return `Acum ${diffInDays} zile`;
+    if (diffInDays < 30) return `Acum ${Math.floor(diffInDays / 7)} săptămâni`;
+    return `Acum ${Math.floor(diffInDays / 30)} luni`;
   }
 
   protected readonly SpecialistCardComponent = SpecialistCardComponent;

@@ -69,11 +69,12 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
   userMarkerOptions: google.maps.MarkerOptions = {
     icon: {
       url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-          <circle cx="24" cy="24" r="20" fill="#2196F3" stroke="white" stroke-width="3"/>
-          <circle cx="24" cy="24" r="8" fill="white"/>
-        </svg>
-      `),
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="20" fill="#3c1a7d" stroke="white" stroke-width="3"/>
+        <circle cx="24" cy="24" r="8" fill="white"/>
+        <circle cx="24" cy="24" r="4" fill="#3c1a7d"/>
+      </svg>
+    `),
       scaledSize: new google.maps.Size(48, 48),
       anchor: new google.maps.Point(24, 24)
     },
@@ -121,14 +122,12 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
 
   // Simple marker options for specialists
   getMarkerOptions(marker: MapMarkerInfo): google.maps.MarkerOptions {
-    // Ensure marker and specialist data exists
     if (!marker || !marker.specialist) {
       return this.getDefaultMarkerOptions();
     }
 
     const profilePictureUrl = marker.specialist.profilePictureUrl;
 
-    // Check if we have a valid profile picture URL
     if (profilePictureUrl &&
       profilePictureUrl !== 'src/assets/avatar.svg' &&
       profilePictureUrl.startsWith('http')) {
@@ -150,24 +149,25 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
 
   private getColorCodedMarkerOptions(marker: MapMarkerInfo): google.maps.MarkerOptions {
     const rating = marker.info?.rating || 0;
-    let color = '#666666'; // Default gray
+    let color = '#9a83db'; // Default purple theme color
 
     if (rating >= 4.5) {
-      color = '#4CAF50'; // Green for high rating
+      color = '#3c1a7d'; // Dark purple for high rating
     } else if (rating >= 4.0) {
-      color = '#FF9800'; // Orange for good rating
+      color = '#b7a4dd'; // Medium purple for good rating
     } else if (rating >= 3.0) {
-      color = '#2196F3'; // Blue for average rating
+      color = '#cfbdfe'; // Light purple for average rating
     }
 
     return {
       icon: {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="2"/>
-            <text x="16" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">👤</text>
-          </svg>
-        `),
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="2"/>
+          <circle cx="16" cy="12" r="4" fill="white"/>
+          <path d="M8 24 Q8 20 16 20 Q24 20 24 24" fill="white"/>
+        </svg>
+      `),
         scaledSize: new google.maps.Size(32, 32),
         anchor: new google.maps.Point(16, 16)
       },
@@ -180,11 +180,11 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
     return {
       icon: {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="14" fill="#666666" stroke="white" stroke-width="2"/>
-            <text x="16" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">?</text>
-          </svg>
-        `),
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="14" fill="#9a83db" stroke="white" stroke-width="2"/>
+          <text x="16" y="20" text-anchor="middle" fill="white" font-size="16" font-weight="bold">?</text>
+        </svg>
+      `),
         scaledSize: new google.maps.Size(32, 32),
         anchor: new google.maps.Point(16, 16)
       },
@@ -456,9 +456,15 @@ export class SpecialistMapComponent implements OnInit, OnDestroy {
   getStars(rating: number): string {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    let stars = '⭐'.repeat(fullStars);
-    if (hasHalfStar) stars += '⭐';
+    let stars = '★'.repeat(fullStars);
+    if (hasHalfStar) stars += '☆';
+    const emptyStars = 5 - Math.ceil(rating);
+    stars += '☆'.repeat(emptyStars);
     return stars || '☆☆☆☆☆';
+  }
+
+  getStarsText(rating: number): string {
+    return `${rating}/5 ★`;
   }
 
   trackBySpecialist(index: number, marker: MapMarkerInfo): string {

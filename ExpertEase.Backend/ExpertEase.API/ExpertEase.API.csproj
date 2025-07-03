@@ -170,6 +170,19 @@
       <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\down-button.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\assets\icons\up-button.svg" />
       <_ContentIncludedByDefault Remove="wwwroot\browser\main-JP3GSDJS.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-B6ZNCXO3.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-MUIMV6OG.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-WMJ3RM57.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YTCUXXDK.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-3ECNCCV2.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-4OXF5YCY.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-5M6IB6IF.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-62HFCRJN.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-7FYZQ4YQ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-C52DK3RT.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-C7RLULGJ.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-E5KX4KVM.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\browser\main-UEMJ7ZXQ.js" />
     </ItemGroup>
 
     <Target Name="BuildAngular" BeforeTargets="Build">

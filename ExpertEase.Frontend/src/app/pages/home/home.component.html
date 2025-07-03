@@ -65,7 +65,8 @@
     <app-specialist-card
       [specialist]="user"
       (specialistId)="user.id = $event"
-      (requestFormSubmit)="addRequest($event)">
+      (requestFormSubmit)="addRequest($event)"
+      (showDetails)="showSpecialistDetails($event)">
     </app-specialist-card>
 
     <!-- Add separator between cards, but not after the last one -->
@@ -81,3 +82,135 @@
   (pageChange)="onPageChange($event)"
   (pageSizeChange)="onPageSizeChange($event)">
 </app-pagination>
+
+<!-- Specialist Details Modal -->
+<div class="overlay-wrapper" *ngIf="isSpecialistDetailsVisible" (click)="closeSpecialistDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="specialist-card">
+      <button class="close-btn" aria-label="Închide" (click)="closeSpecialistDetails()">×</button>
+
+      <!-- Specialist Details Content -->
+      <div class="specialist-header">
+        <div class="avatar-section">
+          <div class="avatar-wrapper">
+            <div class="avatar">
+              <img [src]="selectedSpecialistDetails?.profilePictureUrl || 'assets/avatar.svg'" alt="Poza de profil"/>
+            </div>
+            <div class="rating-badge">
+              <img src="assets/star-rating.svg" alt="User star" />
+              <span class="rating-value">{{ selectedSpecialistDetails?.rating || 0 }}</span>
+            </div>
+          </div>
+          <div class="basic-info">
+            <h1 class="name">{{ selectedSpecialistDetails?.fullName }}</h1>
+            <div class="experience-badge" *ngIf="selectedSpecialistDetails?.yearsExperience">
+              <span class="icon">⚙</span>
+              <span>{{ selectedSpecialistDetails?.yearsExperience }} ani experiență</span>
+            </div>
+            <div class="categories" *ngIf="(selectedSpecialistDetails?.categories?.length ?? 0) > 0">
+              <span class="category-chip" *ngFor="let category of selectedSpecialistDetails?.categories">
+                {{ category }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="specialist-body">
+        <!-- Contact Information -->
+        <div class="info-section" *ngIf="selectedSpecialistDetails?.email">
+          <h3 class="section-title">
+            <span class="icon">•</span>
+            Informații de contact
+          </h3>
+          <div class="contact-grid">
+            <div class="contact-item">
+              <span class="contact-label">Email:</span>
+              <a [href]="'mailto:' + (selectedSpecialistDetails?.email || '')" class="contact-value email">
+                {{ selectedSpecialistDetails?.email }}
+              </a>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Telefon:</span>
+              <a [href]="'tel:' + (selectedSpecialistDetails?.phoneNumber || '')" class="contact-value phone">
+                {{ formatPhoneNumber(selectedSpecialistDetails?.phoneNumber || '') }}
+              </a>
+            </div>
+            <div class="contact-item full-width">
+              <span class="contact-label">Adresă:</span>
+              <span class="contact-value address">{{ selectedSpecialistDetails?.address }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="info-section" *ngIf="selectedSpecialistDetails?.description">
+          <h3 class="section-title">
+            <span class="icon">•</span>
+            Despre specialist
+          </h3>
+          <div class="description-content">
+            <p>{{ selectedSpecialistDetails?.description }}</p>
+          </div>
+        </div>
+
+        <!-- Portfolio -->
+        <div class="info-section" *ngIf="selectedSpecialistDetails?.portfolio?.length">
+          <h3 class="section-title">
+            <span class="icon">🖼️</span>
+            Portofoliu
+          </h3>
+          <div class="portfolio-grid">
+            <div class="portfolio-item" *ngFor="let image of selectedSpecialistDetails?.portfolio">
+              <img [src]="image" alt="Imagine portofoliu" class="portfolio-image" />
+              <div class="portfolio-overlay">
+                <span class="view-text">Vezi imagine</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="info-section reviews-section">
+          <h3 class="section-title">
+            <img src="assets/star-rating.svg" alt="Star" class="icon" style="width: 1.4rem; height: 1.4rem;">
+            Recenzii
+            <span class="review-count">({{ selectedSpecialistDetails?.reviews?.length || 0 }})</span>
+          </h3>
+
+          <div class="reviews-container">
+            <div *ngIf="!selectedSpecialistDetails?.reviews?.length" class="no-reviews">
+              <div class="no-reviews-icon">•</div>
+              <p>Acest specialist nu are încă recenzii.</p>
+              <small>Fii primul care lasă o recenzie!</small>
+            </div>
+
+            <div class="review-card" *ngFor="let review of selectedSpecialistDetails?.reviews">
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <img
+                    [src]="review.senderUserProfilePictureUrl || 'assets/avatar.svg'"
+                    alt="Poza reviewer"
+                    class="reviewer-avatar">
+                  <div class="reviewer-details">
+                    <span class="reviewer-name">{{ review.senderUserFullName }}</span>
+                    <span class="review-date">{{ getTimeSince(review.createdAt) }}</span>
+                  </div>
+                </div>
+                <div class="review-rating">
+                  <div class="rating-display">
+                    <img src="assets/star-rating.svg" alt="Star" class="star-icon" />
+                    <span class="rating-value">{{ review.rating }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="review-content">
+                <p>{{ review.content }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
